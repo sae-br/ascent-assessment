@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Teams{% endblock %}
+{% block content %}
+<h2>Teams</h2>
+<p>This is your current teams list.</p>
+<ul>
+  {% for team in teams %}
+    <li><a href="{% url 'generate_team_report' team.id %}">{{ team.name }}</a></li>
+  {% endfor %}
+</ul>
+{% endblock %}

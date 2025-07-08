@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Start New Assessment{% endblock %}
+
+{% block content %}
+<h2>Start a New Assessment</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <label for="team">Select Team:</label>
+    <select name="team" id="team" required>
+        <option value="">-- Choose a Team --</option>
+        {% for team in teams %}
+            <option value="{{ team.id }}">{{ team.name }}</option>
+        {% endfor %}
+    </select>
+
+    <br><br>
+
+    <label for="deadline">Set Assessment Deadline:</label>
+    <input type="date" name="deadline" id="deadline" required>
+
+    <br><br>
+
+    <button type="submit">Continue</button>
+</form>
+{% endblock %}

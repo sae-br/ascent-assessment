@@ -1,0 +1,31 @@
+{% load static %}
+{% load tz %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Team Assessment Tool{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <h1><a href="/">Team Assessment Tool</a></h1>
+        <nav>
+            <a href="{% url 'team_list' %}">Teams</a> |
+            <a href="{% url 'generate_report' %}">Get Report</a> |
+            <a href="{% url 'login' %}">Login</a> |
+        </nav>
+        <hr>
+    </header>
+
+    <main class="content-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <hr>
+        <p>© {{ now|date:'Y' }} Questadon</p>
+    </footer>
+</body>
+</html>

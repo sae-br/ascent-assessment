@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Assessment{% endblock %}
+
+{% block content %}
+<h2>Hello {{ member.name }} 👋</h2>
+<p>Please complete the assessment below:</p>
+
+<form method="post">
+    {% csrf_token %}
+    <ul style="list-style: none; padding-left: 0;">
+        {% for question in questions %}
+            <li style="margin-bottom: 1.5rem;">
+                <strong>{{ question.text }}</strong><br>
+                <label>
+                    <input type="radio" name="question_{{ question.id }}" value="3" required>
+                    Consistently true
+                </label><br>
+                <label>
+                    <input type="radio" name="question_{{ question.id }}" value="2">
+                    Somewhat true
+                </label><br>
+                <label>
+                    <input type="radio" name="question_{{ question.id }}" value="1">
+                    Somewhat untrue
+                </label><br>
+                <label>
+                    <input type="radio" name="question_{{ question.id }}" value="0">
+                    Consistently untrue
+                </label>
+            </li>
+        {% endfor %}
+    </ul>
+    <button type="submit">Submit</button>
+</form>
+{% endblock %}

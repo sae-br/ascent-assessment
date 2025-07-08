@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ team.name }} – Team Report{% endblock %}
+
+{% block content %}
+  <h2>{{ team.name }} – Team Assessment Report</h2>
+
+  {% for peak in peaks %}
+    <section style="margin-bottom: 2rem;">
+      <h3>{{ peak.name }} — {{ peak.score }}%</h3>
+      <ul>
+        {% for question in peak.questions %}
+          <li>{{ question.text }} — {{ question.score }}%</li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endfor %}
+
+{% endblock %}
