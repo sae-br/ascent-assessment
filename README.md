@@ -24,7 +24,6 @@ I'm building this in the open because I'm still new to this and want to offer an
 
 I've organized the project using an `apps/` directory to keep it modular and scalable. Here's the general structure:
 
-'''
 assessmvp/
 ├── apps/
 │   ├── accounts/
@@ -41,7 +40,7 @@ assessmvp/
 ├── manage.py
 ├── .env.example
 └── README.md
-'''
+
 
 ## 🔐 Environment Variables
 
