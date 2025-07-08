@@ -2,12 +2,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from apps.teams.models import Team
 from apps.assessments.models import Peak, Question, Answer
 from django.db.models import Sum, Count
+from django.contrib.auth.decorators import login_required
 
-
+@login_required
 def generate_report(request):
     teams = Team.objects.all()
     return render(request, 'reports/generate.html', {'teams': teams})
 
+@login_required
 def review_team_report(request, team_id):
     team = get_object_or_404(Team, id=team_id)
     members = team.members.all()
@@ -49,6 +51,7 @@ def review_team_report(request, team_id):
         'peaks': peaks_data
     })
 
+@login_required
 def review_team_report_redirect(request):
     team_id = request.GET.get('team_id')
     return redirect('review_team_report', team_id=team_id)
