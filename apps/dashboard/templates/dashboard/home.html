@@ -4,4 +4,12 @@
 <h2>Welcome to the Team Assessment Dashboard</h2>
 <p>This is your team’s starting point.</p>
 <a href="{% url 'new_assessment' %}" class="button">➕ New Assessment</a>
+<h2>Your Teams</h2>
+<ul>
+  {% for team in teams %}
+    <li>{{ team.name }}</li>
+  {% empty %}
+    <li>You don’t have any teams yet.</li>
+  {% endfor %}
+</ul>
 {% endblock %}
