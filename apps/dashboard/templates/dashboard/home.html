@@ -6,10 +6,10 @@
 <p>This is your team’s starting point.</p>
 <a href="{% url 'new_assessment' %}" class="button">➕ New Assessment</a>
 
-{% if assessments %}
-  {% for assessment in assessments %}
+{% if assessments_data %}
+  {% for item in assessments_data %}
     <hr>
-    <h3>{{ assessment.team.name }} – {{ assessment.deadline|date:"F Y" }}</h3>
+    <h3>{{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}</h3>
     <table>
       <thead>
         <tr>
@@ -19,7 +19,7 @@
         </tr>
       </thead>
       <tbody>
-        {% for participant in assessment.participants.all %}
+        {% for participant in item.participants %}
           <tr>
             <td>{{ participant.team_member.name }}</td>
             <td>{{ participant.team_member.email }}</td>
