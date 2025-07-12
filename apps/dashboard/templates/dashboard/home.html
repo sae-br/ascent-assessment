@@ -2,8 +2,8 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 <h2>Welcome to the Team Assessment Dashboard</h2>
-<p>This is your team’s starting point.</p>
 <a href="{% url 'new_assessment' %}" class="button">➕ New Assessment</a>
+
 <h2>Your Teams</h2>
 <ul>
   {% for team in teams %}
@@ -12,4 +12,37 @@
     <li>You don’t have any teams yet.</li>
   {% endfor %}
 </ul>
+
+<h2>Your Assessments</h2>
+{% for item in assessments %}
+  <div style="margin-bottom: 2em;">
+    <h3>{{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Submitted?</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for member in item.members %}
+          <tr>
+            <td>{{ member.name }}</td>
+            <td>{{ member.email }}</td>
+            <td>
+              {% if member.has_submitted %}
+                ✅
+              {% else %}
+                ❌
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% empty %}
+  <p>You don’t have any assessments yet.</p>
+{% endfor %}
 {% endblock %}
