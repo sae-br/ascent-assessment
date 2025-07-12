@@ -3,7 +3,8 @@ from .models import Team, TeamMember
 
 @admin.register(TeamMember)
 class TeamMemberAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'team', 'has_submitted', 'unique_token')
-    readonly_fields = ('unique_token',)
+    list_display = ('name', 'email', 'team')
+    search_fields = ('name', 'email', 'team__name')
+    list_filter = ('team',)
 
 admin.site.register(Team)

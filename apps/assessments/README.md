@@ -63,7 +63,7 @@ submit_assessment – Confirms submission (optionally separated route)
 ## Email Flow
 
 - Triggered from confirm_launch
-- Uses each team member's unique_token to send them an individualized survey link
+- Uses each team member's AssessmentParticipant token to send them an individualized survey link
 - Link structure: /assessments/start/<uuid:token>/
 
 

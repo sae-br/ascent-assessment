@@ -119,15 +119,16 @@ def confirm_launch(request):
             team_member=member
         )
 
-    if request.method == "POST":
-        for member in team.members.all():
-            send_mail(
-                subject="You're invited to complete a team assessment",
-                message=f"Hello {member.name},\n\nPlease complete your team assessment by visiting this link:\n\nhttp://127.0.0.1:8000/assessments/start/{member.unique_token}/\n\nDeadline: {assessment.deadline.strftime('%B %Y')}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[member.email],
-                fail_silently=False,
-            )
+        if request.method == "POST":
+            for member in team.members.all():
+                participant = AssessmentParticipant.objects.get(team_member=member, assessment=assessment)
+                send_mail(
+                    subject="You're invited to complete a team assessment",
+                    message=f"Hello {member.name},\n\nPlease complete your team assessment by visiting this link:\n\nhttp://127.0.0.1:8000/assessments/start/{participant.token}/\n\nDeadline: {assessment.deadline.strftime('%B %Y')}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[member.email],
+                    fail_silently=False,
+                )
         request.session.pop("new_assessment", None)
         messages.success(request, f"Assessment for {team.name} launched!")
         return redirect("dashboard_home")
@@ -140,7 +141,7 @@ def confirm_launch(request):
 # respondent submission
 
 def start_assessment(request, token):
-    participant = get_object_or_404(AssessmentParticipant, team_member__unique_token=token)
+    participant = get_object_or_404(AssessmentParticipant, token=token)
     member = participant.team_member
     assessment = participant.assessment
 

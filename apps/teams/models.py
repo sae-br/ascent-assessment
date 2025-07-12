@@ -14,7 +14,6 @@ class TeamMember(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='members')
     name = models.CharField(max_length=100)
     email = models.EmailField()
-    unique_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     has_submitted = models.BooleanField(default=False)
 
     def __str__(self):

@@ -1,7 +1,7 @@
 from django.db import models
 from apps.teams.models import TeamMember, Team
 from django.utils import timezone
-
+import uuid
 
 class Peak(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -32,6 +32,7 @@ class AssessmentParticipant(models.Model):
     assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE, related_name="participants")
     team_member = models.ForeignKey(TeamMember, on_delete=models.CASCADE, related_name="assessment_links")
     has_submitted = models.BooleanField(default=False)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     def __str__(self):
         return f"{self.team_member.name} for {self.assessment}"

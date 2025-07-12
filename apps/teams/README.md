@@ -13,7 +13,6 @@ TeamMember
 	•	team: ForeignKey(Team) - Team to which the member belongs
 	•	name: CharField - Member’s name
 	•	email: EmailField - Member’s email address
-	•	unique_token: UUIDField - Used to invite team members securely
 
 AssessmentParticipant (Defined in the assessments app)
 	•	assessment: ForeignKey(Assessment) - Which assessment this participation refers to
