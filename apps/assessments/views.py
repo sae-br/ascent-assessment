@@ -2,6 +2,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, get_object_or_404, redirect
@@ -51,15 +52,22 @@ def new_assessment(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def confirm_team(request):
+    print("🟡 Entered confirm_team view")
     session_data = request.session.get("new_assessment")
+
     if not session_data:
+        print("⚠️ No session data found in session")
         messages.error(request, "Assessment setup data missing.")
         return redirect("new_assessment")
 
     team = get_object_or_404(Team, id=session_data["team_id"], admin=request.user)
 
     if request.method == "POST":
+        print("🔵 POST request received")
+        print("🔘 POST keys:", list(request.POST.keys()))
+
         if "add_member" in request.POST:
+            print("➕ Adding member...")
             name = request.POST.get("new_member_name")
             email = request.POST.get("new_member_email")
             if name and email:
@@ -69,6 +77,7 @@ def confirm_team(request):
                 messages.error(request, "Name and email are required to add a new member.")
 
         elif "edit_member" in request.POST:
+            print("✏️ Editing member...")
             member_id = request.POST.get("member_id")
             name = request.POST.get("edit_member_name")
             email = request.POST.get("edit_member_email")
@@ -82,6 +91,7 @@ def confirm_team(request):
                 messages.error(request, "All fields are required to edit a member.")
 
         elif "delete_member" in request.POST:
+            print("🗑️ Deleting member...")
             member_id = request.POST.get("member_id")
             if member_id:
                 member = get_object_or_404(TeamMember, id=member_id, team=team)
@@ -89,9 +99,11 @@ def confirm_team(request):
                 messages.success(request, "Team member deleted.")
 
         elif "confirm_team_done" in request.POST:
+            print("✅ Confirm team done — redirecting to confirm_launch")
             return redirect("confirm_launch")
 
         else:
+            print("❓ Unknown POST action:", request.POST)
             messages.error(request, "Unknown action submitted.")
 
     return render(request, "assessments/confirm_team.html", {
@@ -100,8 +112,12 @@ def confirm_team(request):
 
 @login_required
 def confirm_launch(request):
+    print("🟡 Entered confirm_launch view")
     session_data = request.session.get("new_assessment")
+    print("📦 session_data:", session_data)
+
     if not session_data:
+        print("❌ No session data — redirecting to new_assessment")
         messages.error(request, "Missing assessment setup data.")
         return redirect("new_assessment")
 
@@ -124,14 +140,20 @@ def confirm_launch(request):
                 participant = AssessmentParticipant.objects.get(team_member=member, assessment=assessment)
                 send_mail(
                     subject="You're invited to complete a team assessment",
-                    message=f"Hello {member.name},\n\nPlease complete your team assessment by visiting this link:\n\nhttp://127.0.0.1:8000/assessments/start/{participant.token}/\n\nDeadline: {assessment.deadline.strftime('%B %Y')}",
+                    message=(
+                        f"Hello {member.name},\n\n"
+                        f"Please complete your team assessment by visiting this link:\n\n"
+                        f"http://127.0.0.1:8000/assessments/start/{participant.token}/\n\n"
+                        f"Deadline: {assessment.deadline.strftime('%B %Y')}"
+                    ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[member.email],
                     fail_silently=False,
                 )
-        request.session.pop("new_assessment", None)
-        messages.success(request, f"Assessment for {team.name} launched!")
-        return redirect("dashboard_home")
+
+            request.session.pop("new_assessment", None)
+            messages.success(request, f"Assessment for {team.name} launched!")
+            return redirect("dashboard_home")
 
     return render(request, "assessments/confirm_launch.html", {
         "assessment": assessment,
