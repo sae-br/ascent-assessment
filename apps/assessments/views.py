@@ -12,31 +12,39 @@ from django.contrib.auth.decorators import login_required
 
 @login_required
 def new_assessment(request):
-    teams = Team.objects.all()
+    teams = Team.objects.filter(admin=request.user)
+    selected_team = None
 
     if request.method == "POST":
         team_id = request.POST.get("team")
-        deadline_str = request.POST.get("deadline")  # e.g. '2025-08-01'
+        deadline_str = request.POST.get("deadline")
+        new_team_name = request.POST.get("new_team_name")
 
-        if not team_id or not deadline_str:
+        if new_team_name:
+            # Create new team if name provided
+            selected_team = Team.objects.create(name=new_team_name, admin=request.user)
+            team_id = selected_team.id  # Treat new team as selected
+        elif team_id:
+            selected_team = Team.objects.filter(id=team_id, admin=request.user).first()
+
+        if not selected_team or not deadline_str:
             messages.error(request, "Please select a team and a deadline.")
         else:
             try:
-                # Validate date format
                 deadline = datetime.strptime(deadline_str, "%Y-%m-%d").date()
 
                 request.session['new_assessment'] = {
                     "team_id": team_id,
                     "deadline": deadline_str
                 }
-
                 return redirect("confirm_launch")
 
             except ValueError:
-                messages.error(request, "Invalid deadline format. Please use the date picker.")
+                messages.error(request, "Invalid deadline format.")
 
     return render(request, "assessments/new_assessment.html", {
-        "teams": teams
+        "teams": teams,
+        "selected_team": selected_team,
     })
 
 @login_required

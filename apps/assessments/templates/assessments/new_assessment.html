@@ -1,25 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Start New Assessment{% endblock %}
+{% block title %}Create New Assessment{% endblock %}
 
 {% block content %}
-<h2>Start a New Assessment</h2>
+<h2>Create New Assessment</h2>
 
 <form method="post">
     {% csrf_token %}
-    <label for="team">Select Team:</label>
-    <select name="team" id="team" required>
-        <option value="">-- Choose a Team --</option>
+
+    <h3>Assign a Target Date</h3>
+    <label for="deadline">Select the date by which all responses should be submitted:</label>
+    <br><br>
+    <input type="date" name="deadline" required>
+
+    <br><br>
+
+    <h3>Assign a Team</h3>
+    <p>Choose from existing teams:</p>
+    <select name="team">
+        <option value="">-- Select a team --</option>
         {% for team in teams %}
-            <option value="{{ team.id }}">{{ team.name }}</option>
+            <option value="{{ team.id }}" {% if selected_team and selected_team.id == team.id %}selected{% endif %}>{{ team.name }}</option>
         {% endfor %}
     </select>
 
-    <br><br>
-
-    <label for="deadline">Set Assessment Deadline:</label>
-    <input type="date" name="deadline" id="deadline" required>
+    <p>OR create a new team:</p>
+    <input type="text" name="new_team_name" placeholder="New team name">
 
     <br><br>
+
+    {% if selected_team %}
+        <hr>
+        <h3>Team Members</h3>
+        {% include "teams/_member_table.html" with team=selected_team %}
+    {% endif %}
 
     <button type="submit">Continue</button>
 </form>
