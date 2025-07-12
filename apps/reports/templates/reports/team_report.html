@@ -4,6 +4,23 @@
 {% block content %}
   <h2>{{ team.name }} – Assessment Report ({{ assessment.deadline|date:"F Y" }})</h2>
 
+  <h3>Summary of Peak Scores</h3>
+  <table style="width: 100%; text-align: center; margin-bottom: 2rem; border-collapse: collapse;">
+    <thead>
+      <tr>
+        {% for peak in peaks %}
+          <th style="padding: 10px; border-bottom: 1px solid #ccc;">{{ peak.name }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {% for peak in peaks %}
+          <td style="padding: 10px; font-weight: bold; font-size: 1.5em;">{{ peak.score }}%</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
   {% for peak in peaks %}
     <section style="margin-bottom: 2rem;">
       <h3>{{ peak.name }} — {{ peak.score }}%</h3>

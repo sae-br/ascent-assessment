@@ -7,6 +7,33 @@ This app is responsible for generating visualized summary reports based on respo
 	•	Displays percentage scores for each peak and each question within a peak.
 	•	Calculates these scores using all team member answers — not averages of individuals.
 
+## Models
+
+All range-based models use one of:
+- LOW
+- MID
+- HIGH
+
+These labels are defined as constants and shared across models to ensure consistency.
+
+### ResultsSummary
+
+Stores short insight text based on the combination of the highest and lowest scoring peaks.
+- Includes a summary_type to optionally support other summary categories later.
+- Only one entry per (high_peak, low_peak) combo.
+
+### PeakRange
+
+Describes a range for a peak’s score (e.g., LOW = 0–33%, MEDIUM = 34–66%, HIGH = 67–100%).
+
+### PeakInsight
+
+Text block offering a short interpretation of the team’s result for a given peak in a specific score range.
+
+### PeakAction
+
+Suggested leadership actions based on score range for a given peak.
+
 ## Views
 
 generate_report
@@ -37,21 +64,23 @@ Dependencies
 	•	apps.assessments: To retrieve peaks, questions, and answers
 	•	django.db.models: Used to aggregate data (Sum, Count)
 
-## Output
+## Report Summary Component
 
-The final report includes:
-	•	Team name
-	•	Assessment date
-	•	One section per Peak:
-    	•	Overall score for that Peak
-    	•	Each Question:
-            •	Text
-            •	Percentage score (across all team members)
+The `team_report.html` template includes a summary table showing each Peak's percentage score.
 
-Future Considerations
-	•	Add support for filtering by assessment deadline.
-	•	Style the output for print/export.
-	•	Add support for comparing scores over time (across multiple assessments).
+### Data Source:
+The `peaks` context variable passed into the template contains:
+- `name`: Peak name (e.g., "Collaborative Culture")
+- `score`: Average percentage across its questions
+- `questions`: A list of dicts with `text` and `score`
+
+### Updating for More Questions:
+The number of questions per peak doesn't affect the table; this component just shows the **aggregated score** per peak. To add more questions, update the database seed or admin panel — the backend view will aggregate them automatically.
+
+### Future Enhancements:
+- Add color-coded score ranges (e.g., red < 35%, yellow 35–65%, green > 65%)
+- Convert to a styled visual with CSS or use a component framework
+- Use this same block as the first page of a future PDF export
 
 ⸻
 
