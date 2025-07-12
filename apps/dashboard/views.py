@@ -6,20 +6,19 @@ from datetime import date
 
 @login_required
 def dashboard_home(request):
-    teams = Team.objects.filter(admin=request.user).prefetch_related("assessments", "members")
+    user_teams = Team.objects.filter(admin=request.user)
+    assessments_data = []
 
-    assessments = []
-    for team in teams:
-        team.assessments.filter(deadline__gte=date.today())
-        for assessment in team.assessments.all():
-            members = team.members.all()
-            assessments.append({
+    for team in user_teams:
+        assessments = team.assessments.filter(deadline__gte=date.today())
+        for assessment in assessments:
+            participants = assessment.participants.select_related('team_member')
+            assessments_data.append({
                 "team": team,
                 "assessment": assessment,
-                "members": members
+                "participants": participants,
             })
 
     return render(request, "dashboard/home.html", {
-        "teams": teams,
-        "assessments": assessments
+        "assessments_data": assessments_data
     })

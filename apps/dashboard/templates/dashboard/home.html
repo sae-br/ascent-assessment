@@ -1,22 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
+
 {% block content %}
 <h2>Welcome to the Team Assessment Dashboard</h2>
+<p>This is your team’s starting point.</p>
 <a href="{% url 'new_assessment' %}" class="button">➕ New Assessment</a>
 
-<h2>Your Teams</h2>
-<ul>
-  {% for team in teams %}
-    <li>{{ team.name }}</li>
-  {% empty %}
-    <li>You don’t have any teams yet.</li>
-  {% endfor %}
-</ul>
-
-<h2>Your Assessments</h2>
-{% for item in assessments %}
-  <div style="margin-bottom: 2em;">
-    <h3>{{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}</h3>
+{% if assessments %}
+  {% for assessment in assessments %}
+    <hr>
+    <h3>{{ assessment.team.name }} – {{ assessment.deadline|date:"F Y" }}</h3>
     <table>
       <thead>
         <tr>
@@ -26,12 +19,12 @@
         </tr>
       </thead>
       <tbody>
-        {% for member in item.members %}
+        {% for participant in assessment.participants.all %}
           <tr>
-            <td>{{ member.name }}</td>
-            <td>{{ member.email }}</td>
+            <td>{{ participant.team_member.name }}</td>
+            <td>{{ participant.team_member.email }}</td>
             <td>
-              {% if member.has_submitted %}
+              {% if participant.has_submitted %}
                 ✅
               {% else %}
                 ❌
@@ -41,8 +34,9 @@
         {% endfor %}
       </tbody>
     </table>
-  </div>
-{% empty %}
-  <p>You don’t have any assessments yet.</p>
-{% endfor %}
+  {% endfor %}
+{% else %}
+  <p>No current assessments found.</p>
+{% endif %}
+
 {% endblock %}
