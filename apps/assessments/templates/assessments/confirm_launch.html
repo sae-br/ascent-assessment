@@ -5,7 +5,7 @@
 <h2>Confirm Assessment Launch</h2>
 
 <p><strong>Team:</strong> {{ assessment.team.name }}</p>
-<p><strong>Deadline:</strong> {{ assessment.deadline|date:"F Y" }}</p>
+<p><strong>Target Date:</strong> {{ assessment.deadline|date:"F Y" }}</p>
 
 <h3>Team Members</h3>
 <ul>
@@ -14,7 +14,8 @@
     {% endfor %}
 </ul>
 
-<p>Each team member will receive an email with a unique link to complete their assessment.</p>
+<p>Each team member will receive an email with a unique link 
+    to complete their assessment.</p>
 
 <form method="post">
     {% csrf_token %}
