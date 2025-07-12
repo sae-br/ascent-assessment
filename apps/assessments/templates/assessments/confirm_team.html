@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Confirm Team{% endblock %}
+
+{% block content %}
+<h2>Confirm Team Members</h2>
+
+<p>You are launching an assessment for: <strong>{{ team.name }}</strong></p>
+
+<!-- Includes table + add/delete forms -->
+{% include "teams/_member_table.html" with team=team %}
+
+<hr>
+
+<!-- Final continue button -->
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" name="confirm_team_done">Continue to Review</button>
+</form>
+{% endblock %}

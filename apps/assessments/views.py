@@ -1,12 +1,13 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import TeamMember, Question, Answer, Assessment
-from django.contrib import messages
-from django.urls import reverse
-from apps.teams.models import Team
-from datetime import datetime
 from django.core.mail import send_mail
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
+from django.views.decorators.http import require_http_methods
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import TeamMember, Question, Answer, Assessment
+from apps.teams.models import Team
+from datetime import datetime
 
 # initializing and monitoring
 
@@ -37,7 +38,7 @@ def new_assessment(request):
                     "team_id": team_id,
                     "deadline": deadline_str
                 }
-                return redirect("confirm_launch")
+                return redirect("confirm_team")
 
             except ValueError:
                 messages.error(request, "Invalid deadline format.")
@@ -45,6 +46,56 @@ def new_assessment(request):
     return render(request, "assessments/new_assessment.html", {
         "teams": teams,
         "selected_team": selected_team,
+    })
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def confirm_team(request):
+    session_data = request.session.get("new_assessment")
+    if not session_data:
+        messages.error(request, "Assessment setup data missing.")
+        return redirect("new_assessment")
+
+    team = get_object_or_404(Team, id=session_data["team_id"], admin=request.user)
+
+    if request.method == "POST":
+        if "add_member" in request.POST:
+            name = request.POST.get("new_member_name")
+            email = request.POST.get("new_member_email")
+            if name and email:
+                TeamMember.objects.create(team=team, name=name, email=email)
+                messages.success(request, f"Added {name} to the team.")
+            else:
+                messages.error(request, "Name and email are required to add a new member.")
+
+        elif "edit_member" in request.POST:
+            member_id = request.POST.get("member_id")
+            name = request.POST.get("edit_member_name")
+            email = request.POST.get("edit_member_email")
+            if member_id and name and email:
+                member = get_object_or_404(TeamMember, id=member_id, team=team)
+                member.name = name
+                member.email = email
+                member.save()
+                messages.success(request, f"Updated member {name}.")
+            else:
+                messages.error(request, "All fields are required to edit a member.")
+
+        elif "delete_member" in request.POST:
+            member_id = request.POST.get("member_id")
+            if member_id:
+                member = get_object_or_404(TeamMember, id=member_id, team=team)
+                member.delete()
+                messages.success(request, "Team member deleted.")
+
+        elif "confirm_team_done" in request.POST:
+            return redirect("confirm_launch")
+
+        else:
+            messages.error(request, "Unknown action submitted.")
+
+    return render(request, "assessments/confirm_team.html", {
+        "team": team
     })
 
 @login_required
