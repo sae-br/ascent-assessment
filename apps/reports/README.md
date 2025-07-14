@@ -29,9 +29,9 @@ Stores short insight text based on the combination of the highest and lowest sco
 - Includes a summary_type to optionally support other summary categories later.
 - Only one entry per (high_peak, low_peak) combo.
 
-### PeakInsight
+### PeakInsights
 
-Text block offering a short interpretation of the team’s result for a given peak in a specific score range.
+Bullet points offering a short interpretation of the team’s result for a given peak in a specific score range.
 
 ### PeakActions
 

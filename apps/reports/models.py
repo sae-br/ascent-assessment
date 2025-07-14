@@ -33,18 +33,25 @@ class UniformRangeSummary(models.Model):
         return f"All {self.get_range_label_display()}"
 
 
-class PeakInsight(models.Model):
-    peak = models.CharField(max_length=2, choices=PEAK_CHOICES, unique=True)
+class PeakInsights(models.Model):
+    peak = models.CharField(max_length=2, choices=PEAK_CHOICES)
+    range_label = models.CharField(max_length=10, choices=RANGE_CHOICES)
     insight_text = models.TextField()
 
+    class Meta:
+        unique_together = ("peak", "range_label")
+
     def __str__(self):
-        return f"{self.get_peak_display()} Insight"
+        return f"{self.get_peak_display()} ({self.range_label}) Insight"
 
 
 class PeakActions(models.Model):
     peak = models.CharField(max_length=2, choices=PEAK_CHOICES)
     range_label = models.CharField(max_length=10, choices=RANGE_CHOICES)
     action_text = models.TextField()
+
+    class Meta:
+        unique_together = ("peak", "range_label")
 
     def __str__(self):
         return f"{self.get_peak_display()} – {self.range_label.capitalize()} Actions"
