@@ -7,6 +7,13 @@ This app is responsible for generating visualized summary reports based on respo
 	•	Displays percentage scores for each peak and each question within a peak.
 	•	Calculates these scores using all team member answers — not averages of individuals.
 
+## Utilities
+
+### Get Score Range Label
+
+Describes the range for a peak’s score (e.g., LOW = 0–33%, MEDIUM = 34–66%, HIGH = 67–100%).
+
+
 ## Models
 
 All range-based models use one of:
@@ -21,10 +28,6 @@ These labels are defined as constants and shared across models to ensure consist
 Stores short insight text based on the combination of the highest and lowest scoring peaks.
 - Includes a summary_type to optionally support other summary categories later.
 - Only one entry per (high_peak, low_peak) combo.
-
-### PeakRange
-
-Describes a range for a peak’s score (e.g., LOW = 0–33%, MEDIUM = 34–66%, HIGH = 67–100%).
 
 ### PeakInsight
 

@@ -33,15 +33,6 @@ class UniformRangeSummary(models.Model):
         return f"All {self.get_range_label_display()}"
 
 
-class PeakRange(models.Model):
-    peak = models.ForeignKey(Peak, on_delete=models.CASCADE)
-    low_threshold = models.PositiveIntegerField()
-    medium_threshold = models.PositiveIntegerField()
-
-    def __str__(self):
-        return f"{self.get_peak_display()} thresholds"
-
-
 class PeakInsight(models.Model):
     peak = models.CharField(max_length=2, choices=PEAK_CHOICES, unique=True)
     insight_text = models.TextField()
