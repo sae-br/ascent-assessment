@@ -27,12 +27,13 @@ I've organized the project using an `apps/` directory to keep it modular and sca
 ```
 assessmvp/
 ├── apps/
-│   ├── accounts/
-│   ├── teams/
-│   ├── assessments/
-│   ├── reports/
-│   ├── dashboard/
-│   └── payments/
+│   ├── accounts/     # users, etc
+│   ├── assessments/  # assessment categories, questions, start new, etc
+│   ├── common/       # some core functions ie markdown, etc
+│   ├── dashboard/    
+│   ├── payments/
+│   ├── reports/      # generate report, scoring, dynamic content, etc
+│   └── teams/        # manage teams and team members specific to user
 ├── assessment_tool/  # project settings, root urls
 ├── static/           # project-wide CSS/JS/images
 ├── templates/        # shared templates (base.html, 404.html, etc)
