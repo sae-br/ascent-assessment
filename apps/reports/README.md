@@ -33,7 +33,7 @@ Stores short insight text based on the combination of the highest and lowest sco
 
 Text block offering a short interpretation of the team’s result for a given peak in a specific score range.
 
-### PeakAction
+### PeakActions
 
 Suggested leadership actions based on score range for a given peak.
 

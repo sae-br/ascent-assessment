@@ -1,11 +1,16 @@
 from django.db import models
-from apps.assessments.models import Peak
 
 PEAK_CHOICES = [
     ('CC', 'Collaborative Culture'),
     ('LA', 'Leadership Accountability'),
     ('SM', 'Strategic Momentum'),
     ('TM', 'Talent Magnetism'),
+]
+
+RANGE_CHOICES = [
+    ("LOW", "Low"),
+    ("MEDIUM", "Medium"),
+    ("HIGH", "High"),
 ]
 
 class ResultsSummary(models.Model):
@@ -21,11 +26,6 @@ class ResultsSummary(models.Model):
 
 
 class UniformRangeSummary(models.Model):
-    RANGE_CHOICES = [
-        ("LOW", "Low"),
-        ("MEDIUM", "Medium"),
-        ("HIGH", "High"),
-    ]
     range_label = models.CharField(max_length=10, choices=RANGE_CHOICES, unique=True)
     summary_text = models.TextField()
 
@@ -41,9 +41,10 @@ class PeakInsight(models.Model):
         return f"{self.get_peak_display()} Insight"
 
 
-class PeakAction(models.Model):
-    peak = models.CharField(max_length=2, choices=PEAK_CHOICES, unique=True)
+class PeakActions(models.Model):
+    peak = models.CharField(max_length=2, choices=PEAK_CHOICES)
+    range_label = models.CharField(max_length=10, choices=RANGE_CHOICES)
     action_text = models.TextField()
 
     def __str__(self):
-        return f"{self.get_peak_display()} Action"
+        return f"{self.get_peak_display()} – {self.range_label.capitalize()} Actions"

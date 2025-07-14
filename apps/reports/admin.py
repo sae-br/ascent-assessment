@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ResultsSummary, UniformRangeSummary, PeakInsight, PeakAction
+from .models import ResultsSummary, UniformRangeSummary, PeakInsight, PeakActions
 
 @admin.register(ResultsSummary)
 class ResultsSummaryAdmin(admin.ModelAdmin):
@@ -16,7 +16,7 @@ class PeakInsightAdmin(admin.ModelAdmin):
     list_display = ("peak",)
     list_filter = ("peak",)
 
-@admin.register(PeakAction)
-class PeakActionAdmin(admin.ModelAdmin):
+@admin.register(PeakActions)
+class PeakActionsAdmin(admin.ModelAdmin):
     list_display = ("peak",)
     list_filter = ("peak",)
