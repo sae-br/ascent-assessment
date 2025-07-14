@@ -25,4 +25,5 @@ urlpatterns = [
     path('reports/', include('apps.reports.urls')),
     path('payments/', include('apps.payments.urls')),
     path('', include('apps.dashboard.urls')),  
+    path('markdownx/', include('markdownx.urls')),
 ]

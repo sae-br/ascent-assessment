@@ -1,4 +1,5 @@
 from django.db import models
+from markdownx.models import MarkdownxField
 
 PEAK_CHOICES = [
     ('CC', 'Collaborative Culture'),
@@ -36,7 +37,7 @@ class UniformRangeSummary(models.Model):
 class PeakInsights(models.Model):
     peak = models.CharField(max_length=2, choices=PEAK_CHOICES)
     range_label = models.CharField(max_length=10, choices=RANGE_CHOICES)
-    insight_text = models.TextField()
+    insight_text = MarkdownxField()
 
     class Meta:
         unique_together = ("peak", "range_label")
@@ -48,7 +49,7 @@ class PeakInsights(models.Model):
 class PeakActions(models.Model):
     peak = models.CharField(max_length=2, choices=PEAK_CHOICES)
     range_label = models.CharField(max_length=10, choices=RANGE_CHOICES)
-    action_text = models.TextField()
+    action_text = MarkdownxField
 
     class Meta:
         unique_together = ("peak", "range_label")

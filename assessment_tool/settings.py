@@ -60,7 +60,9 @@ INSTALLED_APPS = [
     'apps.assessments.apps.AssessmentsConfig',
     'apps.reports.apps.ReportsConfig',
     'apps.dashboard.apps.DashboardConfig',
+    'apps.common',
     # third party
+    'markdownx',
 ]
 
 MIDDLEWARE = [
@@ -75,6 +77,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'assessment_tool.urls'
 
+# Enable markdown support
+# (no config needed unless customizing filters)
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
