@@ -3,7 +3,15 @@ from apps.teams.models import TeamMember, Team
 from django.utils import timezone
 import uuid
 
+PEAK_CHOICES = [
+    ('CC', 'Collaborative Culture'),
+    ('LA', 'Leadership Accountability'),
+    ('SM', 'Strategic Momentum'),
+    ('TM', 'Talent Magnetism'),
+]
+
 class Peak(models.Model):
+    code = models.CharField(max_length=2, unique=True, choices=PEAK_CHOICES)
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):

@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from apps.teams.models import Team
 from apps.assessments.models import Peak, Question, Answer, Assessment, AssessmentParticipant
+from apps.reports.models import ResultsSummary, UniformRangeSummary, PeakInsights, PeakActions
+from apps.reports.utils import get_score_range_label
 from django.db.models import Sum, Count
 from django.contrib.auth.decorators import login_required
 
@@ -16,6 +18,7 @@ def review_team_report(request, assessment_id):
     total_participants = participants.count()
 
     peaks_data = []
+    peak_scores = {}
 
     for peak in Peak.objects.prefetch_related('questions'):
         peak_total_score = 0
@@ -39,17 +42,52 @@ def review_team_report(request, assessment_id):
             peak_max_score += max_score
 
         peak_percentage = (peak_total_score / peak_max_score * 100) if peak_max_score else 0
+        peak_score_rounded = round(peak_percentage)
+        peak_scores[peak.name] = peak_score_rounded
+
+        # Determine range label using utility
+        range_label = get_score_range_label(peak_percentage)
+
+        # Fetch insight and action for this peak/range
+        insight = PeakInsights.objects.filter(peak=peak.code, range_label=range_label).first()
+        action = PeakActions.objects.filter(peak=peak.code, range_label=range_label).first()
 
         peaks_data.append({
             'name': peak.name,
+            'code': peak.code, 
             'score': round(peak_percentage),
-            'questions': question_data
+            'questions': question_data,
+            'range': range_label,
+            'insight': insight.insight_text if insight else None,
+            'action': action.action_text if action else None,
         })
+
+    # Determine results summary (high/low peak or uniform range)
+    scores_sorted = sorted(peak_scores.items(), key=lambda x: x[1], reverse=True)
+    top_peaks = [name for name, score in scores_sorted if score == scores_sorted[0][1]]
+    bottom_peaks = [name for name, score in scores_sorted if score == scores_sorted[-1][1]]
+
+    priority_order = ['CC', 'TM', 'LA', 'SM']
+
+    def prioritize(peaks, reverse=False):
+        ordered = sorted(peaks, key=lambda x: priority_order.index(x["code"]))
+        return ordered[0] if ordered else None
+
+    high_peak = prioritize(top_peaks, reverse=True)
+    low_peak = prioritize(bottom_peaks)
+
+    summary = ResultsSummary.objects.filter(high_peak=high_peak, low_peak=low_peak).first()
+
+    if not summary:
+        range_labels = set([get_score_range_label(score) for score in peak_scores.values()])
+        if len(range_labels) == 1:
+            summary = UniformRangeSummary.objects.filter(range_label=range_labels.pop()).first()
 
     return render(request, 'reports/team_report.html', {
         'team': assessment.team,
         'assessment': assessment,
-        'peaks': peaks_data
+        'peaks': peaks_data,
+        'summary_text': summary.summary_text if summary else "",
     })
 
 @login_required

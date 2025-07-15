@@ -1,34 +1,52 @@
 {% extends "base.html" %}
+{% load markdown_extras %}
 {% block title %}{{ team.name }} – Team Report{% endblock %}
 
 {% block content %}
-  <h2>{{ team.name }} – Assessment Report ({{ assessment.deadline|date:"F Y" }})</h2>
+  <h2>{{ team.name }} – Team Assessment Report</h2>
 
-  <h3>Summary of Peak Scores</h3>
-  <table style="width: 100%; text-align: center; margin-bottom: 2rem; border-collapse: collapse;">
-    <thead>
-      <tr>
-        {% for peak in peaks %}
-          <th style="padding: 10px; border-bottom: 1px solid #ccc;">{{ peak.name }}</th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        {% for peak in peaks %}
-          <td style="padding: 10px; font-weight: bold; font-size: 1.5em;">{{ peak.score }}%</td>
-        {% endfor %}
-      </tr>
-    </tbody>
-  </table>
+  <section>
+    <h3>Results at a Glance</h3>
+    <table>
+      <thead>
+        <tr>
+          {% for peak in peaks %}
+            <th>{{ peak.name }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {% for peak in peaks %}
+            <td>{{ peak.score }}%</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h3>Results Summary</h3>
+    {% if summary_text %}
+      <p>{{ summary_text|markdown }}</p>
+    {% else %}
+      <p>No summary available for these results.</p>
+    {% endif %}
+  </section>
+
   {% for peak in peaks %}
     <section style="margin-bottom: 2rem;">
-      <h3>{{ peak.name }} — {{ peak.score }}%</h3>
-      <ul>
-        {% for question in peak.questions %}
-          <li>{{ question.text }} — {{ question.score }}%</li>
-        {% endfor %}
-      </ul>
+      <h3>{{ peak.name }} — {{ peak.score }}% ({{ peak.range_label }})</h3>
+
+      {% if peak.insight %}
+        <h4>Insight</h4>
+        <div>{{ peak.insight|markdown }}</div>
+      {% endif %}
+
+      {% if peak.action %}
+        <h4>Action</h4>
+        <div>{{ peak.action|markdown }}</div>
+      {% endif %}
     </section>
   {% endfor %}
 
