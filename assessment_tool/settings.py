@@ -33,13 +33,10 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost").split(",")
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "/static/"
+STATICFILES_DIRS = [ BASE_DIR / "static" ]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# STATICFILES_DIRS is for development
-# STATIC_ROOT is used when running collectstatic in production
-if DEBUG:
-    STATICFILES_DIRS = [ BASE_DIR / "static" ]
-else:
-    STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'unsafe-dev-key')
 

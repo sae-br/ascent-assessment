@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% load markdown_extras %}
+{% load static %}
+
 {% block title %}{{ team.name }} – Team Report{% endblock %}
 
 {% block content %}
@@ -23,6 +25,8 @@
         </tr>
       </tbody>
     </table>
+
+    <canvas id="resultsChart" width="400" height="300"></canvas>
   </section>
 
   <section>
@@ -49,5 +53,15 @@
       {% endif %}
     </section>
   {% endfor %}
+{% endblock %}
 
+{% block extra_scripts %}
+  <!-- Chart.js from root/static -->
+  <script src="{% static 'js/chart.min.js' %}"></script>
+
+  <!-- JSON data block -->
+  {{ chart_data|json_script:"chart-data" }}
+
+  <!-- Custom chart logic -->
+  <script src="{% static 'reports/scripts/resultsChart.js' %}"></script>
 {% endblock %}

@@ -89,11 +89,18 @@ def review_team_report(request, assessment_id):
         if len(range_labels) == 1:
             summary = UniformRangeSummary.objects.filter(range_label=range_labels.pop()).first()
 
+    # Generate Results chart
+    chart_data = {
+        'labels': [peak['code'] for peak in peaks_data],
+        'data': [peak['score'] for peak in peaks_data],
+    }
+
     return render(request, 'reports/team_report.html', {
         'team': assessment.team,
         'assessment': assessment,
         'peaks': peaks_data,
         'summary_text': summary.summary_text if summary else "",
+        'chart_data': chart_data, 
     })
 
 @login_required
