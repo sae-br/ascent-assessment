@@ -59,13 +59,17 @@
     </header>
 
     <main class="auth-container">
-      <div class="auth-box">
+        <div class="auth-box">
+        <h2 style="margin-top: 0;">
+            {% block page_heading %}{% endblock %}
+        </h2>
+
         {% block content %}{% endblock %}
-      </div>
+        </div>
     </main>
 
     <footer>
-      &copy; {{ now.year }} Team Assessment Tool
+        &copy; {% now "Y" %} Team Assessment Tool
     </footer>
   </div>
 
