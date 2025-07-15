@@ -1,8 +1,11 @@
+import markdown as md
 from django import template
-import markdown
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
 @register.filter
-def markdownify(text):
-    return markdown.markdown(text, extensions=["fenced_code", "tables"])
+def markdown(text):
+    if not text:
+        return ""
+    return mark_safe(md.markdown(text))

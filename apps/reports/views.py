@@ -69,9 +69,15 @@ def review_team_report(request, assessment_id):
 
     priority_order = ['CC', 'TM', 'LA', 'SM']
 
-    def prioritize(peaks, reverse=False):
-        ordered = sorted(peaks, key=lambda x: priority_order.index(x["code"]))
-        return ordered[0] if ordered else None
+    # Create a name-to-code mapping
+    name_to_code = {peak['name']: peak['code'] for peak in peaks_data}
+
+    def prioritize(peaks_names, reverse=False):
+        ordered = sorted(
+            peaks_names,
+            key=lambda name: priority_order.index(name_to_code.get(name, 'ZZ'))  # ZZ to push unknowns to end
+        )
+        return name_to_code.get(ordered[0]) if ordered else None
 
     high_peak = prioritize(top_peaks, reverse=True)
     low_peak = prioritize(bottom_peaks)
