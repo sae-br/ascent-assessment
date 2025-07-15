@@ -57,7 +57,7 @@ def review_team_report(request, assessment_id):
             'code': peak.code, 
             'score': round(peak_percentage),
             'questions': question_data,
-            'range': range_label,
+            'range_label': range_label,
             'insight': insight.insight_text if insight else None,
             'action': action.action_text if action else None,
         })

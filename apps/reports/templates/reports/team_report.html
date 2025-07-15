@@ -39,12 +39,12 @@
       <h3>{{ peak.name }} — {{ peak.score }}% ({{ peak.range_label }})</h3>
 
       {% if peak.insight %}
-        <h4>Insight</h4>
+        <h4>Insights to Examine</h4>
         <div>{{ peak.insight|markdown }}</div>
       {% endif %}
 
       {% if peak.action %}
-        <h4>Action</h4>
+        <h4>Suggested Actions</h4>
         <div>{{ peak.action|markdown }}</div>
       {% endif %}
     </section>
