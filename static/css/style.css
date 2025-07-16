@@ -7,9 +7,9 @@ body {
 }
 
 .content-container {
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 2rem 1.5rem;
 }
 
 header, footer {
@@ -35,6 +35,127 @@ main {
 h1, h2 {
     color: #222;
 }
+
+
+.main-header {
+  background-color: #eaeaea;
+  padding: 1rem 2rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.main-content {
+  flex-grow: 1;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.header-left,
+.header-center,
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Left: App Name */
+.site-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: #222;
+}
+
+/* Logo */
+.logo {
+  margin-right: 0.5rem;
+  font-size: 1.5rem;
+}
+
+/* Center: Nav links */
+.header-center a {
+  text-decoration: none;
+  color: #007acc;
+  font-weight: 500;
+}
+
+.header-center a:hover {
+  text-decoration: underline;
+}
+
+/* Right: Greeting + logout */
+.header-right a {
+  text-decoration: none;
+  color: #007acc;
+  font-weight: 500;
+}
+
+.header-right a:hover {
+  text-decoration: underline;
+}
+
+.user-greeting {
+  font-weight: bold;
+  color: #333;
+}
+
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-header {
+  background-color: #eaeaea;
+  padding: 1rem 2rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.site-title {
+  font-size: 1.5rem;
+  text-decoration: none;
+  color: #222;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.main-nav a {
+  text-decoration: none;
+  color: #007acc;
+  font-weight: 500;
+}
+
+.main-nav a:hover {
+  text-decoration: underline;
+}
+
+.user-greeting {
+  margin-right: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+
 
 .auth-box p {
   margin-bottom: 1rem;
@@ -77,4 +198,13 @@ h1, h2 {
 
 .auth-box button:hover {
   background: #4338ca;
+}
+
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #eaeaea;
+  font-size: 0.9rem;
+  margin-top: auto;
 }

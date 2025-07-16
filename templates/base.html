@@ -1,37 +1,56 @@
 {% load static %}
 {% load tz %}
-{% if user.is_authenticated %}
-    <p>Welcome, {{ user.username }} | <a href="{% url 'logout' %}">Logout</a></p>
-{% else %}
-    <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'signup' %}">Sign up</a></p>
-{% endif %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Team Assessment Tool{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Team Assessment Tool{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
 </head>
 <body>
-    <header>
-        <h1><a href="/">Team Assessment Tool</a></h1>
-        <nav>
-            <a href="{% url 'dashboard_home' %}">Dashboard</a> |
-            <a href="{% url 'team_list' %}">Teams</a> |
-            <a href="{% url 'generate_report' %}">Get Report</a>
-        </nav>
-        <hr>
-    </header>
+  <div class="page-wrapper">
+    <header class="main-header">
+        <div class="header-inner">
+            
+            <!-- Left: Logo + App Name -->
+            <div class="header-left">
+            <a href="{% url 'dashboard_home' %}" class="site-title">
+                <span class="logo">🚀</span> Team Assessment Tool
+            </a>
+            </div>
 
-    <main class="content-container">
-        {% block content %}{% endblock %}
+            <!-- Center: Nav Links -->
+            <nav class="header-center main-nav">
+            <a href="{% url 'dashboard_home' %}">Dashboard</a>
+            <a href="{% url 'team_list' %}">Teams</a>
+            <a href="{% url 'generate_report' %}">Get Report</a>
+            </nav>
+
+            <!-- Right: User info -->
+            <div class="header-right">
+            {% if user.is_authenticated %}
+                <span class="user-greeting">Hi, {{ user.username }}</span>
+                <a href="{% url 'accounts:logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}">Login</a>
+                <a href="{% url 'accounts:signup' %}">Sign Up</a>
+            {% endif %}
+            </div>
+
+        </div>
+        </header>
+
+    <main class="main-content content-container">
+      {% block content %}{% endblock %}
     </main>
 
     <footer>
-        <hr>
-        <p>© {{ now|date:'Y' }} Questadon</p>
+      &copy; {% now "Y" %} Team Assessment Tool
     </footer>
-{% block extra_scripts %}{% endblock %}
+  </div>
+
+  {% block extra_scripts %}{% endblock %}
 </body>
 </html>

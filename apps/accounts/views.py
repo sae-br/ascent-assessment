@@ -45,5 +45,4 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.info(request, "You’ve been logged out.")
-    return redirect("login")
+    return render(request, "accounts/logout.html")
