@@ -1,0 +1,25 @@
+{% load static %}
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <img src="{% static 'images/logo.svg' %}" alt="Team AssessMVP Logo" class="sidebar-logo" />
+  </div>
+
+  <nav class="sidebar-nav">
+    <p class="nav-section">MENU</p>
+    <ul>
+      <li><a href="{% url 'dashboard_home' %}" class="nav-link active">Dashboard</a></li>
+      <li><a href="{% url 'new_assessment' %}" class="nav-link">Assessments</a></li>
+      <li><a href="{% url 'team_list' %}" class="nav-link">Teams</a></li>
+      <li><a href="{% url 'generate_report' %}" class="nav-link">Reports</a></li>
+    </ul>
+
+    <p class="nav-section">OTHER</p>
+    <ul>
+      <li><a href="#" class="nav-link">Settings</a></li>
+      <li><a href="#" class="nav-link">Payment</a></li>
+      <li><a href="#" class="nav-link">Account</a></li>
+      <li><a href="#" class="nav-link">Help</a></li>
+    </ul>
+  </nav>
+</aside>

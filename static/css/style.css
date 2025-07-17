@@ -41,77 +41,6 @@ body {
   margin: 0;
 }
 
-/* Flex container */
-.page-wrapper {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  grid-template-rows: auto 1fr auto;
-  grid-template-areas:
-    "header header"
-    "sidebar main"
-    "footer footer";
-  min-height: 100vh;
-}
-
-/* Full-width topbar */
-header {
-  grid-area: header;
-  background: var(--bg-accent);
-  padding: 1rem 2rem;
-  border-bottom: 1px solid var(--primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-
-.navbar {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.navbar a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.navbar a:hover {
-  text-decoration: underline;
-}
-
-/* Fixed side nav */
-.sidebar {
-  grid-area: sidebar;
-  background: var(--bg-accent);
-  padding: 2rem 1rem;
-}
-
-.sidebar nav ul {
-  list-style: none;
-  padding-left: 0;
-}
-
-.sidebar nav li {
-  margin-bottom: 1rem;
-}
-
-.sidebar nav a {
-  text-decoration: none;
-  color: var(--text);
-  font-weight: 500;
-}
-
-.sidebar nav a:hover {
-  color: var(--primary-hover);
-}
-
-/* Scrollable main content area */
-.main {
-  grid-area: main;
-  padding: 2rem;
-  max-width: 100%;
-}
 
 /* Format headers */
 h1 {
@@ -182,6 +111,174 @@ h3 {
 .text-center {
   text-align: center;
 }
+
+
+/* Flex container */
+.page-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.public-page .page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+
+/* Fixed side nav */
+.sidebar {
+  width: 240px;
+  background-color: var(--bg-accent);
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  height: 24px;
+  width: auto;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-app-name {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.nav-section {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-nav ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+
+/* Nav links */
+.nav-link {
+  display: block;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: var(--text);
+  border-radius: 6px;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background-color: var(--primary);
+  color: var(--accent-text);
+}
+
+
+/* Scrollable main content area */
+.main {
+  grid-area: main;
+  padding: 2rem;
+  max-width: 100%;
+}
+
+.main-area {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg);
+}
+
+.main-content {
+  padding: 2rem;
+}
+
+
+/* Dashboard header area */
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 3px solid var(--bg-accent);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  background-color: var(--text-light);
+  color: var(--bg);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  font-weight: bold;
+}
+
+.logout-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.logout-link:hover {
+  color: var(--primary-hover)
+}
+
+
+/* Public page */
+.public-header {
+  text-align: center;
+  padding: 1rem 1rem 1rem;
+}
+
+.public-header-logo {
+  height: 30px;
+  width: auto;
+  margin-top: 0.5rem;
+}
+
+.public-container {
+  display: flex;
+  justify-content: center;
+  background-color: var(--bg-accent);
+  padding: 3rem 1rem;
+  min-height: 100vh;
+}
+
+.public-box {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--standard-border-radius);
+  max-width: 700px;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.public-footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--bg-accent);
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+/* Utility */
+.unstyled-link {
+  text-decoration: none;
+  color: inherit;
+}
+
 
 /* Format links & buttons */
 a,
@@ -400,8 +497,7 @@ input[type="file"] {
 }
 
 /* Simplified containers for views with no sidebar */
-.auth-container,
-.public-container {
+.auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
