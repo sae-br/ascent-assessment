@@ -1,210 +1,530 @@
+/* Global variables. */
+:root {
+  /* Set sans-serif & mono fonts */
+  --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir,
+    "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
+    "Helvetica Neue", sans-serif;
+  --mono-font: Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  --standard-border-radius: 8px;
+  --border-width: 1px;
+
+  /* Default (light) theme */
+  --bg: white;
+  --bg-accent: AliceBlue;
+  --text: #393446;
+  --text-light: #6C7581;
+  --border: #9FA8B8;
+  --primary: #0093ED;
+  --primary-hover: #0b81cb;
+  --accent-text: var(--bg);
+  --alert: #CC0101;
+  --disabled: #efefef;
+}
+
+/* Reset box-sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Set the font globally */
+  font-family: var(--sans-font);
+  scroll-behavior: smooth;
+}
+
+/* Simple body */
 body {
-    font-family: sans-serif;
-    margin: 0;
-    padding: 0 2rem;
-    background-color: #f7f7f7;
-    color: #333;
+  color: var(--text);
+  background-color: var(--bg);
+  font-size: 1.15rem;
+  line-height: 1.5;
+  margin: 0;
 }
 
-.content-container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-header, footer {
-    background-color: #eaeaea;
-    padding: 1rem 0;
-    text-align: center;
-}
-
-nav a {
-    margin: 0 1rem;
-    text-decoration: none;
-    color: #007acc;
-}
-
-nav a:hover {
-    text-decoration: underline;
-}
-
-main {
-    padding: 2rem 0;
-}
-
-h1, h2 {
-    color: #222;
-}
-
-
-.main-header {
-  background-color: #eaeaea;
-  padding: 1rem 2rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.main-content {
-  flex-grow: 1;
-}
-
-.header-inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.header-left,
-.header-center,
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-/* Left: App Name */
-.site-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-decoration: none;
-  color: #222;
-}
-
-/* Logo */
-.logo {
-  margin-right: 0.5rem;
-  font-size: 1.5rem;
-}
-
-/* Center: Nav links */
-.header-center a {
-  text-decoration: none;
-  color: #007acc;
-  font-weight: 500;
-}
-
-.header-center a:hover {
-  text-decoration: underline;
-}
-
-/* Right: Greeting + logout */
-.header-right a {
-  text-decoration: none;
-  color: #007acc;
-  font-weight: 500;
-}
-
-.header-right a:hover {
-  text-decoration: underline;
-}
-
-.user-greeting {
-  font-weight: bold;
-  color: #333;
-}
-
-
+/* Flex container */
 .page-wrapper {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
   min-height: 100vh;
 }
 
-.main-header {
-  background-color: #eaeaea;
+/* Full-width topbar */
+header {
+  grid-area: header;
+  background: var(--bg-accent);
   padding: 1rem 2rem;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-.header-inner {
+  border-bottom: 1px solid var(--primary);
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  max-width: 960px;
-  margin: 0 auto;
-}
-
-.site-title {
-  font-size: 1.5rem;
-  text-decoration: none;
-  color: #222;
-}
-
-.main-nav {
-  display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-top: 0.5rem;
 }
 
-.main-nav a {
+
+.navbar {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.navbar a {
+  color: var(--primary);
   text-decoration: none;
-  color: #007acc;
   font-weight: 500;
 }
 
-.main-nav a:hover {
+.navbar a:hover {
   text-decoration: underline;
 }
 
-.user-greeting {
-  margin-right: 1rem;
-  font-weight: bold;
-  color: #333;
+/* Fixed side nav */
+.sidebar {
+  grid-area: sidebar;
+  background: var(--bg-accent);
+  padding: 2rem 1rem;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.sidebar nav li {
+  margin-bottom: 1rem;
+}
+
+.sidebar nav a {
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.sidebar nav a:hover {
+  color: var(--primary-hover);
+}
+
+/* Scrollable main content area */
+.main {
+  grid-area: main;
+  padding: 2rem;
+  max-width: 100%;
+}
+
+/* Format headers */
+h1 {
+  font-size: 2.6rem;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-top: 3rem;
+}
+
+h3 {
+  font-size: 1.6rem;
+  margin-top: 3rem;
+}
+
+h4 {
+  font-size: 1.44rem;
+}
+
+h5 {
+  font-size: 1.15rem;
+}
+
+h6 {
+  font-size: 0.96rem;
+}
+
+p {
+  margin: 1rem 0;
+}
+
+form p {
+  margin: 0 0 1rem 0;
+}
+
+/* Prevent long strings from overflowing container */
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/* Fix line height when title wraps */
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}
+
+/* Reduce header size on mobile */
+@media only screen and (max-width: 720px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2.1rem;
+  }
+
+  h3 {
+    font-size: 1.75rem;
+  }
+
+  h4 {
+    font-size: 1.25rem;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Format links & buttons */
+a,
+a:visited {
+  color: var(--primary);
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+button,
+.button,
+a.button, /* extra specificity to override a */
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+  border: var(--border-width) solid var(--primary);
+  background-color: var(--primary);
+  color: var(--bg);
+  padding: 1.5rem 0.9rem;
+  text-decoration: none;
+  line-height: normal;
+}
+
+.button[aria-disabled="true"], 
+input:disabled,
+textarea:disabled,
+select:disabled,
+button[disabled] {
+  cursor: not-allowed;
+  background-color: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--text-light);
+}
+
+input[type="range"] {
+  padding: 0;
+}
+
+/* Set the cursor to '?' on an abbreviation and style the abbreviation to show that there is more information underneath */
+abbr[title] {
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+}
+
+button:enabled:hover,
+.button:not([aria-disabled="true"]):hover,
+input[type="submit"]:enabled:hover,
+input[type="reset"]:enabled:hover,
+input[type="button"]:enabled:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+  cursor: pointer;
+}
+
+.button:focus-visible,
+button:focus-visible:where(:enabled),
+input:enabled:focus-visible:where(
+  [type="submit"],
+  [type="reset"],
+  [type="button"]
+) {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
 }
 
 
-.auth-box p {
+fieldset, dialog {
+  border: var(--border-width) solid var(--border);
+  padding: 1rem;
+  border-radius: var(--standard-border-radius);
   margin-bottom: 1rem;
+}
+
+
+/* Format tables */
+table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+td,
+th {
+  border: var(--border-width) solid var(--border);
+  text-align: start;
+  padding: 0.5rem;
+}
+
+th {
+  background-color: var(--bg-accent);
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  /* Set every other cell slightly darker. Improves readability. */
+  background-color: var(--bg-accent);
+}
+
+table caption {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+/* Format forms */
+textarea,
+select,
+input,
+button,
+.button {
+  font-size: inherit;
+  font-family: inherit;
+  padding: 0.5em;
+  margin-bottom: 0.5rem;
+  border-radius: var(--standard-border-radius);
+  box-shadow: none;
+  max-width: 100%;
+  display: inline-block;
+}
+textarea,
+select,
+input {
+  color: var(--text);
+  background-color: var(--bg);
+  border: var(--border-width) solid var(--border);
+}
+label {
+  display: block;
+}
+textarea:not([cols]) {
+  width: 100%;
+}
+
+/* Add arrow to drop-down */
+select:not([multiple]) {
+  background-image: linear-gradient(45deg, transparent 49%, var(--text) 51%),
+    linear-gradient(135deg, var(--text) 51%, transparent 49%);
+  background-position: calc(100% - 15px), calc(100% - 10px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-inline-end: 25px;
+}
+*[dir="rtl"] select:not([multiple]) {
+  background-position: 10px, 15px;
+}
+
+/* checkbox and radio button style */
+input[type="checkbox"],
+input[type="radio"] {
+  vertical-align: middle;
+  position: relative;
+  width: min-content;
+}
+
+input[type="checkbox"] + label,
+input[type="radio"] + label {
+  display: inline-block;
+}
+
+input[type="radio"] {
+  border-radius: 100%;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: var(--primary);
+}
+
+input[type="checkbox"]:checked::after {
+  /* Creates a rectangle with colored right and bottom borders which is rotated to look like a check mark */
+  content: " ";
+  width: 0.2em;
+  height: 0.4em;
+  border-radius: 0;
+  position: absolute;
+  top: 0.04em;
+  left: 0.18em;
+  background-color: transparent;
+  border-right: solid var(--bg) 0.08em;
+  border-bottom: solid var(--bg) 0.08em;
+  font-size: 1.8em;
+  transform: rotate(45deg);
+}
+input[type="radio"]:checked::after {
+  /* creates a colored circle for the checked radio button  */
+  content: " ";
+  width: 0.3em;
+  height: 0.3em;
+  border-radius: 100%;
+  position: absolute;
+  top: 0.125em;
+  background-color: var(--bg);
+  left: 0.125em;
+  font-size: 1.8em;
+}
+
+/* Makes input fields wider on smaller screens */
+@media only screen and (max-width: 720px) {
+  textarea,
+  select,
+  input {
+    width: 100%;
+  }
+}
+
+/* Set a height for color input */
+input[type="color"] {
+  height: 2.5rem;
+  padding:  0.2rem;
+}
+
+/* Do not show border around file selector button */
+input[type="file"] {
+  border: 0;
+}
+
+/* Simplified containers for views with no sidebar */
+.auth-container,
+.public-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 4rem 1rem;
+  background-color: var(--bg-accent);
+}
+
+.auth-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.auth-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.auth-box input,
+.auth-box button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.auth-box input,
+.auth-box button,
+.auth-box select,
+.auth-box textarea {
+  margin-bottom: 0; /* Override inherited global margin */
 }
 
 .auth-box label {
   display: block;
-  font-weight: bold;
   margin-bottom: 0.25rem;
-}
-
-.auth-box input {
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 1rem;
-  box-sizing: border-box;
 }
 
 .auth-box .helptext,
 .auth-box ul {
   font-size: 0.875rem;
-  color: #555;
-  margin: 0.25rem 0 1rem;
-  padding-left: 1.2rem;
+  color: var(--text-light);
+  line-height: 1.5rem;
 }
 
 .auth-box ul {
   list-style-type: disc;
+  margin: 0.25rem 0 1rem;
+  padding-left: 1.2rem;
 }
 
-.auth-box button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  background: #4f46e5;
-  color: white;
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.auth-logo img {
+  max-width: 240px;
+  height: auto;
+}
+
+/* Misc body elements */
+hr {
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  height: var(--border-width);
+  background: var(--border);
+  margin: 1rem auto;
 }
 
-.auth-box button:hover {
-  background: #4338ca;
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--standard-border-radius);
 }
 
+blockquote {
+  margin-inline-start: 2rem;
+  margin-inline-end: 0;
+  margin-block: 2rem;
+  padding: 0.4rem 0.8rem;
+  border-inline-start: 0.35rem solid var(--primary);
+  color: var(--text-light);
+  font-style: italic;
+}
 
-footer {
-  text-align: center;
-  padding: 1rem;
-  background-color: #eaeaea;
+cite {
   font-size: 0.9rem;
-  margin-top: auto;
+  color: var(--text-light);
+  font-style: normal;
 }
+
+dt {
+    color: var(--text-light);
+}
+
+/* Superscript & Subscript */
+/* Prevent scripts from affecting line-height. */
+sup, sub {
+  vertical-align: baseline;
+  position: relative;
+}
+
+sup {
+  top: -0.4em;
+}
+
+sub { 
+  top: 0.3em; 
+}
+
+/* Classes for notices */
+.notice {
+  background: var(--bg-accent);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--standard-border-radius);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+

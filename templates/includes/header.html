@@ -1,0 +1,36 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Team Assessment Tool{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <div class="page-wrapper">
+    
+    <header class="main-header">
+      <div class="header-inner">
+        <div class="header-left">
+          <span class="logo">🚀</span>
+          <a href="/" class="site-title">Team Assessment Tool</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-container">
+      <div class="auth-box">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <footer>
+      &copy; {% now "Y" %} Team Assessment Tool
+    </footer>
+  </div>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

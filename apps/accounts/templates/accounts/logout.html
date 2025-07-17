@@ -1,8 +1,9 @@
-{% extends "base_public.html" %}
+{% extends "base_auth.html" %}
 
 {% block title %}Logged Out{% endblock %}
 
 {% block content %}
   <h2>You've been logged out.</h2>
-  <p><a href="{% url 'accounts:login' %}">Log in again</a> or <a href="{% url 'accounts:signup' %}">create a new account</a>.</p>
+  <p class="text-center"><a href="{% url 'accounts:login' %}">Log in again</a> 
+    or <a href="{% url 'accounts:signup' %}">create a new account</a>.</p>
 {% endblock %}
