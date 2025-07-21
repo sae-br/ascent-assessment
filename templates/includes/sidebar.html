@@ -2,8 +2,10 @@
 
 <aside class="sidebar">
   <div class="sidebar-header">
-    <img src="{% static 'images/logo.svg' %}" alt="Team AssessMVP Logo" class="sidebar-logo" />
-  </div>
+    <a href="{% url 'dashboard_home' %}">
+      <img src="{% static 'images/logo.svg' %}" alt="Team AssessMVP Logo" class="sidebar-logo" />
+      </a>
+    </div>
 
   <nav class="sidebar-nav">
     <p class="nav-section">MENU</p>
@@ -16,10 +18,7 @@
 
     <p class="nav-section">OTHER</p>
     <ul>
-      <li><a href="#" class="nav-link">Settings</a></li>
-      <li><a href="#" class="nav-link">Payment</a></li>
       <li><a href="#" class="nav-link">Account</a></li>
-      <li><a href="#" class="nav-link">Help</a></li>
     </ul>
   </nav>
 </aside>

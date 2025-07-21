@@ -14,7 +14,7 @@
   --text: #393446;
   --text-light: #6C7581;
   --border: #9FA8B8;
-  --primary: #0093ED;
+  --primary: rgba(0, 147, 237); /* #0093ED in hex */
   --primary-hover: #0b81cb;
   --accent-text: var(--bg);
   --alert: #CC0101;
@@ -174,8 +174,8 @@ h3 {
 
 .nav-link.active,
 .nav-link:hover {
-  background-color: var(--primary);
-  color: var(--accent-text);
+  background-color: #D3EAFD;
+  color: var(--primary-hover);
 }
 
 
@@ -299,7 +299,7 @@ input[type="button"] {
   border: var(--border-width) solid var(--primary);
   background-color: var(--primary);
   color: var(--bg);
-  padding: 1.5rem 0.9rem;
+  padding: .8em 2rem;
   text-decoration: none;
   line-height: normal;
 }
@@ -319,7 +319,8 @@ input[type="range"] {
   padding: 0;
 }
 
-/* Set the cursor to '?' on an abbreviation and style the abbreviation to show that there is more information underneath */
+/* Set the cursor to '?' on an abbreviation and style the 
+abbreviation to show that there is more information underneath */
 abbr[title] {
   cursor: help;
   text-decoration-line: underline;
@@ -392,7 +393,7 @@ button,
 .button {
   font-size: inherit;
   font-family: inherit;
-  padding: 0.5em;
+  padding: 0.5em 1em;
   margin-bottom: 0.5rem;
   border-radius: var(--standard-border-radius);
   box-shadow: none;
