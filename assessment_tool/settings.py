@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.assessments.apps.AssessmentsConfig',
     'apps.reports.apps.ReportsConfig',
     'apps.dashboard.apps.DashboardConfig',
+    'apps.pdfexport'
     'apps.common',
     # third party
     'markdownx',
