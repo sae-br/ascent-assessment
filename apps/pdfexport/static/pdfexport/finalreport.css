@@ -1,11 +1,40 @@
 /* Global styles */
 body {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 12pt;
   color: #222;
   margin: 0;
   padding: 0;
   line-height: 1.5;
+}
+
+h1, h2, h3, h4 {
+    color: #003366;
+    margin-top: 0;
+}
+
+h1 {
+    font-size: 28pt;
+    text-align: center;
+    margin-top: 200px;
+}
+
+h2 {
+    font-size: 20pt;
+    margin-bottom: 10px;
+}
+
+h3.insight-heading {
+    font-size: 14pt;
+    color: #2a6ebb;
+    margin-top: 20px;
+}
+
+h4 {
+    font-size: 10pt;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 2px;
 }
 
 /* Title Page */
@@ -25,31 +54,71 @@ body {
   margin-bottom: 1rem;
 }
 
-.title-page .report-date {
-  font-size: 18px;
-  color: #666;
+.report-date {
+    text-align: center;
+    font-size: 14pt;
+    margin-top: 10px;
 }
 
 /* Peak Section */
 .peak-section {
-  padding: 2rem 1.5rem;
-  page-break-inside: avoid;
+    padding: 40px;
+    background: #fff;
 }
 
-.peak-section h2 {
-  font-size: 24px;
-  margin-bottom: 1rem;
-  color: #004080;
+.score-summary {
+    display: grid;
+    grid-template-columns: 100px 100px 1fr;
+    gap: 30px;
+    align-items: center;
+    background-color: #e6f2fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.score-summary h4 {
+    margin: 0;
+    font-weight: bold;
+}
+
+.score-summary p {
+    font-size: 14pt;
+    margin: 0;
 }
 
 .peak-chart {
-  width: 100%;
-  max-width: 600px;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+}
+
+.insights {
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+.insights p {
+    margin: 0 0 10px 0;
+}
+
+.insights ul {
+    margin: 10px 0 20px 20px;
+    padding-left: 20px;
+}
+
+.insights li {
+    margin-bottom: 5px;
+}
+
+.ascent-image-focus {
+    text-align: right;
+    margin-top: -100px;
+}
+
+.ascent-image-focus img {
+    width: 100px;
+    height: auto;
 }
 
 /* Page Breaks */

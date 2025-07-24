@@ -2,6 +2,7 @@ from django.template.loader import get_template
 from django.conf import settings
 from django.http import HttpResponse
 from weasyprint import HTML, CSS
+from apps.reports.models import PeakActions, PeakInsights, ResultsSummary
 from apps.pdfexport.utils.context import get_report_context_data
 from apps.pdfexport.utils.charts import (
     get_peak_rating_distribution,
@@ -30,10 +31,33 @@ def generate_final_report_pdf(request, assessment_id):
         # Generate chart and save to output_path
         generate_peak_distribution_chart(peak.name, percentages, output_path)
 
+        # Score is the average of the answers in this peak (already calculated)
+        score = sum((i * p) for i, p in enumerate(percentages)) / 100  # weighted average
+        percentage_score = round(score * 100 / 3)  # Converts 0–3 scale to 0–100
+
+        # Determine range label based on thresholds
+        if percentage_score < 34:
+            range_label = "LOW"
+        elif percentage_score < 67:
+            range_label = "MEDIUM"
+        else:
+            range_label = "HIGH"
+
+        # Fetch insights for this peak and range
+        try:
+            insight_entry = PeakInsights.objects.get(peak=peak.code, range_label=range_label)
+            insights = insight_entry.insight_text
+        except PeakInsights.DoesNotExist:
+            insights = "No insights available."
+
         peak_sections.append({
             "name": peak.name,
             "code": peak.code,
             "chart_path": output_path,
+            "range_label": range_label,
+            "score": percentage_score,
+            "insights": insights,
+            "ascent_image": os.path.join(settings.BASE_DIR, "apps/pdfexport/static/images", f"ascent-{peak.code}-focus.png")
         })
         temp_chart_paths.append(output_path)
 
