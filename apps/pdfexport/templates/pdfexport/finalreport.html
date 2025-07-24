@@ -1,0 +1,30 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ team_name }} – Assessment Report</title>
+    <link rel="stylesheet" href="{% static 'pdfexport/finalreport.css' %}">
+</head>
+<body>
+
+    <!-- Title Page -->
+    <section class="title-page">
+        <h1>AssessMVP Report</h1>
+        <p class="report-date">{{ team_name }} – {{ deadline|date:"F Y" }}</p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Loop through each peak section -->
+    {% for peak in peak_sections %}
+        <section class="peak-section">
+            <h2>{{ peak.name }}</h2>
+            <img src="file://{{ peak.chart_path }}" alt="{{ peak.name }} Rating Spread" class="peak-chart" />
+        </section>
+        <div class="page-break"></div>
+    {% endfor %}
+
+</body>
+</html>

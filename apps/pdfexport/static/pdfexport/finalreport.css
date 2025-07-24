@@ -1,0 +1,58 @@
+/* Global styles */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #222;
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+/* Title Page */
+.title-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 2rem;
+  background-color: #f5f7fa;
+}
+
+.title-page h1 {
+  font-size: 36px;
+  margin-bottom: 1rem;
+}
+
+.title-page .report-date {
+  font-size: 18px;
+  color: #666;
+}
+
+/* Peak Section */
+.peak-section {
+  padding: 2rem 1.5rem;
+  page-break-inside: avoid;
+}
+
+.peak-section h2 {
+  font-size: 24px;
+  margin-bottom: 1rem;
+  color: #004080;
+}
+
+.peak-chart {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Page Breaks */
+.page-break {
+  page-break-after: always;
+}

@@ -4,6 +4,10 @@
 
 {% block title %}{{ team.name }} – Team Report{% endblock %}
 
+<a href="{% url 'generate_final_report_pdf' assessment.id %}" class="btn btn-primary" target="_blank">
+    Download Full PDF Report
+</a>
+
 {% block content %}
   <h2>{{ team.name }} – Team Assessment Report</h2>
 

@@ -28,6 +28,7 @@ urlpatterns = [
     path('payments/', include('apps.payments.urls')),
     path('', include('apps.dashboard.urls')),  
     path('markdownx/', include('markdownx.urls')),
+    path("pdfexport/", include("apps.pdfexport.urls")),
 ]
 
 if settings.DEBUG:
