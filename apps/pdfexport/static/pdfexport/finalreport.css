@@ -1,33 +1,48 @@
-/* Global styles */
-body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 12pt;
-  color: #222;
-  margin: 0;
-  padding: 0;
-  line-height: 1.5;
+/* Global variables. */
+:root {
+  --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir,
+    "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
+    "Helvetica Neue", sans-serif;
+  --standard-border-radius: 8px;
+  --border-width: 1px;
+  --bg: white;
+  --bg-accent: AliceBlue;
+  --text: #393446;
+  --text-light: #6C7581;
+  --border: #9FA8B8;
+  --primary: rgba(0, 147, 237); /* #0093ED in hex */
+  --primary-hover: #0b81cb;
+  --accent-text: var(--bg);
 }
 
-h1, h2, h3, h4 {
-    color: #003366;
-    margin-top: 0;
+/* Global styles */
+body {
+  font-family: var(--sans-font);
+  font-size: 11pt;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5 {
+  color: var(--primary);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  text-align: left;
 }
 
 h1 {
-    font-size: 28pt;
-    text-align: center;
-    margin-top: 200px;
+    font-size: 22pt;
 }
 
 h2 {
-    font-size: 20pt;
-    margin-bottom: 10px;
+    font-size: 16pt;
 }
 
-h3.insight-heading {
-    font-size: 14pt;
-    color: #2a6ebb;
-    margin-top: 20px;
+h3 {
+    font-size: 12pt;
 }
 
 h4 {
@@ -36,6 +51,16 @@ h4 {
     color: #666;
     margin-bottom: 2px;
 }
+
+ul {
+    margin: 10px 0 20px 20px;
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 5px;
+}
+
 
 /* Title Page */
 .title-page {
@@ -46,12 +71,20 @@ h4 {
   height: 100vh;
   text-align: center;
   padding: 2rem;
-  background-color: #f5f7fa;
+  border-radius: var(--standard-border-radius);
+  background-color: var(--bg-accent);
 }
 
 .title-page h1 {
   font-size: 36px;
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.title-logo img {
+  width: 200px;
+  height: auto;
+  margin-bottom: 200px;
 }
 
 .report-date {
@@ -62,7 +95,7 @@ h4 {
 
 /* Peak Section */
 .peak-section {
-    padding: 40px;
+    padding: 1rem;
     background: #fff;
 }
 
@@ -71,57 +104,96 @@ h4 {
     grid-template-columns: 100px 100px 1fr;
     gap: 30px;
     align-items: center;
-    background-color: #e6f2fa;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
+    background-color: var(--bg-accent);
+    border-radius: var(--standard-border-radius);
+    padding: 20px 40px;
+    margin-bottom: 40px;
 }
 
 .score-summary h4 {
     margin: 0;
     font-weight: bold;
+    text-align: center;
 }
 
 .score-summary p {
     font-size: 14pt;
     margin: 0;
+    text-align: center;
 }
 
 .peak-chart {
     width: 100%;
-    max-width: 400px;
-    height: auto;
+    height: 100%;
+}
+
+.insight-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
 }
 
 .insights {
-    margin-top: 10px;
+    flex: 1 1 65%;
+    margin-top: 0;
     margin-bottom: 30px;
-}
-
-.insights p {
-    margin: 0 0 10px 0;
-}
-
-.insights ul {
-    margin: 10px 0 20px 20px;
-    padding-left: 20px;
-}
-
-.insights li {
-    margin-bottom: 5px;
+    padding-right: 0;
 }
 
 .ascent-image-focus {
+    flex: 1 1 30%;
     text-align: right;
-    margin-top: -100px;
+    align-self: flex-start;
 }
 
 .ascent-image-focus img {
-    width: 100px;
+    width: 200px;
     height: auto;
+    vertical-align: top;
+    margin: 0;
+    padding: 0;
 }
 
 /* Page Breaks */
 .page-break {
   page-break-after: always;
+}
+
+/* Footer */
+.report-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    font-size: 9pt;
+    color: var(--text-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+    margin: 0;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 500px;
+}
+
+.footer-logo {
+    height: 15px;
+    width: auto;
+}
+
+.footer-right {
+    text-align: right;
+}
+
+.title-page + .report-footer {
+    display: none;
 }

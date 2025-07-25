@@ -20,6 +20,7 @@ def generate_final_report_pdf(request, assessment_id):
     peak_sections = []
     temp_chart_paths = []
 
+    # Create a section for each peak
     for peak in peaks:
         # Get rating distribution data
         percentages = get_peak_rating_distribution(assessment, peak.code)

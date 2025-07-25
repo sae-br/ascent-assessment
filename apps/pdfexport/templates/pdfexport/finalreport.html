@@ -1,4 +1,5 @@
 {% load static %}
+{% load markdown_extras %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +11,27 @@
 
     <!-- Title Page -->
     <section class="title-page">
+        <div>
+            <img src="{% static 'images/logo.svg' %}" alt="Team AssessMVP Logo" class="title-logo"/>
+        </div>
         <h1>AssessMVP Report</h1>
         <p class="report-date">{{ team_name }} – {{ deadline|date:"F Y" }}</p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Introduction -->
+    <section class="intro-section">
+        <h1>Introduction</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam imperdiet cursus ligula, ac congue nisl gravida id.</p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Team Score Summary -->
+    <section class="team-score">
+        <h1>Your Team Score</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer blandit, augue eget porttitor tincidunt, velit arcu interdum urna, eu posuere nisl lorem non nisi.</p>
     </section>
 
     <div class="page-break"></div>
@@ -19,7 +39,7 @@
     <!-- Peak Sections -->
     {% for peak in peak_sections %}
         <section class="peak-section">
-            <h2>{{ peak.name }}</h2>
+            <h1>{{ peak.name }}</h1>
 
             <!-- Score Summary -->
             <div class="score-summary">
@@ -37,19 +57,53 @@
             </div>
 
             <!-- Insights Section -->
-            <h3 class="insight-heading">Insights to Examine</h3>
-            <div class="insights">
-                {{ peak.insights|markdown }}
+            <h2>Insights to Examine</h2>
+            <div class="insight-layout">
+                <div class="insights">
+                    {{ peak.insights|markdown }}
+                </div>
+                <div class="ascent-image-focus">
+                    <img src="file://{{ peak.ascent_image }}" alt="Ascent Model – {{ peak.name }}">
+                </div>
             </div>
 
-            <!-- Ascent Model Image -->
-            <div class="ascent-image-focus">
-                <img src="file://{{ peak.ascent_image }}" alt="Ascent Model – {{ peak.name }}">
-            </div>
+            <!-- Questions and Responses -->
+            <h2>Questions and Responses</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin aliquet augue ut nisl interdum, vitae commodo turpis fermentum.</p>
+
+            <!-- Suggested Actions -->
+            <h2>Suggested Actions</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi in mauris nec diam suscipit tincidunt.</p>
+
         </section>
 
         <div class="page-break"></div>
     {% endfor %}
+
+    <!-- Action Ideas -->
+    <section class="action-ideas">
+        <h1>Action Ideas</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse at nisl vel nisi laoreet bibendum.</p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Team Commitments -->
+    <section class="team-commitments">
+        <h1>Team Commitments</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis viverra, metus id volutpat tincidunt, sapien felis convallis lorem, eget tincidunt magna leo nec est.</p>
+    </section>
+
+    <!-- PDF Footer (Hidden on Title Page) -->
+    <footer class="report-footer">
+        <div class="footer-left">
+            <img src="{% static 'images/logo.png' %}" alt="AssessMVP Logo" class="footer-logo">
+            <span>{{ team_name }} – {{ deadline|date:"F Y" }}</span>
+        </div>
+        <div class="footer-right">
+            Page <span class="pageNumber"></span>
+        </div>
+    </footer>
 
 </body>
 </html>

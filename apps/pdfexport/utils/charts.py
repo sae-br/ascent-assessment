@@ -22,10 +22,8 @@ def generate_peak_distribution_chart(peak_name, percentages, output_path):
         y=percentages,
         fill='tozeroy',
         mode='lines+text',
-        line=dict(color='steelblue'),
+        line=dict(color='rgba(0, 147, 237, 1)'),
         hoverinfo='x+y',
-        text=[f"{p}%" for p in percentages],  # Adds % text under each point
-        textposition="bottom center",         # You could use "top center" if you prefer
         name=peak_name
     ))
 
@@ -33,10 +31,10 @@ def generate_peak_distribution_chart(peak_name, percentages, output_path):
         title=None,
         xaxis=dict(title='', showgrid=False, tickangle=0, tickfont=dict(size=14)),
         yaxis=dict(title='', showgrid=False, visible=False),
-        plot_bgcolor='white',
-        paper_bgcolor='lightblue',
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
         showlegend=False,
-        margin=dict(l=10, r=10, t=10, b=10)
+        margin=dict(l=0, r=0, t=0, b=0)
     )
 
     fig.write_image(output_path, width=500, height=300)
@@ -72,7 +70,7 @@ def get_peak_rating_distribution(assessment, peak_code):
 
 # Creates temp pngs for graphs/charts
 @contextmanager
-def temporary_plotly_images(figures, format="png"):
+def temporary_plotly_images(figures, format="svg"):
     """
     Saves multiple Plotly figures as temporary image files.
     Yields a list of file paths. Cleans up all files after use.
