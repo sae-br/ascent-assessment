@@ -50,7 +50,11 @@ def generate_final_report_pdf(request, assessment_id):
             insights = insight_entry.insight_text
         except PeakInsights.DoesNotExist:
             insights = "No insights available."
+        
+        # Fetch suggested actions for this peak and range
+        actions = PeakActions.objects.filter(peak=peak.code, range_label=range_label).first()
 
+        # Gather the dynamic elements
         peak_sections.append({
             "name": peak.name,
             "code": peak.code,
@@ -58,6 +62,7 @@ def generate_final_report_pdf(request, assessment_id):
             "range_label": range_label,
             "score": percentage_score,
             "insights": insights,
+            "actions": actions.action_text if actions else "No actions available.",
             "ascent_image": os.path.join(settings.BASE_DIR, "apps/pdfexport/static/images", f"ascent-{peak.code}-focus.png")
         })
         temp_chart_paths.append(output_path)

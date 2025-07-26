@@ -73,7 +73,16 @@
 
             <!-- Suggested Actions -->
             <h2>Suggested Actions</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi in mauris nec diam suscipit tincidunt.</p>
+            <div class="suggested-actions">
+                {{ peak.actions|markdown }}
+            </div>
+
+            <!-- Action Prompt Box -->
+            <div class="action-prompt-box">
+                <p>
+                    Turn to page 28 and individually write down one or two action items you think your team should consider regarding <strong>{{ peak.name }}</strong>.
+                </p>
+            </div>
 
         </section>
 

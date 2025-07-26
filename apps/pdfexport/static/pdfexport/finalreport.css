@@ -155,6 +155,16 @@ li {
     padding: 0;
 }
 
+
+.action-prompt-box {
+    background-color: var(--bg-accent);
+    border-left: 4px solid var(--primary);
+    padding: 1rem;
+    margin-top: 1.5rem;
+    font-size: 10.5pt;
+    color: var(--text-light);
+}
+
 /* Page Breaks */
 .page-break {
   page-break-after: always;
