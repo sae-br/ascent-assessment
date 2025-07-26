@@ -22,16 +22,91 @@
 
     <!-- Introduction -->
     <section class="intro-section">
-        <h1>Introduction</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam imperdiet cursus ligula, ac congue nisl gravida id.</p>
+    <h1>Introduction</h1>
+    <p>There are few things more important for an organization than its health. The greatest change a leadership team can make for their organization is to work to get healthy on their team, as the trickledown of both conscious and subconscious influence sets the bar for what is possible at every level. Through the OrgHealth Ascent Assessment, your team will become conscious of the specific insights that are critical to your company’s health. It will be up to you whether or not you take action.</p>
+    <p>In this report, you’ll uncover things about your leadership team and thereby your organization that are invisible to other methods of measurement. We will focus on providing:</p>
+    <ul>
+        <li><strong>Priority areas:</strong> We’ll bring to the forefront the most pressing issues within your leadership team that threaten the stability of your organization.</li>
+        <li><strong>Discussion points:</strong> We’ll guide you towards the contentious, possibly uncomfortable, but critically necessary conversations that need to take place within your team—which is where the real engagement needs to happen.</li>
+        <li><strong>Action steps:</strong> We’ll give recommendations for what to do with this information based on over 25 years of working with teams like yours.</li>
+    </ul>
+    <p>We are cheering for you as you take up the challenge of leading with greater excellence.</p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Review of the Model -->
+    <div class="page-break"></div>
+    <section class="model-overview-section">
+    <h1>Review of the OrgHealth Ascent Model</h1>
+
+    <div class="model-layout">
+        <div class="model-image">
+        <img src="{% static 'images/Ascent-Organizational-Health-labels.png' %}" alt="OrgHealth Ascent Model">
+        </div>
+        <div class="model-description">
+        <p>The OrgHealth Ascent Model provides simple but powerful language your entire leadership team can rally around, evaluate yourselves against, and use to ensure your company’s future success.</p>
+        <p>Organizational health can be broken down into four main elements—four “peaks” to summit in order to truly have a healthy organization.</p>
+        </div>
+    </div>
+
+    <div class="model-peaks">
+        <div class="model-peak">
+        <img src="{% static 'images/collaborative-culture.png' %}" alt="Collaborative Culture Icon">
+        <div>
+            <strong>Collaborative Culture</strong>
+            <p>Collaborative Culture measures the trust built, if values are being lived out, and whether or not the vital information is flowing both vertically and horizontally throughout the company.</p>
+        </div>
+        </div>
+
+        <div class="model-peak">
+        <img src="{% static 'images/leadership-accountability.png' %}" alt="Leadership Accountability Icon">
+        <div>
+            <strong>Leadership Accountability</strong>
+            <p>This area is about leaders taking responsibility for impact their behaviour has on the rest of the company, ensuring there is clarity from the top down.</p>
+        </div>
+        </div>
+
+        <div class="model-peak">
+        <img src="{% static 'images/strategic-momentum.png' %}" alt="Strategic Momentum Icon">
+        <div>
+            <strong>Strategic Momentum</strong>
+            <p>A healthy organization develops momentum by setting and reaching its goals together, without becoming stuck or rigid in their way of doing things.</p>
+        </div>
+        </div>
+
+        <div class="model-peak">
+        <img src="{% static 'images/talent-magnetism.png' %}" alt="Talent Magnetism Icon">
+        <div>
+            <strong>Talent Magnetism</strong>
+            <p>Establishing processes internally to ensure that the company hires those who embody company values will be key for long-term success.</p>
+        </div>
+        </div>
+    </div>
     </section>
 
     <div class="page-break"></div>
 
     <!-- Team Score Summary -->
     <section class="team-score">
-        <h1>Your Team Score</h1>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer blandit, augue eget porttitor tincidunt, velit arcu interdum urna, eu posuere nisl lorem non nisi.</p>
+        <h1>Our Team’s Results</h1>
+        <div class="score-grid">
+        {% for peak in peak_score_summary %}
+            <div class="score-item">
+            <div class="score-label">{{ peak.range }}</div>
+            <div class="score-title">{{ peak.name }}</div>
+            <div class="score-bar-container">
+                <div class="score-bar" style="width: {{ peak.score }}%;"></div>
+            </div>
+            <div class="score-percent">{{ peak.score }}%</div>
+            </div>
+        {% endfor %}
+        </div>
+
+        <h2>Results at a Glance</h2>
+        <p class="summary-text">
+        {{ summary_text|linebreaks }}
+        </p>
     </section>
 
     <div class="page-break"></div>
@@ -69,7 +144,19 @@
 
             <!-- Questions and Responses -->
             <h2>Questions and Responses</h2>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin aliquet augue ut nisl interdum, vitae commodo turpis fermentum.</p>
+            {% for question in peak.questions %}
+            <div class="question-block">
+                <div class="question-row"> 
+                <div class="question-text">
+                    <strong>{{ forloop.counter }}. {{ question.text }}</strong>
+                    <p><span class="label">Health Percentage:</span> <strong>{{ question.health_percentage }}%</strong></p>
+                </div>
+                <div class="question-chart">
+                    <img src="file://{{ question.chart_path }}" alt="Chart for Question {{ forloop.counter }}">
+                </div>
+                </div>
+            </div>
+            {% endfor %}
 
             <!-- Suggested Actions -->
             <h2>Suggested Actions</h2>

@@ -67,6 +67,24 @@ def get_peak_rating_distribution(assessment, peak_code):
     # Calculate percentages in the correct order
     return [round((counter.get(i, 0) / total) * 100) for i in range(4)]
 
+# Bar chart for each question - generate chart
+def generate_question_bar_chart(question_text, rating_counts, output_path):
+    labels = ["Consistently\nUntrue", "Somewhat\nUntrue", "Somewhat\nTrue", "Consistently\nTrue"]
+
+    fig = go.Figure(data=[
+        go.Bar(x=labels, y=rating_counts, text=rating_counts, textposition="outside", marker_color="#0093ED")
+    ])
+
+    fig.update_layout(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=0, b=10),  # t=0 instead of 10
+        height=180,
+        width=320,
+        showlegend=False
+    )
+
+    fig.write_image(output_path, width=320, height=180, format="svg")
 
 # Creates temp pngs for graphs/charts
 @contextmanager

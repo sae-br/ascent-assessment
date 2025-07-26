@@ -93,6 +93,96 @@ li {
     margin-top: 10px;
 }
 
+
+/* Model Review Section */
+.model-overview-section {
+  padding: 2rem 0;
+}
+
+.model-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.model-image img {
+  width: 250px;
+  height: auto;
+}
+
+.model-description {
+  flex: 1;
+  font-size: 10.5pt;
+}
+
+.model-peaks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  font-size: 10.5pt;
+}
+
+.model-peak {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.model-peak img {
+  width: 30px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+/* Team Results Section */
+
+.score-grid {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+  gap: 20px;
+}
+
+.score-item {
+  flex: 1 1 20%;
+  text-align: center;
+}
+
+.score-label {
+  font-weight: bold;
+  font-size: 9pt;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+
+.score-title {
+  font-size: 10.5pt;
+  margin-bottom: 6px;
+}
+
+.score-bar-container {
+  background: #e0e0e0;
+  border-radius: 4px;
+  height: 8px;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.score-bar {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--primary);
+}
+
+.score-percent {
+  font-size: 12pt;
+  color: var(--primary);
+  font-weight: bold;
+}
+
 /* Peak Section */
 .peak-section {
     padding: 1rem;
@@ -127,6 +217,7 @@ li {
     height: 100%;
 }
 
+/* Insights */
 .insight-layout {
     display: flex;
     justify-content: space-between;
@@ -155,7 +246,43 @@ li {
     padding: 0;
 }
 
+/* Questions and Responses */
+.question-block {
+    margin-top: 2rem;
+}
 
+.question-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.question-text {
+    flex: 1 1 60%;
+    font-size: 10.5pt;
+}
+
+.question-chart {
+    flex: 1 1 35%;
+    text-align: right;
+    max-width: 320px;
+}
+
+.question-chart img {
+    max-width: 100%;
+    height: auto;
+}
+
+.label {
+    text-transform: uppercase;
+    font-size: 9pt;
+    color: #555;
+    letter-spacing: 0.5px;
+}
+
+/* Suggested Actions */
 .action-prompt-box {
     background-color: var(--bg-accent);
     border-left: 4px solid var(--primary);
