@@ -86,6 +86,7 @@ h1, h2, h3, h4, h5 {
 
 h1 {
     font-size: 22pt;
+    margin-bottom: 2rem;
 }
 
 h2 {
@@ -115,32 +116,65 @@ li {
 
 
 /* Title Page */
-.title-page {
+.title-page {  
+  font-family: var(--sans-font);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.title-top {
+  flex: 1 1 auto;
+  background-color: var(--bg-accent);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 100%;
-  text-align: center;
-  padding: 3rem;
-  background-color: var(--bg-accent);
-  font-family: var(--sans-font);
+  align-items: center;
+  padding: 60px 20px 40px;
 }
 
-.title-logo img {
-  width: 160px;
-  height: auto;
-  margin-bottom: 60px;
-  padding-top: 200px;
+.title-model img {
+  width: 200px;
+  margin-top: 100px;
+  margin-bottom: 40px;
 }
 
-.title-page h1 {
-  font-size: 30pt;
-  margin-bottom: 10px;
+.report-title {
+  font-size: 28pt;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 140px;
+}
+
+.team-name {
+  font-size: 16pt;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--text);
 }
 
 .report-date {
-  font-size: 14pt;
-  margin-top: 1rem;
+  font-size: 12pt;
+  color: var(--text-light);
+}
+
+.title-bottom {
+  flex-shrink: 0;
+  padding-top: 60px;
+  background-color: var(--bg);
+}
+
+.title-logo img {
+  width: 180px;
+  margin-bottom: 20px;
+}
+
+.title-company-info {
+  font-size: 10pt;
   color: var(--text-light);
 }
 
@@ -342,6 +376,43 @@ li {
     margin-top: 1.5rem;
     font-size: 10.5pt;
     color: var(--text-light);
+}
+
+/* Action Ideas Section */
+.action-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 40px;
+  font-family: var(--sans-font);
+}
+
+.action-table th,
+.action-table td {
+  border: 1px solid var(--border);
+  padding: 10px;
+  vertical-align: top;
+}
+
+.action-table thead th {
+  background-color: var(--bg-accent);
+  font-size: 9pt;
+  text-transform: uppercase;
+  color: var(--text-light);
+  font-weight: normal;
+}
+
+.action-table td:first-child {
+  height: 80px; /* Big writing area */
+}
+
+.action-table td:nth-child(2),
+.action-table td:nth-child(3) {
+  width: 120px;
+}
+
+.action-table td {
+  height: 80px;
+  font-size: 10pt;
 }
 
 /* Page Breaks */
