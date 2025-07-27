@@ -7,16 +7,17 @@
     <title>{{ team_name }} – Assessment Report</title>
     <link rel="stylesheet" href="{% static 'pdfexport/finalreport.css' %}">
 </head>
-<body>
+
+<body style="string-set: team_meta '{{ team_name }} – {{ deadline|date:"F Y" }}';">
 
     <!-- Title Page -->
-    <section class="title-page">
+    <div class="title-page" style="page: cover;">
         <div>
             <img src="{% static 'images/logo.svg' %}" alt="Team AssessMVP Logo" class="title-logo"/>
         </div>
         <h1>AssessMVP Report</h1>
         <p class="report-date">{{ team_name }} – {{ deadline|date:"F Y" }}</p>
-    </section>
+    </div>
 
     <div class="page-break"></div>
 
@@ -36,7 +37,6 @@
     <div class="page-break"></div>
 
     <!-- Review of the Model -->
-    <div class="page-break"></div>
     <section class="model-overview-section">
     <h1>Review of the OrgHealth Ascent Model</h1>
 
@@ -189,17 +189,6 @@
         <h1>Team Commitments</h1>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis viverra, metus id volutpat tincidunt, sapien felis convallis lorem, eget tincidunt magna leo nec est.</p>
     </section>
-
-    <!-- PDF Footer (Hidden on Title Page) -->
-    <footer class="report-footer">
-        <div class="footer-left">
-            <img src="{% static 'images/logo.png' %}" alt="AssessMVP Logo" class="footer-logo">
-            <span>{{ team_name }} – {{ deadline|date:"F Y" }}</span>
-        </div>
-        <div class="footer-right">
-            Page <span class="pageNumber"></span>
-        </div>
-    </footer>
 
 </body>
 </html>
