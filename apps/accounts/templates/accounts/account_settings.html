@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Account Settings | Ascent Assessment{% endblock %}
+{% block content %}
+
+<h1>Account Settings</h1>
+
+<h2>Update Username or Email</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ update_form.as_p }}
+  <button type="submit" name="update_account">Save Changes</button>
+</form>
+
+<h2>Change Password</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ password_form.as_p }}
+  <button type="submit" name="change_password">Change Password</button>
+</form>
+
+<h2>Delete Account</h2>
+<form method="post" action="{% url 'accounts:delete_account' %}">
+  {% csrf_token %}
+  <button type="submit" onclick="return confirm('Are you sure you want to delete your account and all its related teams and reports? This cannot be undone.')">Delete My Account</button>
+</form>
+
+{% endblock %}
