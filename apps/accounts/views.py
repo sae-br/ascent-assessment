@@ -4,13 +4,14 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
+from .forms import CustomUserCreationForm
 
 
 def signup_view(request):
     if request.user.is_authenticated:
         return redirect("dashboard_home")
     elif request.method == "POST":
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)  
         if form.is_valid():
             user = form.save()
             login(request, user)
@@ -24,7 +25,7 @@ def signup_view(request):
             )
             return redirect("dashboard_home")
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, "accounts/signup.html", {"form": form})
 
 

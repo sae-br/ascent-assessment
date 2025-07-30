@@ -10,6 +10,9 @@
     <button type="submit">Log In</button>
   </form>
   <p class="text-center">
+    <a href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+  </p>
+  <p class="text-center">
     Don’t have an account?
     <a href="{% url 'accounts:signup' %}">Sign up here</a>.
   </p>

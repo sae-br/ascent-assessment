@@ -1,7 +1,11 @@
 <header class="dashboard-header">
-  <div class="user-info">
-    <div class="user-avatar">A</div>
-    <span>Client Admin</span>
-  </div>
-  <a href="{% url 'accounts:logout' %}" class="logout-link">Log Out</a>
+  {% if request.user.is_authenticated %}
+    <div class="user-info">
+      <div class="user-avatar">
+        {{ request.user.username|slice:":1"|upper }}
+      </div>
+      <span>{{ request.user.username }}</span>
+    </div>
+    <a href="{% url 'accounts:logout' %}" class="logout-link">Log Out</a>
+  {% endif %}
 </header>
