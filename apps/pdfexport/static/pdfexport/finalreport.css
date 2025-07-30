@@ -12,6 +12,7 @@
   --border: #9FA8B8;
   --primary: rgba(0, 147, 237); /* #0093ED in hex */
   --primary-hover: #0b81cb;
+  --secondary: #b5eaea;
   --accent-text: var(--bg);
 }
 
@@ -22,11 +23,11 @@
 
   @bottom {
     content: "";
-    border-top: 1px solid #0091EA;
+    border-top: 1px solid #0093ED;
   }
 
   @bottom-left {
-    content: "AssessMVP";
+    content: "Ascent Assessment";
     font-size: 10px;
     font-family: var(--sans-font);
     padding-top: 4px;

@@ -1,38 +1,38 @@
-# Team Assessment Tool
+# Ascent Assessment for Teams
 
-This is a custom Django application I’m building as an MVP to support consultants' team assessment process. The goal is to make it simple for consultants or team leaders to create team assessments, invite members, collect responses, and generate actionable reports. I'm using the OrgHealth Ascent Model as the framework for this initial version.
+The Ascent Assessment is a secure, web-based application that enables leadership teams to measure, understand, and act on the health of their organization. Built with Django and PostgreSQL, the platform facilitates data collection, report generation, and tailored recommendations based on the OrgHealth Ascent Model.
 
-I'm building this in the open because I'm still new to this and want to offer and benefit from anyone's collaboration. 
+## 🚀 Features
 
-## 🧠 What It Does (Eventually)
-
-- Teams can be created and managed
-- Assessments can be launched with a deadline (month/year)
-- Team members receive unique links to complete their assessments
-- Responses are stored and scored
-- Reports will be generated based on aggregate team responses
+- Team assessments with private, invite-only access
+- Scored PDF reports with dynamic visuals and insights
+- Suggested discussion points and actions based on results
+- Admin dashboard for managing teams, assessments, and reports
+- Secure, scalable PostgreSQL backend
+- Flexible report rendering via HTML-to-PDF pipeline
 
 ## 🔧 Tech Stack
 
 - Python 3.13
 - Django 5.2
-- PostgreSQL (local for now)
-- HTML/CSS (no front-end framework yet)
-- Planned: Deployment via Render, email via SendGrid
+- PostgreSQL 
+- WeasyPrint (PDF generation), testing to be replaced with DocRaptor
+- Planned: Deployment via Render, email via MailGun, payments via Stripe
 
 ## 📁 Project Structure
 
 I've organized the project using an `apps/` directory to keep it modular and scalable. This is not default Django, so it's important to specify the changes. Here's the general structure:
 
 ```
-assessmvp/
+ascent-assessment/
 ├── apps/
-│   ├── accounts/     # users, etc
+│   ├── accounts/     # users
 │   ├── assessments/  # assessment categories, questions, start new, etc
 │   ├── common/       # some core functions ie markdown, etc
-│   ├── dashboard/    
-│   ├── payments/
-│   ├── reports/      # generate report, scoring, dynamic content, etc
+│   ├── dashboard/    # dashboard displays
+│   ├── payments/     # billing, checkout, Stripe, etc
+│   ├── pdfexport/    # HTML-to-PDF generation, report design
+│   ├── reports/      # scoring, web report, dynamic content, report storage
 │   └── teams/        # manage teams and team members specific to user
 ├── assessment_tool/  # project settings, root urls
 ├── static/           # project-wide CSS/JS/images
@@ -44,75 +44,10 @@ assessmvp/
 └── README.md
 ```
 
-### Adding a New Custom App
+## 📦 Deployment
 
-If you create a new app (e.g., python manage.py startapp example), be sure to follow these custom steps:
+See `docs/deployment.md` for deployment instructions on Render and environment setup using `.env`.
 
+## 📝 Licensing
 
-1. **Create the app as usual:**
-
-   ```bash
-   python manage.py startapp example
-   ```
-
-2. **Move the app into the `apps/` folder:**
-
-   ```bash
-   mv example apps/
-   ```
-
-3. **Update `INSTALLED_APPS` in `settings.py`:**
-   Instead of just `'example'`, use the full dotted path:
-
-   ```python
-   'apps.example.apps.ExampleConfig',
-   ```
-
-4. **Ensure the app's app.py names it correctly:**
-    ```python
-    class ExampleConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.example'
-    ```
-
-5. **Ensure `apps/` is a package:**
-   Add an empty `__init__.py` file inside the `apps/` directory if it doesn't already exist:
-
-   ```bash
-   touch apps/__init__.py
-   ```
-
-6. **App templates location:**
-    Store app-specific templates in:
-
-    ```
-    'apps/example/templates/example/your_template.html'
-    ```
-
-7. **Static files (if used):**
-    Store app-specific static files in:
-
-    ```
-    'apps/example/static/example/your_file.js'
-    ```
-
-8. **Use relative imports within apps:**
-    To avoid module errors, use:
-
-    ```python
-    from apps.example.models import YourModel
-    ```
-
-9.	**Run makemigrations and migrate as normal:**
-    Django’s migration system works fine with apps in a subfolder.
-
-
-## 🔐 Environment Variables
-
-I want to keep things safe and plan for eventual production, so this project uses a `.env` file to manage sensitive settings like database credentials and the Django secret key. 
-
-
-
----
-
-If you’re reading this and have thoughts, suggestions, or want to follow along, I’d love that. You can find me at questadon.com or on Mastodon as @another_sarah_brown.
+This application is licensed for internal use only under a custom OrgHealth license. See `LICENSE.md` for terms.

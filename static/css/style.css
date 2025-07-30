@@ -8,13 +8,14 @@
   --standard-border-radius: 8px;
   --border-width: 1px;
 
-  /* Default (light) theme */
+  /* Default theme */
   --bg: white;
   --bg-accent: AliceBlue;
   --text: #393446;
   --text-light: #6C7581;
   --border: #9FA8B8;
   --primary: rgba(0, 147, 237); /* #0093ED in hex */
+  --secondary: #b5eaea;
   --primary-hover: #0b81cb;
   --accent-text: var(--bg);
   --alert: #CC0101;
