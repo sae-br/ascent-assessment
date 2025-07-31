@@ -4,41 +4,15 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h2>Your Dashboard</h2>
-<p>This is your team’s starting point.</p>
-<a href="{% url 'new_assessment' %}" class="button">New Assessment</a>
-
-{% if assessments_data %}
-  {% for item in assessments_data %}
-    <hr>
-    <h3>{{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Submitted?</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for participant in item.participants %}
-          <tr>
-            <td>{{ participant.team_member.name }}</td>
-            <td>{{ participant.team_member.email }}</td>
-            <td>
-              {% if participant.has_submitted %}
-                ✅
-              {% else %}
-                ❌
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endfor %}
-{% else %}
-  <p>No current assessments found.</p>
-{% endif %}
-
+<div class="main-heading">
+  <h1>Your Dashboard</h2>
+  <a href="{% url 'new_assessment' %}" class="button">New Assessment</a>
+  </div>
+<div class="dashboard-grid">
+  {% include "dashboard/includes/recent_assessments.html" %}
+  <div class="dashboard-bottom">
+    {% include "dashboard/includes/teams_list.html" %}
+    {% include "dashboard/includes/reports_list.html" %}
+  </div>
+</div>
 {% endblock %}

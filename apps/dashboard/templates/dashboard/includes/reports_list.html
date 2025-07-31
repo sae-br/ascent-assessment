@@ -1,0 +1,22 @@
+<div class="dashboard-section">
+    <div class="section-header">
+        <h2>Reports</h2>
+        <a href="{% url 'new_assessment' %}" class="unstyled-link">See All</a>
+    </div>
+    <div class="card">
+        {% if reports %}
+            <ul class="table-list">
+                {% for report in reports %}
+                    <li class="table-row">
+                    <span class="row-left">{{ report.title }}</span>
+                    <span class="row-right">
+                        <a href="{{ report.download_url }}" class="row-button">Download</a>
+                    </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No completed assessments yet. Reports will appear here once all team members have submitted.</p>
+        {% endif %}
+    </div>
+</div>

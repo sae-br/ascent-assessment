@@ -13,7 +13,7 @@
   --bg-accent: AliceBlue;
   --text: #393446;
   --text-light: #6C7581;
-  --border: #9FA8B8;
+  --border: #c1c9d4;
   --primary: rgba(0, 147, 237); /* #0093ED in hex */
   --secondary: #b5eaea;
   --primary-hover: #0b81cb;
@@ -45,21 +45,21 @@ body {
 
 /* Format headers */
 h1 {
-  font-size: 2.6rem;
+  font-size: 2.2rem;
 }
 
 h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   margin-top: 3rem;
 }
 
 h3 {
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   margin-top: 3rem;
 }
 
 h4 {
-  font-size: 1.44rem;
+  font-size: 1.2rem;
 }
 
 h5 {
@@ -131,15 +131,14 @@ h3 {
 .sidebar {
   width: 240px;
   background-color: var(--bg-accent);
-  padding: 2rem 1rem;
+  padding: 1rem 1rem;
   display: flex;
   flex-direction: column;
 }
 
 .sidebar-logo {
-  height: 32px;
+  height: 48px;
   width: auto;
-  margin-bottom: 0.5rem;
 }
 
 .sidebar-app-name {
@@ -217,6 +216,10 @@ h3 {
   padding: 2rem;
 }
 
+.main-heading {
+  margin-bottom: 2rem;
+}
+
 
 /* Dashboard header area */
 
@@ -253,6 +256,184 @@ h3 {
 
 .logout-link:hover {
   color: var(--primary-hover)
+}
+
+
+/* Dashboard layout */
+.dashboard-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+}
+
+.dashboard-section {
+  background-color: white;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.section-header a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.section-header a:hover {
+  color: var(--primary-hover);
+}
+
+/* Dashboard - Assessments */
+.assessment-cards {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 1rem;
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--standard-border-radius);
+  padding: 2rem;
+}
+
+.assessment-cards .card {
+  flex: 1 1 calc(32% - 1.33rem);
+  min-width: 220px;
+  max-width: 100%;
+}
+
+@media (max-width: 720px) {
+  .assessment-cards .card {
+    flex: 1 1 100%;
+  }
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.card-header p {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--text-light);
+}
+
+.participant-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.participant-list li {
+  padding: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.participant-list li.incomplete {
+  font-weight: bold;
+  color: var(--alert);
+}
+
+.table-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.table-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-light);
+}
+
+.table-row .row-left {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.row-right {
+  display: flex;
+  align-items: center;
+}
+
+.row-right i[data-lucide] {
+  width: 1.25rem;
+  height: 1.25rem;
+  stroke-width: 2px;
+  vertical-align: middle; /* optional, fallback */
+}
+
+.table-row .status-icon {
+  width: 20px;
+  height: 20px;
+  stroke: var(--border); /* default = gray */
+}
+
+.table-row.incomplete .status-icon {
+  stroke: var(--alert); /* red if incomplete */
+}
+
+.row-button {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-light);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.row-button:hover {
+  color: var(--primary);
+}
+
+/* Dashboard - Teams & Reports*/
+.team-list,
+.report-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.team-list li,
+.report-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.report-list a {
+  font-size: 0.875rem;
+  color: var(--primary);
+  margin-left: 0.5rem;
+}
+
+.report-list a:hover {
+  color: var(--primary-hover);
+}
+
+@media (max-width: 768px) {
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+  }
 }
 
 
