@@ -13,7 +13,7 @@
   --bg-accent: AliceBlue;
   --text: #393446;
   --text-light: #6C7581;
-  --border: #c1c9d4;
+  --border: #d3dce8;
   --primary: rgba(0, 147, 237); /* #0093ED in hex */
   --secondary: #b5eaea;
   --primary-hover: #0b81cb;
@@ -111,6 +111,10 @@ h3 {
 
 .text-center {
   text-align: center;
+}
+
+.para-small {
+  font-size: 1rem;
 }
 
 
@@ -387,7 +391,7 @@ h3 {
 .table-row .status-icon {
   width: 20px;
   height: 20px;
-  stroke: var(--border); /* default = gray */
+  stroke: var(--text-light); /* default = gray */
 }
 
 .table-row.incomplete .status-icon {
