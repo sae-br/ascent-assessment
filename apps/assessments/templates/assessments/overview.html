@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="main-heading">
+    <h1>Assessments</h1>
+</div>
+
+<section class="section">
+    <div class="container--narrow">
+        <h2>Create a New Assessment</h2>
+        <p>Select the date by which all responses should be submitted. The month and year 
+        of this date will be assigned to the title of your assessment and report.
+        </p>
+        <a href="{% url 'new_assessment' %}" class="button--primary">New Assessment</a>
+    </div>
+</section>
+
+<section class="section">
+<h2>Review an Assessment</h2>
+
+<form method="get" action="{% url 'assessments_overview' %}">
+    <label for="assessment">Select Assessment</label>
+    <div class="assessment-select">
+    <select name="assessment" id="assessment">
+        {% for a in assessments %}
+        <option value="{{ a.id }}" {% if a.id == selected_assessment.id %}selected{% endif %}>
+            {{ a.team.name }} – {{ a.deadline|date:"F Y" }}
+        </option>
+        {% endfor %}
+    </select>
+    <button type="submit">Select</button>
+    </div>
+</form>
+
+{% if selected_assessment %}
+    <div class="assessment-meta">
+        <p><strong>Target Date:</strong> {{ selected_assessment.deadline|date:"F d, Y" }}</p>
+        <p><strong>Invitations Sent:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
+        <p><strong>Report Generated:</strong> {{ selected_assessment.report_generated|default:"none" }}</p>
+    </div>
+
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Submitted?</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for participant in participants %}
+                <tr>
+                <td>{{ participant.team_member.name }}</td>
+                <td>{{ participant.team_member.email }}</td>
+                <td class="status-cell">
+                    {% if participant.has_submitted %}
+                    <i data-lucide="check-circle" class="status-icon submitted"></i>
+                    {% else %}
+                    <i data-lucide="x-circle" class="status-icon incomplete"></i>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if not participant.has_submitted %}
+                    <form method="post" action="{% url 'resend_invite' participant.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="text-button">Resend Invite</button>
+                    </form>
+                    {% else %}
+                    <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+</section>
+{% endblock %}

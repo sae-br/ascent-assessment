@@ -2,14 +2,13 @@
 
 This app handles the full lifecycle of the assessment itself, from setup and email distribution to response collection and scoring (the scores get passed to Reports).
 
-Right now it's set up using the OrgHealth Ascent Model, but the models, questions, and scoring can all be adjusted for different IP.
-
 ## Features
 
 - Admins can create new assessments for specific teams
 - Team members receive unique links to submit their responses
 - Questions are grouped under "Peaks" (key categories)
 - Responses are scored, grouped, and analyzed
+- Admins can view current/past assessments and resend invitations to participants
 
 ## Models
 

@@ -6,11 +6,45 @@ from django.http import HttpResponse
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Prefetch
+from django.utils.timezone import now
 from .models import TeamMember, Question, Answer, Assessment, AssessmentParticipant
 from apps.teams.models import Team
 from datetime import datetime
 
-# initializing and monitoring
+# main assessment page
+
+@login_required
+def assessments_overview(request):
+    # Step 1: Get all teams managed by the user
+    teams = Team.objects.filter(admin=request.user)
+
+    # Step 2: Get all assessments for those teams
+    assessments = Assessment.objects.filter(team__in=teams).order_by('-deadline')
+
+    selected_assessment_id = request.GET.get("assessment")
+    selected_assessment = None
+    participants = []
+
+    if selected_assessment_id:
+        selected_assessment = assessments.filter(id=selected_assessment_id).first()
+    elif assessments.exists():
+        selected_assessment = assessments.first()
+
+    if selected_assessment:
+        participants = AssessmentParticipant.objects.filter(
+            assessment=selected_assessment
+        ).select_related("team_member").order_by("team_member__name")
+
+    return render(request, "assessments/overview.html", {
+        "teams": teams,
+        "assessments": assessments,
+        "selected_assessment": selected_assessment,
+        "participants": participants
+    })
+
+
+# initializing and monitoring new assessment
 
 @login_required
 def new_assessment(request):
@@ -217,3 +251,31 @@ def start_assessment(request, token):
         "member": member,
         "questions": questions
     })
+
+
+@login_required
+@require_http_methods(["POST"])
+def resend_invite(request, participant_id):
+    participant = get_object_or_404(AssessmentParticipant, id=participant_id)
+    member = participant.team_member
+    assessment = participant.assessment
+
+    if member.team.admin != request.user:
+        messages.error(request, "You don't have permission to do that.")
+        return redirect("assessments_home")
+
+    send_mail(
+        subject="You're invited to complete a team assessment",
+        message=(
+            f"Hello {member.name},\n\n"
+            f"Please complete your team assessment by visiting this link:\n\n"
+            f"http://127.0.0.1:8000/assessments/start/{participant.token}/\n\n"
+            f"Deadline: {assessment.deadline.strftime('%B %Y')}"
+        ),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[member.email],
+        fail_silently=False,
+    )
+
+    messages.success(request, f"Resent invite to {member.name}.")
+    return redirect(f"{reverse('assessments_home')}?assessment={assessment.id}")

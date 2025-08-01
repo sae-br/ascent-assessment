@@ -5,7 +5,7 @@ def current_section(request):
 
     if path.startswith("/dashboard"):
         return {"section": "dashboard"}
-    elif path.startswith("/assessments") or "confirm" in path or "launch" in path:
+    elif path.startswith("/assessments"):
         return {"section": "assessments"}
     elif path.startswith("/teams"):
         return {"section": "teams"}

@@ -46,24 +46,25 @@ body {
 /* Format headers */
 h1 {
   font-size: 2.2rem;
+  margin-bottom: 2rem;
 }
 
 h2 {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   margin-top: 3rem;
 }
 
 h3 {
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   margin-top: 3rem;
 }
 
 h4 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 h5 {
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 
 h6 {
@@ -88,6 +89,7 @@ h1,
 h2,
 h3 {
   line-height: 1.2;
+  font-weight: 600;
 }
 
 /* Reduce header size on mobile */
@@ -118,6 +120,61 @@ h3 {
 }
 
 
+/* Buttons */
+
+.button {
+  display: inline-block;
+  cursor: pointer;
+  border-radius: var(--standard-border-radius);
+  border: var(--border-width) solid var(--primary);
+  background-color: var(--primary);
+  color: var(--bg);
+  padding: 0.4em 1.2rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: normal;
+  text-decoration: none;
+}
+.button:disabled,
+.button[aria-disabled="true"] {
+  background-color: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+.button:hover:not(:disabled),
+.button:focus:not(:disabled) {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.button--primary {
+  border-color: var(--primary);
+  border-radius: var(--standard-border-radius);
+  background-color: var(--primary);
+  color: var(--bg);
+  text-decoration: none;
+  padding: 0.8em 2rem;
+  font-weight: 500;
+}
+.button--primary:hover,
+.button--primary:focus {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.button--secondary { 
+  border-color: var(--border);
+  background-color: transparent;
+  color: var(--text);
+}
+.button--secondary:hover,
+.button--secondary:focus {
+  background-color: var(--border);
+  border-color: var(--text-light);
+}
+
+
 /* Flex container */
 .page-wrapper {
   display: flex;
@@ -130,6 +187,9 @@ h3 {
   min-height: 100vh;
 }
 
+.container--narrow {
+  max-width: 700px;
+}
 
 /* Fixed side nav */
 .sidebar {
@@ -224,8 +284,33 @@ h3 {
   margin-bottom: 2rem;
 }
 
+.section {
+  margin-bottom: 4rem;
+}
 
-/* Dashboard header area */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.section-header a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary);
+}
+
+.section-header a:hover {
+  color: var(--primary-hover);
+}
+
+
+/* Header Bar */
 
 .dashboard-header {
   display: flex;
@@ -262,7 +347,6 @@ h3 {
   color: var(--primary-hover)
 }
 
-
 /* Dashboard layout */
 .dashboard-grid {
   display: flex;
@@ -280,29 +364,7 @@ h3 {
   background-color: white;
 }
 
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.section-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.section-header a {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--primary);
-}
-
-.section-header a:hover {
-  color: var(--primary-hover);
-}
-
-/* Dashboard - Assessments */
+/* Dashboard - Assessments widget */
 .assessment-cards {
   display: flex;
   flex-wrap: wrap;
@@ -356,7 +418,92 @@ h3 {
   color: var(--alert);
 }
 
-.table-list {
+/* Tables */
+
+.table-wrapper {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--standard-border-radius);
+  overflow-x: auto;
+  padding: 1rem 2rem;
+  margin-top: 2rem;
+}
+
+/* table with headers i.e. Assessment management */
+.table { 
+  width: 100%;
+  margin: 0rem;
+  border-color: var(--bg);
+  background: var(--bg);
+}
+
+.table thead th {
+  font-weight: 600;
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+  background: var(--bg);
+}
+
+.table tbody tr {
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+.table tbody td {
+  padding: 0.6rem 1rem;         /* tighten vertical spacing */
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;       /* center icons and text */
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;          /* last row: remove bottom border */
+}
+
+.table td.status-cell {
+  text-align: center;
+  width: 4rem;                  /* fixed width keeps columns aligned */
+}
+
+.table .text-button {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.table .text-button:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.status-icon {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+.status-icon.submitted {
+  color: var(--check);
+}
+
+.status-icon.incomplete {
+  color: var(--alert);
+}
+
+/* table list with no headers, i.e dashboard widgets */
+.table-list { 
   list-style: none;
   padding: 0;
   margin: 0;
@@ -410,7 +557,7 @@ h3 {
   color: var(--primary);
 }
 
-/* Dashboard - Teams & Reports*/
+/* Dashboard - Teams & Reports widgets */
 .team-list,
 .report-list {
   list-style: none;
@@ -484,42 +631,6 @@ h3 {
   color: inherit;
 }
 
-
-/* Format links & buttons */
-a,
-a:visited {
-  color: var(--primary);
-}
-
-a:hover {
-  text-decoration: none;
-}
-
-button,
-.button,
-a.button, /* extra specificity to override a */
-input[type="submit"],
-input[type="reset"],
-input[type="button"] {
-  border: var(--border-width) solid var(--primary);
-  background-color: var(--primary);
-  color: var(--bg);
-  padding: .8em 2rem;
-  text-decoration: none;
-  line-height: normal;
-}
-
-.button[aria-disabled="true"], 
-input:disabled,
-textarea:disabled,
-select:disabled,
-button[disabled] {
-  cursor: not-allowed;
-  background-color: var(--disabled);
-  border-color: var(--disabled);
-  color: var(--text-light);
-}
-
 input[type="range"] {
   padding: 0;
 }
@@ -532,28 +643,6 @@ abbr[title] {
   text-decoration-line: underline;
   text-decoration-style: dotted;
 }
-
-button:enabled:hover,
-.button:not([aria-disabled="true"]):hover,
-input[type="submit"]:enabled:hover,
-input[type="reset"]:enabled:hover,
-input[type="button"]:enabled:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
-  cursor: pointer;
-}
-
-.button:focus-visible,
-button:focus-visible:where(:enabled),
-input:enabled:focus-visible:where(
-  [type="submit"],
-  [type="reset"],
-  [type="button"]
-) {
-  outline: 2px solid var(--primary);
-  outline-offset: 1px;
-}
-
 
 fieldset, dialog {
   border: var(--border-width) solid var(--border);
@@ -595,23 +684,33 @@ table caption {
 textarea,
 select,
 input,
-button,
-.button {
-  font-size: inherit;
-  font-family: inherit;
-  padding: 0.5em 1em;
-  margin-bottom: 0.5rem;
-  border-radius: var(--standard-border-radius);
-  box-shadow: none;
-  max-width: 100%;
-  display: inline-block;
-}
 textarea,
 select,
-input {
-  color: var(--text);
-  background-color: var(--bg);
+input:not([type="submit"]):not([type="reset"]):not([type="button"]) {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0.5em 1em;
+  margin-bottom: 0.5rem;
   border: var(--border-width) solid var(--border);
+  border-radius: var(--standard-border-radius);
+  background-color: var(--bg);
+  color: var(--text);
+  box-shadow: none;
+  max-width: 100%;
+  display: inline-block; 
+}
+button {
+  display: inline-block;
+  cursor: pointer;
+  border-radius: var(--standard-border-radius);
+  border: var(--border-width) solid var(--primary);
+  background-color: var(--primary);
+  color: var(--bg);
+  padding: 0.4em 1.2rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  line-height: normal;
+  text-decoration: none;
 }
 label {
   display: block;
