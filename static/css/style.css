@@ -1,10 +1,9 @@
+@import url('/static/fonts/metropolis.css');
+
 /* Global variables. */
 :root {
-  /* Set sans-serif & mono fonts */
-  --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir,
-    "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
-    "Helvetica Neue", sans-serif;
-  --mono-font: Consolas, Menlo, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+  --sans-font: "Metropolis", -apple-system, BlinkMacSystemFont, "Avenir Next",
+    Avenir, "Segoe UI", Roboto, "Noto Sans", Helvetica, Arial, sans-serif;
   --standard-border-radius: 8px;
   --border-width: 1px;
 

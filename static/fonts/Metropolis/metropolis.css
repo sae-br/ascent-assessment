@@ -1,0 +1,53 @@
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 400;
+  src:
+    url('metropolis-regular-webfont.woff2') format('woff2'),
+    url('metropolis-regular-webfont.woff')  format('woff');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: italic;
+  font-weight: 400;
+  src:
+    url('metropolis-regularitalic-webfont.woff2') format('woff2'),
+    url('metropolis-regularitalic-webfont.woff')  format('woff');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 500;
+  src:
+    url('metropolis-medium-webfont.woff2') format('woff2'),
+    url('metropolis-medium-webfont.woff')  format('woff');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: italic;
+  font-weight: 500;
+  src:
+    url('metropolis-mediumitalic-webfont.woff2') format('woff2'),
+    url('metropolis-mediumitalic-webfont.woff')  format('woff');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: normal;
+  font-weight: 700;
+  src:
+    url('metropolis-bold-webfont.woff2') format('woff2'),
+    url('metropolis-bold-webfont.woff')  format('woff');
+}
+
+@font-face {
+  font-family: 'Metropolis';
+  font-style: italic;
+  font-weight: 700;
+  src:
+    url('metropolis-bolditalic-webfont.woff2') format('woff2'),
+    url('metropolis-bolditalic-webfont.woff')  format('woff');
+}
