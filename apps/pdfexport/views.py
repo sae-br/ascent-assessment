@@ -83,7 +83,7 @@ def generate_final_report_pdf(request, assessment_id):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as chart_file:
                 chart_path = chart_file.name
             generate_question_bar_chart(q.text, rating_counts, chart_path)
-            temp_chart_paths.append(chart_path)  # clean up later
+            temp_chart_paths.append(chart_path)  
 
             question_data.append({
                 "text": q.text,
