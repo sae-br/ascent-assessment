@@ -2,38 +2,54 @@
 {% block title %}Create New Assessment{% endblock %}
 
 {% block content %}
-<h2>Create New Assessment</h2>
+<h1>Create New Assessment</h1>
 
-<form method="post">
-    {% csrf_token %}
+<h2>Step 1/3: Set Up Assessment</h2>
 
-    <h3>Assign a Target Date</h3>
-    <label for="deadline">Select the date by which all responses should be submitted:</label>
-    <br><br>
-    <input type="date" name="deadline" required>
-
-    <br><br>
-
-    <h3>Assign a Team</h3>
-    <p>Choose from existing teams:</p>
-    <select name="team">
-        <option value="">-- Select a team --</option>
-        {% for team in teams %}
-            <option value="{{ team.id }}" {% if selected_team and selected_team.id == team.id %}selected{% endif %}>{{ team.name }}</option>
+<section class="container--narrow">
+    
+    {% if messages %}
+    <div class="notice">
+        {% for msg in messages %}
+        <p{% if msg.tags %} class="{{ msg.tags }}"{% endif %}>{{ msg }}</p>
         {% endfor %}
-    </select>
-
-    <p>OR create a new team:</p>
-    <input type="text" name="new_team_name" placeholder="New team name">
-
-    <br><br>
-
-    {% if selected_team %}
-        <hr>
-        <h3>Team Members</h3>
-        {% include "teams/_member_table.html" with team=selected_team %}
+    </div>
     {% endif %}
 
-    <button type="submit">Continue</button>
-</form>
+    <form method="post">
+        {% csrf_token %}
+        <p><strong>Assign the team</strong> that will be participating in this assessment. 
+            The team name will be assigned to the title of your assessment and report.</p>
+        <select name="team">
+            <option value="">-- Select a team --</option>
+            {% for team in teams %}
+                <option value="{{ team.id }}" {% if selected_team and selected_team.id == team.id %}selected{% endif %}>{{ team.name }}</option>
+            {% endfor %}
+        </select>
+
+        <p>OR</p>
+        <input type="text" name="new_team_name" placeholder="Enter a new team name">
+
+        {% if selected_team %}
+            <hr>
+            <h3>Team Members</h3>
+            {% include "teams/_member_table.html" with team=selected_team %}
+        {% endif %}
+
+        <p class="para-small"><em>You will be able to edit the team members on the next screen.</em>
+        </p>
+
+        <br>
+
+        <p><strong>Select the target date</strong> by which all responses should be submitted. 
+            The month and year of this date will be assigned to the title of your assessment 
+            and report.
+        </p>
+        <input type="date" name="deadline" required>
+
+        <br><br>
+
+        <button type="submit" class="button--secondary">Continue</button>
+    </form>
+</section>
 {% endblock %}

@@ -2,23 +2,36 @@
 {% block title %}Confirm Assessment Launch{% endblock %}
 
 {% block content %}
-<h2>Confirm Assessment Launch</h2>
+<h1>Create New Assessment</h1>
 
-<p><strong>Team:</strong> {{ assessment.team.name }}</p>
-<p><strong>Target Date:</strong> {{ assessment.deadline|date:"F Y" }}</p>
+<h2>Step 3/3: Confirm and Launch</h2>
 
-<h3>Team Members</h3>
-<ul>
-    {% for member in members %}
-        <li>{{ member.name }} ({{ member.email }})</li>
-    {% endfor %}
-</ul>
+<section class="container--narrow">
 
-<p>Each team member will receive an email with a unique link 
-    to complete their assessment.</p>
+    <p>You are launching the assessment:</p>
+    <p><strong>{{ assessment.team.name }} - {{ assessment.deadline|date:"F Y" }}</strong></p>
+    <br>
 
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirm & Launch Assessment</button>
-</form>
+    <p>The participating team members will be:</p>
+    <ul>
+        {% for member in members %}
+            <li>{{ member.name }} ({{ member.email }})</li>
+        {% endfor %}
+    </ul>
+    <br>
+
+    <p>The target date you’ll request team members submit by is:</p>
+    <p><strong>{{ assessment.deadline|date:"F j, Y" }}</strong></p>
+    <br>
+
+    <p>Once you click Launch below, each team member will receive an email with a unique 
+        link to complete their assessment. As team members submit their responses, you 
+        will receive an update email.</p>
+    <br>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="button--primary">Launch Assessment</button>
+    </form>
+</section>
 {% endblock %}

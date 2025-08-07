@@ -95,6 +95,10 @@ def confirm_team(request):
         return redirect("new_assessment")
 
     team = get_object_or_404(Team, id=session_data["team_id"], admin=request.user)
+    try:
+        deadline = datetime.strptime(session_data["deadline"], "%Y-%m-%d").date()
+    except Exception:
+        deadline = None
 
     if request.method == "POST":
         print("🔵 POST request received")
@@ -141,7 +145,8 @@ def confirm_team(request):
             messages.error(request, "Unknown action submitted.")
 
     return render(request, "assessments/confirm_team.html", {
-        "team": team
+        "team": team,
+        "deadline": deadline,
     })
 
 @login_required

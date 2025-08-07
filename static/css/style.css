@@ -1,4 +1,4 @@
-@import url('/static/fonts/metropolis.css');
+@import url('/static/fonts/Metropolis/metropolis.css');
 
 /* Global variables. */
 :root {
@@ -164,14 +164,15 @@ h3 {
 }
 
 .button--secondary { 
-  border-color: var(--border);
-  background-color: transparent;
-  color: var(--text);
+  border-color: var(--primary);
+  background-color: var(--bg-accent);
+  color: var(--primary);
+  padding: 0.6em 1rem;
 }
 .button--secondary:hover,
 .button--secondary:focus {
-  background-color: var(--border);
-  border-color: var(--text-light);
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
 }
 
 
@@ -277,7 +278,7 @@ h3 {
 }
 
 .main-heading {
-  margin-bottom: 2rem;
+  margin-bottom: 4rem;
 }
 
 .section {
@@ -713,6 +714,11 @@ label {
 }
 textarea:not([cols]) {
   width: 100%;
+}
+
+.notice {
+  color: var(--alert);
+  font-size: 1rem;
 }
 
 /* Add arrow to drop-down */

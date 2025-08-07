@@ -2,18 +2,28 @@
 {% block title %}Confirm Team{% endblock %}
 
 {% block content %}
-<h2>Confirm Team Members</h2>
+<h1>Create New Assessment</h1>
 
-<p>You are launching an assessment for: <strong>{{ team.name }}</strong></p>
+<h2>Step 2/3: Set Up Assessment</h2>
 
-<!-- Includes table + add/delete forms -->
-{% include "teams/_member_table.html" with team=team %}
+<section class="container--narrow">
 
-<hr>
+  <p>You are launching the assessment:<br><strong>{{ team.name }} - {{ deadline|date:"F Y" }}</strong></p>
 
-<!-- Final continue button -->
-<form method="post">
-  {% csrf_token %}
-  <button type="submit" name="confirm_team_done">Continue to Review</button>
-</form>
+  <br>
+
+  <!-- Includes table + add/delete forms -->
+  <p><strong>Confirm team member names and emails.</strong> You can add or delete team members 
+    as needed, then hit Continue below to confirm all information before launching the assessment.
+  </p>
+</section>
+
+  {% include "teams/_member_table.html" with team=team %}
+
+  <hr>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="confirm_team_done" class="button--secondary">Continue</button>
+  </form>
 {% endblock %}

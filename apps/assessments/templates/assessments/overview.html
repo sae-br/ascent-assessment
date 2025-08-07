@@ -4,17 +4,8 @@
 {% block content %}
 <div class="main-heading">
     <h1>Assessments</h1>
+    <a href="{% url 'new_assessment' %}" class="button--primary">New Assessment</a>
 </div>
-
-<section class="section">
-    <div class="container--narrow">
-        <h2>Create a New Assessment</h2>
-        <p>Select the date by which all responses should be submitted. The month and year 
-        of this date will be assigned to the title of your assessment and report.
-        </p>
-        <a href="{% url 'new_assessment' %}" class="button--primary">New Assessment</a>
-    </div>
-</section>
 
 <section class="section">
 <h2>Review an Assessment</h2>
