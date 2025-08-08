@@ -4,10 +4,7 @@
 :root {
   --sans-font: "Metropolis", -apple-system, BlinkMacSystemFont, "Avenir Next",
     Avenir, "Segoe UI", Roboto, "Noto Sans", Helvetica, Arial, sans-serif;
-  --standard-border-radius: 8px;
-  --border-width: 1px;
 
-  /* Default theme */
   --bg: white;
   --bg-accent: AliceBlue;
   --text: #373d48;
@@ -19,7 +16,14 @@
   --primary-hover: #0b81cb;
   --accent-text: var(--bg);
   --alert: #CC0101;
-  --disabled: #efefef;
+  --disabled: #9ba3af;
+
+  --standard-border-radius: 8px;
+  --border-width: 1px;
+  --form-padding: 0.5rem 1rem;
+  --form-border: 1px solid var(--border);
+  --form-radius: var(--standard-border-radius);
+  --form-spacing: 0.5rem;
 }
 
 /* Reset box-sizing */
@@ -37,7 +41,7 @@ html {
 body {
   color: var(--text);
   background-color: var(--bg);
-  font-size: 1.15rem;
+  font-size: 16px;
   line-height: 1.5;
   margin: 0;
 }
@@ -45,7 +49,7 @@ body {
 
 /* Format headers */
 h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   margin-bottom: 2rem;
 }
 
@@ -79,17 +83,15 @@ form p {
   margin: 0 0 1rem 0;
 }
 
-/* Prevent long strings from overflowing container */
 p, h1, h2, h3, h4, h5, h6 {
   overflow-wrap: break-word;
 }
 
-/* Fix line height when title wraps */
 h1,
 h2,
 h3 {
   line-height: 1.2;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Reduce header size on mobile */
@@ -155,6 +157,7 @@ h3 {
   color: var(--bg);
   text-decoration: none;
   padding: 0.8em 2rem;
+  font-size: 18px;
   font-weight: 500;
 }
 .button--primary:hover,
@@ -194,7 +197,8 @@ h3 {
 
 /* Fixed side nav */
 .sidebar {
-  width: 240px;
+  flex: 0 0 240px;
+  min-width: 240px;
   background-color: var(--bg-accent);
   padding: 1rem 1rem;
   display: flex;
@@ -376,8 +380,8 @@ h3 {
 }
 
 .assessment-cards .card {
-  flex: 1 1 calc(32% - 1.33rem);
-  min-width: 220px;
+  flex: 1 1 calc(32% - 1.30rem);
+  min-width: 200px;
   max-width: 100%;
 }
 
@@ -678,42 +682,71 @@ table caption {
 }
 
 /* Format forms */
+input:not([type="button"]):not([type="reset"]):not([type="submit"]),
 textarea,
-select,
-input,
-textarea,
-select,
-input:not([type="submit"]):not([type="reset"]):not([type="button"]) {
-  font-family: inherit;
-  font-size: inherit;
-  padding: 0.5em 1em;
-  margin-bottom: 0.5rem;
-  border: var(--border-width) solid var(--border);
-  border-radius: var(--standard-border-radius);
-  background-color: var(--bg);
+select {
+  font: inherit;
+  padding: var(--form-padding);
+  margin-bottom: var(--form-spacing);
+  border: var(--form-border);
+  border-radius: var(--form-radius);
+  background: var(--bg);
   color: var(--text);
   box-shadow: none;
-  max-width: 100%;
-  display: inline-block; 
-}
-button {
   display: inline-block;
+  width: 300px;
+  max-width: 100%;
+}
+
+button,
+input[type="submit"],
+input[type="reset"] {
+  font: inherit;
   cursor: pointer;
-  border-radius: var(--standard-border-radius);
-  border: var(--border-width) solid var(--primary);
-  background-color: var(--primary);
-  color: var(--bg);
+  border: var(--form-border);
+  border-radius: var(--form-radius);
+  background: var(--primary);
+  color: var(--accent-text);
   padding: 0.4em 1.2rem;
-  font-size: 0.95rem;
-  font-family: inherit;
   line-height: normal;
   text-decoration: none;
+  display: inline-block;
 }
+button:disabled,
+input:disabled {
+  background: var(--disabled);
+  border-color: var(--disabled);
+  color: var(--text-light);
+  cursor: not-allowed;
+}
+button:not(:disabled):hover,
+input:not(:disabled):hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 label {
   display: block;
+  margin-bottom: 0.25rem;
 }
-textarea:not([cols]) {
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  display: block;
   width: 100%;
+}
+
+.full-width {
+  display: block !important;
+  width: 100%  !important;
 }
 
 .notice {
@@ -721,87 +754,63 @@ textarea:not([cols]) {
   font-size: 1rem;
 }
 
-/* Add arrow to drop-down */
-select:not([multiple]) {
-  background-image: linear-gradient(45deg, transparent 49%, var(--text) 51%),
-    linear-gradient(135deg, var(--text) 51%, transparent 49%);
-  background-position: calc(100% - 15px), calc(100% - 10px);
-  background-size: 5px 5px, 5px 5px;
-  background-repeat: no-repeat;
-  padding-inline-end: 25px;
-}
-*[dir="rtl"] select:not([multiple]) {
-  background-position: 10px, 15px;
-}
-
-/* checkbox and radio button style */
+/* hide the real inputs but keep them in the a11y tree */
 input[type="checkbox"],
 input[type="radio"] {
-  vertical-align: middle;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+label.custom-control {
   position: relative;
-  width: min-content;
+  padding-left: 2em;
+  cursor: pointer;
 }
 
-input[type="checkbox"] + label,
-input[type="radio"] + label {
-  display: inline-block;
+/* shared box/circle */
+label.custom-control::before {
+  content: "";
+  position: absolute;
+  left: 0; 
+  top: 0.2em;
+  width: 1.2em; 
+  height: 1.2em;
+  border: var(--form-border);
+  background: #fff;
+  border-radius: var(--form-radius);
 }
 
-input[type="radio"] {
-  border-radius: 100%;
+input[type="checkbox"]:checked + label.custom-control::after {
+  content: "\2713";
+  position: absolute;
+  left: 0.2em; 
+  top: 0.1em;
+  font-size: 1em;
+  color: var(--primary);
 }
 
-input[type="checkbox"]:checked,
-input[type="radio"]:checked {
-  background-color: var(--primary);
+label.custom-control.radio::before {
+  border-radius: 50%;
 }
 
-input[type="checkbox"]:checked::after {
-  /* Creates a rectangle with colored right and bottom borders which is rotated to look like a check mark */
-  content: " ";
-  width: 0.2em;
+input[type="radio"]:checked + label.custom-control.radio::after {
+  content: "";
+  position: absolute;
+  left: 0.4em; 
+  top: 0.4em;
+  width: 0.4em; 
   height: 0.4em;
-  border-radius: 0;
-  position: absolute;
-  top: 0.04em;
-  left: 0.18em;
-  background-color: transparent;
-  border-right: solid var(--bg) 0.08em;
-  border-bottom: solid var(--bg) 0.08em;
-  font-size: 1.8em;
-  transform: rotate(45deg);
-}
-input[type="radio"]:checked::after {
-  /* creates a colored circle for the checked radio button  */
-  content: " ";
-  width: 0.3em;
-  height: 0.3em;
-  border-radius: 100%;
-  position: absolute;
-  top: 0.125em;
-  background-color: var(--bg);
-  left: 0.125em;
-  font-size: 1.8em;
+  border-radius: 50%;
+  background: var(--primary);
 }
 
-/* Makes input fields wider on smaller screens */
-@media only screen and (max-width: 720px) {
+@media (max-width:720px) {
+  input:not([type="button"]):not([type="reset"]):not([type="submit"]),
   textarea,
-  select,
-  input {
+  select {
     width: 100%;
   }
-}
-
-/* Set a height for color input */
-input[type="color"] {
-  height: 2.5rem;
-  padding:  0.2rem;
-}
-
-/* Do not show border around file selector button */
-input[type="file"] {
-  border: 0;
 }
 
 /* Simplified containers for views with no sidebar */
@@ -824,7 +833,7 @@ input[type="file"] {
 }
 
 .auth-box form {
-  display: flex;
+  display: block;
   flex-direction: column;
   gap: 0.5rem;
   width: 100%;
@@ -841,12 +850,12 @@ input[type="file"] {
 .auth-box button,
 .auth-box select,
 .auth-box textarea {
-  margin-bottom: 0; /* Override inherited global margin */
+  display: block !important;
+  width: 100% !important;
 }
 
 .auth-box label {
   display: block;
-  margin-bottom: 0.25rem;
 }
 
 .auth-box .helptext,
