@@ -174,8 +174,9 @@ h3 {
 }
 .button--secondary:hover,
 .button--secondary:focus {
-  border-color: var(--primary-hover);
-  color: var(--primary-hover);
+  border-color: var(--primary-hover) !important;
+  background-color: var(--primary-hover) !important;
+  color: var(--bg) !important;
 }
 
 

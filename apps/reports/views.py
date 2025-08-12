@@ -1,9 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from apps.teams.models import Team
-from apps.assessments.models import Peak, Question, Answer, Assessment, AssessmentParticipant
+from apps.assessments.models import Peak, Answer, Assessment
 from apps.reports.models import ResultsSummary, UniformRangeSummary, PeakInsights, PeakActions
 from apps.reports.utils import get_score_range_label
-from django.db.models import Sum, Count
+from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 
 @login_required
@@ -15,7 +14,7 @@ def generate_report(request):
 def review_team_report(request, assessment_id):
     assessment = get_object_or_404(Assessment, id=assessment_id, team__admin=request.user)
     participants = assessment.participants.select_related('team_member')
-    total_participants = participants.count()
+    participants = participants.filter(has_submitted=True)
 
     peaks_data = []
     peak_scores = {}
@@ -42,8 +41,6 @@ def review_team_report(request, assessment_id):
             peak_max_score += max_score
 
         peak_percentage = (peak_total_score / peak_max_score * 100) if peak_max_score else 0
-        peak_score_rounded = round(peak_percentage)
-        peak_scores[peak.name] = peak_score_rounded
 
         # Determine range label using utility
         range_label = get_score_range_label(peak_percentage)
@@ -67,20 +64,23 @@ def review_team_report(request, assessment_id):
     top_peaks = [name for name, score in scores_sorted if score == scores_sorted[0][1]]
     bottom_peaks = [name for name, score in scores_sorted if score == scores_sorted[-1][1]]
 
-    priority_order = ['CC', 'TM', 'LA', 'SM']
-
     # Create a name-to-code mapping
+    priority_order = ('CC', 'TM', 'LA', 'SM')  # fixed, canonical order
     name_to_code = {peak['name']: peak['code'] for peak in peaks_data}
+    rank = {code: i for i, code in enumerate(priority_order)}
 
-    def prioritize(peaks_names, reverse=False):
-        ordered = sorted(
-            peaks_names,
-            key=lambda name: priority_order.index(name_to_code.get(name, 'ZZ'))  # ZZ to push unknowns to end
-        )
-        return name_to_code.get(ordered[0]) if ordered else None
+    def prioritize(names):
+        if not names:
+            return None
+        # be strict: every name must map to a known code
+        unknown = [n for n in names if n not in name_to_code]
+        if unknown:
+            raise KeyError(f"Unknown peak name(s): {unknown}")
+        # pick the one with the smallest rank (CC > TM > LA > SM)
+        return name_to_code[min(names, key=lambda n: rank[name_to_code[n]])]
 
-    high_peak = prioritize(top_peaks, reverse=True)
-    low_peak = prioritize(bottom_peaks)
+    high_peak = prioritize(top_peaks)
+    low_peak  = prioritize(bottom_peaks)
 
     summary = ResultsSummary.objects.filter(high_peak=high_peak, low_peak=low_peak).first()
 

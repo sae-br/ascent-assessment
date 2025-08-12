@@ -24,6 +24,11 @@ load_dotenv(BASE_DIR / ".env")
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
+CSRF_TRUSTED_ORIGINS = [
+    o.strip()
+    for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
+    if o.strip()
+]
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG
@@ -134,6 +139,11 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# ACCOUNT LOGIN
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -152,23 +162,89 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email settings
 
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
-EMAIL_HOST = os.getenv('EMAIL_HOST')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'no-reply@example.com')
+# --- Admins / email identities ---
+SUPERADMIN_EMAIL = os.getenv('SUPERADMIN_EMAIL')
+ADMINS = []
+_admins_env = os.getenv("ADMINS", "").strip()
+if _admins_env:
+    parts = [p.strip() for p in _admins_env.split(",") if p.strip()]
+    for p in parts:
+        if "<" in p and ">" in p:
+            name = p.split("<")[0].strip()
+            email = p[p.find("<")+1:p.find(">")].strip()
+        else:
+            name, email = p, p
+        ADMINS.append((name, email))
 
-SUPERADMIN_EMAIL = os.getenv('SUPERADMIN_EMAIL', 'admin@example.com')
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)  
 
+
+# --- Email backend selection (console for dev, SMTP for prod) ---
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = os.getenv(
+        "EMAIL_BACKEND",
+        "django.core.mail.backends.smtp.EmailBackend",
+    )
+    EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+    EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+    EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 
 
-# ACCOUNT LOGIN
+# --- Logging ---
+LOG_LEVEL = os.getenv("LOG_LEVEL", "DEBUG" if DEBUG else "INFO").upper()
 
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+    },
+
+    "formatters": {
+        "simple": {
+            "format": "%(levelname)s %(name)s: %(message)s"
+        },
+        "verbose": {
+            "format": "%(asctime)s %(levelname)s %(name)s [%(process)d:%(thread)d] %(message)s"
+        },
+    },
+
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "mail_admins": {
+            "level": "ERROR",  # send only errors/tracebacks
+            "class": "django.utils.log.AdminEmailHandler",
+            "filters": ["require_debug_false"],  
+        },
+    },
+
+    # Default: log to console at LOG_LEVEL
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+
+    # Django request logger: email 500s in production
+    "loggers": {
+        "django.request": {
+            "handlers": ["mail_admins", "console"],
+            "level": "WARNING",
+            "propagate": True,
+        },
+        "apps.assessments": {"level": "INFO"},
+        "apps.reports": {"level": "INFO"},
+        "apps.teams": {"level": "INFO"},
+    },
+}
