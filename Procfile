@@ -1,0 +1,1 @@
+web: gunicorn assessment_tool.wsgi:application

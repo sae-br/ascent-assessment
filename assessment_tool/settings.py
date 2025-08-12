@@ -10,18 +10,22 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+
+from dotenv import load_dotenv
 from pathlib import Path
 import os
-from dotenv import load_dotenv
 from django.template.context_processors import request
 import dj_database_url
 
-
-SECRET_KEY = os.getenv('SECRET_KEY', 'unsafe-dev-key')
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / ".env")
+
+# Load the right .env file
+ENV_FILE = BASE_DIR / ".env.production" if os.getenv("DJANGO_ENV") == "production" else BASE_DIR / ".env.local"
+load_dotenv(dotenv_path=ENV_FILE)
+
+
+SECRET_KEY = os.getenv('SECRET_KEY', '')
 
 
 # Adjusted for production by creating .env
@@ -122,7 +126,7 @@ DATABASES = {
 }
 _db_url = os.getenv("DATABASE_URL")
 if _db_url:
-    DATABASES['default'] = dj_database_url.parse(_db_url, conn_max_age=600, ssl_require=not DEBUG)
+    DATABASES["default"] = dj_database_url.parse(_db_url, conn_max_age=600)
 
 
 # Password validation
