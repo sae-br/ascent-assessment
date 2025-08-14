@@ -205,14 +205,14 @@ def confirm_launch(request):
         for m in team.members.all():
             participant = AssessmentParticipant.objects.get(team_member=m, 
                                                             assessment=assessment)
-            link = request.build_absolute_uri(reverse("start_assessment", args=[participant.token]))
+            invite_url = request.build_absolute_uri(reverse("start_assessment", args=[participant.token])),
             try:
                 send_mail(
                     subject="You're invited to complete a team assessment",
                     message=(
                         f"Hello {m.name},\n\n"
                         f"Please complete your team assessment by visiting this link:\n\n"
-                        f"{link}/\n\n"
+                        f"{invite_url}/\n\n"
                         f"Deadline: {assessment.deadline.strftime('%B %Y')}"
                     ),
                     from_email=settings.DEFAULT_FROM_EMAIL,
@@ -324,14 +324,14 @@ def resend_invite(request, participant_id):
         messages.error(request, "You don't have permission to do that.")
         return redirect("assessments_overview")
 
-    link = request.build_absolute_uri(reverse("start_assessment", args=[participant.token]))
+    invite_url = request.build_absolute_uri(reverse("start_assessment", args=[participant.token])),
     try:
         send_mail(
             subject="You're invited to complete a team assessment",
             message=(
                 f"Hello {member.name},\n\n"
                 f"Please complete your team assessment by visiting this link:\n\n"
-                f"{link}/\n\n"
+                f"{invite_url}/\n\n"
                 f"Deadline: {assessment.deadline.strftime('%B %Y')}"
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
