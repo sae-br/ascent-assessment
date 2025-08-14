@@ -593,21 +593,23 @@ h3 {
 /* Public page */
 .public-header {
   text-align: center;
-  padding: 1rem 1rem 1rem;
+  background-color: var(--bg-accent);
 }
 
 .public-header-logo {
-  height: 30px;
+  max-height: 80px;
+  height: auto;
   width: auto;
-  margin-top: 0.5rem;
+  margin-top: 1.5rem;
 }
 
 .public-container {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   background-color: var(--bg-accent);
-  padding: 3rem 1rem;
-  min-height: 100vh;
+  flex: 1 0 auto;
+  padding: 1rem;
 }
 
 .public-box {
@@ -621,9 +623,9 @@ h3 {
 
 .public-footer {
   text-align: center;
-  padding: 1rem;
   background-color: var(--bg-accent);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  padding: 1rem;
   color: var(--text-light);
 }
 
@@ -673,7 +675,6 @@ th {
 }
 
 tr:nth-child(even) {
-  /* Set every other cell slightly darker. Improves readability. */
   background-color: var(--bg-accent);
 }
 
@@ -764,10 +765,25 @@ label {
   font-size: 1rem;
 }
 
-/* hide the real inputs but keep them in the a11y tree */
+/* Hide native controls but keep them accessible to a11y tree and labels */
 input[type="checkbox"],
 input[type="radio"] {
-  position: absolute;
+  appearance: none;              /* standard */
+  -webkit-appearance: none;      /* Safari */
+  -moz-appearance: none;         /* older Firefox */
+  position: absolute !important; /* removes from layout but keeps in doc */
+  width: 1px !important;
+  height: 1px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+
+  /* extra belt & suspenders so nothing paints */
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
 label.custom-control {
@@ -956,7 +972,6 @@ sub {
   top: 0.3em; 
 }
 
-/* Classes for notices */
 .notice {
   background: var(--bg-accent);
   border: var(--border-width) solid var(--border);
@@ -965,3 +980,131 @@ sub {
   margin: 2rem 0;
 }
 
+/* --- Respondent Assessment pager --- */
+
+.assessment-form { 
+  max-width: 720px; 
+}
+
+.assessment-form fieldset.question-card {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+  background: transparent; 
+}
+.assessment-form fieldset.question-card legend {
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.progress-wrap { 
+  margin: 0 0 3rem; 
+}
+
+.progress-bar { 
+  height: 6px; 
+  background: var(--bg-accent); 
+  border-radius: 999px; 
+  overflow: hidden; 
+}
+.progress-fill { 
+  display: block; 
+  height: 100%; 
+  width: 0%; 
+  background: var(--primary); 
+  transition: width .25s ease; 
+}
+.progress-meta { 
+  margin-top: .5rem; 
+  color: var(--text-light); 
+  font-size: .9rem; 
+}
+
+.step { 
+  display: none; 
+}
+.step.is-active { 
+  display: block; 
+}
+
+.question-card { 
+  background-color: white;
+}
+.question-card legend { 
+  font-weight: 400;
+  font-size: 1.2rem;
+  margin: 3rem 0rem 1rem;
+}
+
+.choices { 
+  display: grid; 
+  grid-template-columns: repeat(2, minmax(200px, 1fr)); 
+  gap: .5rem; 
+}
+@media (min-width: 720px) { .choices { grid-template-columns: repeat(4, 1fr); } }
+
+.choice {
+  display: flex; align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--standard-border-radius);
+  padding: .6rem .75rem; background: #fff;
+}
+.choice:hover { 
+  border-color: var(--primary); 
+}
+.choice:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-color: var(--primary);
+}
+
+.choice.is-selected {
+  border-color: var(--primary);
+  background: #f5fbff; 
+}
+
+.choice-label { 
+  display: flex; 
+  align-items: baseline; 
+  gap: .5rem; 
+}
+.choice-text { 
+  color: var(--text-light); 
+  font-size: .9rem; 
+}
+
+.choice input[type="radio"]:checked ~ .choice-label,
+.choice input[type="radio"]:checked + .choice-label {
+  color: var(--text); 
+}
+.choice input[type="radio"]:checked ~ .choice-label .choice-text,
+.choice input[type="radio"]:checked + .choice-label .choice-text {
+  color: var(--text);
+}
+
+.form-error {
+  margin-top: .5rem;
+  color: var(--alert);
+  font-size: .95rem;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@keyframes nudge {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.form-error.is-visible { animation: nudge .25s; }
+
+.pager { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  gap: 1rem; 
+  margin-top: 2rem; 
+}
