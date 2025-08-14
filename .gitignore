@@ -10,7 +10,6 @@ venv/
 
 # Secrets
 .env.local
-.env.production
 
 # Django staticfiles
 /staticfiles/

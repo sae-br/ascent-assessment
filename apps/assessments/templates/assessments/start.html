@@ -14,26 +14,15 @@
 
     <div class="choices" style="display:flex; gap:1rem; align-items:center;">
 
-        {# Consistently True (includes required here for whole group) #}
+        {# Consistently Untrue #}
         <input
             type="radio"
-            id="q{{ question.id }}-3"
+            id="q{{ question.id }}-0"
             name="question_{{ question.id }}"
-            value="3"
-            class="visually-hidden"
-            required
+            value="0"
+            class="visually-hidden"  {# or remove this class if you keep your opacity:0 rule #}
         />
-        <label for="q{{ question.id }}-3" class="custom-control radio">3</label>
-
-        {# Somewhat True #}
-        <input
-            type="radio"
-            id="q{{ question.id }}-2"
-            name="question_{{ question.id }}"
-            value="2"
-            class="visually-hidden"
-        />
-        <label for="q{{ question.id }}-2" class="custom-control radio">2</label>
+        <label for="q{{ question.id }}-0" class="custom-control radio">Consistently Untrue</label>
 
         {# Somewhat Untrue #}
         <input
@@ -43,17 +32,29 @@
             value="1"
             class="visually-hidden"
         />
-        <label for="q{{ question.id }}-1" class="custom-control radio">1</label>
-
-        {# Consistently Untrue #}
+        <label for="q{{ question.id }}-1" class="custom-control radio">Somewhat Untrue</label>
+        
+        {# Somewhat True #}
         <input
             type="radio"
-            id="q{{ question.id }}-0"
+            id="q{{ question.id }}-2"
             name="question_{{ question.id }}"
-            value="0"
-            class="visually-hidden"  {# or remove this class if you keep your opacity:0 rule #}
+            value="2"
+            class="visually-hidden"
         />
-        <label for="q{{ question.id }}-0" class="custom-control radio">0</label>
+        <label for="q{{ question.id }}-2" class="custom-control radio">Somewhat True</label>
+
+        {# Consistently True (includes required here for whole group) #}
+        <input
+            type="radio"
+            id="q{{ question.id }}-3"
+            name="question_{{ question.id }}"
+            value="3"
+            class="visually-hidden"
+            required
+        />
+        <label for="q{{ question.id }}-3" class="custom-control radio">Consistently True</label>
+
     </div>
   </fieldset>
   {% endfor %}
