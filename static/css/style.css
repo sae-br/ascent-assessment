@@ -683,6 +683,15 @@ table caption {
 }
 
 /* Format forms */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+  clip-path: inset(50%);
+}
+
 input:not([type="button"]):not([type="reset"]):not([type="submit"]),
 textarea,
 select {
@@ -759,8 +768,6 @@ label {
 input[type="checkbox"],
 input[type="radio"] {
   position: absolute;
-  opacity: 0;
-  pointer-events: none;
 }
 
 label.custom-control {
@@ -780,6 +787,12 @@ label.custom-control::before {
   border: var(--form-border);
   background: #fff;
   border-radius: var(--form-radius);
+}
+
+input[type="checkbox"]:focus-visible + label.custom-control::before,
+input[type="radio"]:focus-visible + label.custom-control::before {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 input[type="checkbox"]:checked + label.custom-control::after {
