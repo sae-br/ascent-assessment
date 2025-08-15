@@ -1,1 +1,1 @@
-web: gunicorn assessment_tool.wsgi:application
+web: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120 --graceful-timeout 30
