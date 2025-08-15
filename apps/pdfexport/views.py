@@ -169,8 +169,6 @@ from django.utils.text import slugify
 
 import os
 import tempfile
-import docraptor
-from docraptor.rest import ApiException
 
 from apps.reports.models import PeakActions, PeakInsights, ResultsSummary
 from apps.assessments.models import Peak, Question, Answer, Assessment
@@ -185,7 +183,12 @@ from apps.pdfexport.utils.images import png_path_to_data_uri
 import logging
 logger = logging.getLogger(__name__)
 
-# A TEMP TEST
+import time
+import docraptor
+from docraptor.rest import ApiException
+
+
+# A TEMP TEST FOR TROUBLESHOOTING
 def final_report_preview(request, assessment_id):
     base = get_report_context_data(assessment_id)
     assessment = base["assessment"]
@@ -201,142 +204,216 @@ def final_report_preview(request, assessment_id):
     return HttpResponse(get_template("pdfexport/finalreport_docraptor.html").render(ctx))
 
 
+# TEMP BAREBONES DOCRAPTOR VIEW FOR TIMEOUT ISSUE
 def generate_final_report_pdf_docraptor(request, assessment_id):
-    # 0) Base context
+    t0_total = time.monotonic()
+    logger.info("[PDF] Start render for assessment_id=%s", assessment_id)
+
     base = get_report_context_data(assessment_id)
     assessment = base["assessment"]
-    peaks = base["peaks"]
-
-    # absolute static base (e.g. https://orghealthascent.com/static/)
     STATIC_ABS = request.build_absolute_uri(static(""))
 
-    peak_sections = []
-    temp_paths = []
-
-    # 1) Build each peak section like before, but produce data URIs
-    for peak in peaks:
-        # — rating spread chart —
-        percents = get_peak_rating_distribution(assessment, peak.code)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-            spread_png = tmp.name
-        generate_peak_distribution_chart(peak.name, percents, spread_png)
-        temp_paths.append(spread_png)
-        spread_data_uri = png_path_to_data_uri(spread_png)
-
-        # score on 0–100
-        score0_3 = sum((i * p) for i, p in enumerate(percents)) / 100.0  # weighted avg on 0–3
-        percentage_score = round(score0_3 * 100 / 3)
-        if percentage_score < 34:
-            range_label = "LOW"
-        elif percentage_score < 67:
-            range_label = "MEDIUM"
-        else:
-            range_label = "HIGH"
-
-        # insights/actions
-        insight = PeakInsights.objects.filter(peak=peak.code, range_label=range_label).first()
-        actions = PeakActions.objects.filter(peak=peak.code, range_label=range_label).first()
-
-        # questions + per-question chart
-        q_rows = []
-        participants = assessment.participants.all()
-        answers = Answer.objects.filter(participant__in=participants)
-        for q in Question.objects.filter(peak=peak):
-            qa = answers.filter(question=q)
-            counts = [0, 0, 0, 0]
-            for a in qa:
-                if 0 <= a.value <= 3:
-                    counts[a.value] += 1
-            total = sum(counts)
-            if total:
-                weighted = sum(i * c for i, c in enumerate(counts))
-                health_pct = round((weighted / total) * 100 / 3)
-            else:
-                health_pct = 0
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as qtmp:
-                qpng = qtmp.name
-            generate_question_bar_chart(q.text, counts, qpng)
-            temp_paths.append(qpng)
-            q_rows.append({
-                "text": q.text,
-                "health_percentage": health_pct,
-                "chart_data_uri": png_path_to_data_uri(qpng),
-            })
-
-        # focus image (absolute URL)
-        ascent_image_abs = f"{STATIC_ABS}images/ascent-{peak.code.lower()}-focus.png"
-
-        peak_sections.append({
-            "name": peak.name,
-            "code": peak.code,
-            "chart_data_uri": spread_data_uri,
-            "range_label": range_label,
-            "score": percentage_score,
-            "insights": insight.insight_text if insight else "No insights available.",
-            "actions": actions.action_text if actions else "No actions available.",
-            "ascent_image_abs": ascent_image_abs,
-            "questions": q_rows,
-        })
-
-    # order + summary
-    peak_score_summary = sorted(
-        [{"code": p["code"], "name": p["name"], "score": p["score"], "range": p["range_label"]} for p in peak_sections],
-        key=lambda x: x["score"]
-    )
-    lowest = peak_score_summary[0]["code"]
-    highest = peak_score_summary[-1]["code"]
-    rs = ResultsSummary.objects.filter(high_peak=highest, low_peak=lowest).first()
-    summary_text = rs.summary_text if rs else "No summary available for this combination."
-
-    # 2) Render HTML
+    # For now, skip the heavy peak loop — just pass empty lists
     ctx = {
         "STATIC_ABS": STATIC_ABS,
         "assessment": assessment,
         "team_name": assessment.team.name,
         "deadline": assessment.deadline,
-        "peak_sections": peak_sections,
-        "peak_score_summary": peak_score_summary,
-        "summary_text": summary_text,
+        "peak_sections": [],
+        "peak_score_summary": [],
+        "summary_text": "",
     }
-    html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
 
-    # 3) Call DocRaptor in test mode
+    html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
+    html_len = len(html)
+    img_count = html.count("<img")
+    logger.info("[PDF] HTML size=%s bytes, img_count=%s", html_len, img_count)
+
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+    baseurl = request.build_absolute_uri("/")
 
-    # Helpful: ensure absolute base for relative URLs (we're already absolute, but baseurl is still nice)
-    baseurl = request.build_absolute_uri("/")  # e.g. https://orghealthascent.com/
-
+    t0_docraptor = time.monotonic()
+    logger.info("[PDF] Calling DocRaptor...")
     try:
-        # Can also pass "document_url" if you expose the HTML at a route; here we send content directly
         result = client.create_doc({
-            "test": True,  # Change when done testing
+            "test": True,
             "document_type": "pdf",
             "name": f"{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf",
             "document_content": html,
             "prince_options": {
                 "media": "print",
                 "baseurl": baseurl,
-                # Turn on JS later if/when you move to Chart.js:
-                # "javascript": True,
             },
         })
     except ApiException as e:
         logger.exception("DocRaptor API error")
-        return HttpResponse(
-            f"DocRaptor error {getattr(e, 'status', '')}: {getattr(e, 'body', e)}",
-            status=502
-        )
-    except Exception as e:
-        logger.exception("Unexpected error generating DocRaptor PDF")
-        return HttpResponse(f"Unexpected error: {e}", status=500)
-    finally:
-        # 4) cleanup temp PNGs
-        for p in temp_paths:
-            try:
-                os.remove(p)
-            except OSError:
-                pass
+        return HttpResponse(f"DocRaptor error: {e}", status=502)
+
+    docraptor_dt = time.monotonic() - t0_docraptor
+    logger.info("[PDF] DocRaptor returned in %.2f seconds", docraptor_dt)
+
+    total_dt = time.monotonic() - t0_total
+    logger.info("[PDF] Total view time %.2f seconds", total_dt)
 
     return HttpResponse(result, content_type="application/pdf")
+
+# def generate_final_report_pdf_docraptor(request, assessment_id):
+#     # MEASURING: Start logging size and time used, to find bottleneck areas
+#     t0_total = time.monotonic()
+#     logger.info("[PDF] Start render for assessment_id=%s", assessment_id)
+    
+#     # 0) Base context
+#     base = get_report_context_data(assessment_id)
+#     assessment = base["assessment"]
+#     peaks = base["peaks"]
+
+#     # absolute static base (e.g. https://orghealthascent.com/static/)
+#     STATIC_ABS = request.build_absolute_uri(static(""))
+
+#     peak_sections = []
+#     temp_paths = []
+
+#     # MEASURING: Log how large HTML payload is and how many img tags it has
+#     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
+#     html_len = len(html)
+#     img_count = html.count("<img")
+#     logger.info("[PDF] HTML size=%s bytes, img_count=%s", html_len, img_count)
+
+#     # 1) Build each peak section 
+#     for peak in peaks:
+#         # — rating spread chart —
+#         percents = get_peak_rating_distribution(assessment, peak.code)
+#         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+#             spread_png = tmp.name
+#         generate_peak_distribution_chart(peak.name, percents, spread_png)
+#         temp_paths.append(spread_png)
+#         spread_data_uri = png_path_to_data_uri(spread_png)
+
+#         # score on 0–100
+#         score0_3 = sum((i * p) for i, p in enumerate(percents)) / 100.0  # weighted avg on 0–3
+#         percentage_score = round(score0_3 * 100 / 3)
+#         if percentage_score < 34:
+#             range_label = "LOW"
+#         elif percentage_score < 67:
+#             range_label = "MEDIUM"
+#         else:
+#             range_label = "HIGH"
+
+#         # insights/actions
+#         insight = PeakInsights.objects.filter(peak=peak.code, range_label=range_label).first()
+#         actions = PeakActions.objects.filter(peak=peak.code, range_label=range_label).first()
+
+#         # questions + per-question chart
+#         q_rows = []
+#         participants = assessment.participants.all()
+#         answers = Answer.objects.filter(participant__in=participants)
+#         for q in Question.objects.filter(peak=peak):
+#             qa = answers.filter(question=q)
+#             counts = [0, 0, 0, 0]
+#             for a in qa:
+#                 if 0 <= a.value <= 3:
+#                     counts[a.value] += 1
+#             total = sum(counts)
+#             if total:
+#                 weighted = sum(i * c for i, c in enumerate(counts))
+#                 health_pct = round((weighted / total) * 100 / 3)
+#             else:
+#                 health_pct = 0
+
+#             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as qtmp:
+#                 qpng = qtmp.name
+#             generate_question_bar_chart(q.text, counts, qpng)
+#             temp_paths.append(qpng)
+#             q_rows.append({
+#                 "text": q.text,
+#                 "health_percentage": health_pct,
+#                 "chart_data_uri": png_path_to_data_uri(qpng),
+#             })
+
+#         # focus image (absolute URL)
+#         ascent_image_abs = f"{STATIC_ABS}images/ascent-{peak.code.lower()}-focus.png"
+
+#         peak_sections.append({
+#             "name": peak.name,
+#             "code": peak.code,
+#             "chart_data_uri": spread_data_uri,
+#             "range_label": range_label,
+#             "score": percentage_score,
+#             "insights": insight.insight_text if insight else "No insights available.",
+#             "actions": actions.action_text if actions else "No actions available.",
+#             "ascent_image_abs": ascent_image_abs,
+#             "questions": q_rows,
+#         })
+
+#     # order + summary
+#     peak_score_summary = sorted(
+#         [{"code": p["code"], "name": p["name"], "score": p["score"], "range": p["range_label"]} for p in peak_sections],
+#         key=lambda x: x["score"]
+#     )
+#     lowest = peak_score_summary[0]["code"]
+#     highest = peak_score_summary[-1]["code"]
+#     rs = ResultsSummary.objects.filter(high_peak=highest, low_peak=lowest).first()
+#     summary_text = rs.summary_text if rs else "No summary available for this combination."
+
+#     # 2) Render HTML
+#     ctx = {
+#         "STATIC_ABS": STATIC_ABS,
+#         "assessment": assessment,
+#         "team_name": assessment.team.name,
+#         "deadline": assessment.deadline,
+#         "peak_sections": peak_sections,
+#         "peak_score_summary": peak_score_summary,
+#         "summary_text": summary_text,
+#     }
+#     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
+
+#     # MEASURING: Marking start of DocRaptor call
+#     t0_docraptor = time.monotonic()
+#     logger.info("[PDF] Calling DocRaptor...")
+
+#     # 3) Call DocRaptor 
+#     client = docraptor.DocApi()
+#     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
+#     baseurl = request.build_absolute_uri("/")  # https://orghealthascent.com/
+
+#     try:
+#         # Can also pass "document_url" if you expose the HTML at a route; here we send content directly
+#         result = client.create_doc({
+#             "test": True,  # Change when done testing
+#             "document_type": "pdf",
+#             "name": f"{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf",
+#             "document_content": html,
+#             "prince_options": {
+#                 "media": "print",
+#                 "baseurl": baseurl,
+#                 # Turn on JS later if/when we move to Chart.js:
+#                 # "javascript": True,
+#             },
+#         })
+#         # MEASURING: remote render duration
+#         docraptor_dt = time.monotonic() - t0_docraptor
+#         logger.info("[PDF] DocRaptor returned in %.2f seconds", docraptor_dt)
+#     except ApiException as e:
+#         logger.exception("DocRaptor API error")
+#         return HttpResponse(
+#             f"DocRaptor error {getattr(e, 'status', '')}: {getattr(e, 'body', e)}",
+#             status=502
+#         )
+#     except Exception as e:
+#         logger.exception("Unexpected error generating DocRaptor PDF")
+#         return HttpResponse(f"Unexpected error: {e}", status=500)
+#     finally:
+#         # 4) cleanup temp PNGs
+#         for p in temp_paths:
+#             try:
+#                 os.remove(p)
+#             except OSError:
+#                 pass
+
+#     # MEASURING: get total wall-clock for inside this view
+#     total_dt = time.monotonic() - t0_total
+#     logger.info("[PDF] Total view time %.2f seconds", total_dt)
+
+#     return HttpResponse(result, content_type="application/pdf")
