@@ -161,14 +161,16 @@
 
 
 # DocRaptor Version
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.conf import settings
+from django.shortcuts import render, redirect
 from django.utils.text import slugify
 
 import os
 import tempfile
+import requests
 
 from apps.reports.models import PeakActions, PeakInsights, ResultsSummary
 from apps.assessments.models import Peak, Question, Answer, Assessment
@@ -419,3 +421,139 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
 #     logger.info("[PDF] Total view time %.2f seconds", total_dt)
 
 #     return HttpResponse(result, content_type="application/pdf")
+
+
+# --- Async DocRaptor flow ---
+def final_report_docraptor_start(request, assessment_id):
+    """
+    Kick off an async DocRaptor render and redirect to a status/poll page.
+    For now we use the same minimal context you used for the preview
+    (you can swap back to the full context once we’re confident).
+    """
+    from apps.pdfexport.utils.context import get_report_context_data
+
+    base = get_report_context_data(assessment_id)
+    assessment = base["assessment"]
+
+    STATIC_ABS = request.build_absolute_uri(static(""))
+    ctx = {
+        "STATIC_ABS": STATIC_ABS,
+        "assessment": assessment,
+        "team_name": assessment.team.name,
+        "deadline": assessment.deadline,
+        # keep these empty for now to avoid big payloads; you can restore later
+        "peak_sections": [],
+        "peak_score_summary": [],
+        "summary_text": "",
+    }
+
+    html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
+    filename = f"{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf"
+
+    client = docraptor.DocApi()
+    client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
+    baseurl = request.build_absolute_uri("/")
+
+    try:
+        # Start async job (non-blocking)
+        job = client.create_async_doc({
+            "test": True,  # keep True for testing
+            "document_type": "pdf",
+            "name": filename,
+            "document_content": html,   # sending content directly
+            "prince_options": {
+                "media": "print",
+                "baseurl": baseurl,
+                # enable later if you move to Chart.js:
+                # "javascript": True,
+            },
+        })
+    except ApiException as e:
+        logger.exception("DocRaptor async create failed")
+        return HttpResponse(f"DocRaptor error: {e}", status=502)
+
+    # job.status_id is what we poll with
+    status_id = getattr(job, "status_id", None)
+    if not status_id:
+        logger.error("DocRaptor async job did not return a status_id: %r", job)
+        return HttpResponse("Failed to start PDF job.", status=502)
+
+    # Render a tiny page that polls our status endpoint
+    return render(request, "pdfexport/doc_status.html", {
+        "status_id": status_id,
+        "filename": filename,
+    })
+
+
+def docraptor_status(request, status_id):
+    """
+    JSON endpoint the browser polls every couple seconds to check progress.
+    """
+    client = docraptor.DocApi()
+    client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
+    try:
+        status = client.get_async_doc_status(status_id)
+    except ApiException as e:
+        logger.exception("DocRaptor status check failed")
+        return JsonResponse({"status": "error", "message": str(e)}, status=502)
+
+    # status.status is one of: queued / processing / completed / failed
+    state = getattr(status, "status", "unknown")
+
+    if state == "completed":
+        download_url = getattr(status, "download_url", None)
+        return JsonResponse({
+            "status": "completed",
+            "download": request.build_absolute_uri(
+                # route that will stream the PDF back through your app
+                # (safer than sending DocRaptor URL directly to the browser)
+                f"/pdfexport/docraptor/download/{status_id}/"
+            )
+        })
+
+    if state == "failed":
+        # Some failures include a 'message' with details
+        return JsonResponse({
+            "status": "failed",
+            "message": getattr(status, "message", "DocRaptor failed")
+        }, status=500)
+
+    # queued / processing (or unknown)
+    return JsonResponse({"status": state})
+
+
+def docraptor_download(request, status_id):
+    """
+    When the job is completed, fetch the file from DocRaptor’s download_url
+    and stream it to the user as application/pdf.
+    """
+    client = docraptor.DocApi()
+    client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
+    try:
+        status = client.get_async_doc_status(status_id)
+    except ApiException as e:
+        logger.exception("DocRaptor status check (for download) failed")
+        raise Http404("PDF not available")
+
+    if getattr(status, "status", None) != "completed":
+        raise Http404("PDF not ready")
+
+    download_url = getattr(status, "download_url", None)
+    if not download_url:
+        raise Http404("No download URL available")
+
+    # Stream the file
+    try:
+        r = requests.get(download_url, stream=True, timeout=30)
+        r.raise_for_status()
+    except requests.RequestException as e:
+        logger.exception("Fetching DocRaptor download failed")
+        return HttpResponse("Could not retrieve PDF.", status=502)
+
+    resp = HttpResponse(r.content, content_type="application/pdf")
+    # Optional: nice filename (fallback)
+    resp["Content-Disposition"] = 'inline; filename="report.pdf"'
+    return resp

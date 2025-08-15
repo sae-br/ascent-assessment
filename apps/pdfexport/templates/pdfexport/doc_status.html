@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Preparing your PDF…</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <meta http-equiv="refresh" content="900"> <!-- safety: refresh if left open -->
+</head>
+<body class="public-page">
+  <div class="page-wrapper">
+    <main class="public-container">
+      <div class="public-box" style="text-align:center">
+        <h2>Preparing your PDF…</h2>
+        <p>This can take a moment. Please keep this tab open.</p>
+        <div id="status" class="para-small" aria-live="polite">Starting…</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const statusId = "{{ status_id }}";
+      const statusEl = document.getElementById('status');
+
+      const poll = () => {
+        fetch(`/pdfexport/docraptor/status/${statusId}/`, { cache: 'no-store' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'completed' && data.download) {
+              statusEl.textContent = "Done! Opening PDF…";
+              window.location.href = data.download;
+            } else if (data.status === 'failed') {
+              statusEl.textContent = data.message || "PDF generation failed.";
+            } else {
+              // queued / processing
+              statusEl.textContent = `Status: ${data.status}…`;
+              setTimeout(poll, 2000);
+            }
+          })
+          .catch(() => {
+            statusEl.textContent = "Checking status…";
+            setTimeout(poll, 3000);
+          });
+      };
+
+      poll();
+    })();
+  </script>
+</body>
+</html>
