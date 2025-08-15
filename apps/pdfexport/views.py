@@ -245,7 +245,9 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
                 "media": "print",
                 "baseurl": baseurl,
             },
-        })
+        },
+        _request_timeout=(10, 700)  # MEASURING: (connect_timeout, read_timeout) in seconds
+        )
     except ApiException as e:
         logger.exception("DocRaptor API error")
         return HttpResponse(f"DocRaptor error: {e}", status=502)
