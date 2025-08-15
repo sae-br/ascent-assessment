@@ -156,7 +156,7 @@
 
     <div class="page-break"></div>
 
-    {% comment %} <!-- Peak Sections -->
+    <!-- Peak Sections -->
     {% for peak in peak_sections %}
         <section class="peak-section">
             <h1>{{ peak.name }}</h1>
@@ -172,8 +172,10 @@
                     <p>{{ peak.range_label }}</p>
                 </div>
                 <div>
-                    <img src="{{ peak.chart_data_uri }}" 
-                        alt="{{ peak.name }} Rating Spread" class="peak-chart" />
+                    {% if peak.chart_data_uri %}
+                        <img src="{{ peak.chart_data_uri }}" 
+                            alt="{{ peak.name }} Rating Spread" class="peak-chart" />
+                    {% endif %}
                 </div>
             </div>
 
@@ -184,8 +186,10 @@
                     {{ peak.insights|markdown }}
                 </div>
                 <div class="ascent-image-focus">
-                    <img src="{{ peak.ascent_image_abs }}" 
-                        alt="Ascent Model – {{ peak.name }}">
+                    {% if peak.ascent_image_abs %}
+                        <img src="{{ peak.ascent_image_abs }}" 
+                            alt="Ascent Model – {{ peak.name }}">
+                    {% endif %}
                 </div>
             </div>
 
@@ -199,7 +203,10 @@
                             <p><span class="label">Health Percentage:</span> <strong>{{ question.health_percentage }}%</strong></p>
                         </div>
                         <div class="question-chart">
-                            <img src="{{ question.chart_data_uri }}" alt="Chart for Question {{ forloop.counter }}">
+                            {% if question.chart_data_uri %}
+                                <img src="{{ question.chart_data_uri }}" 
+                                    alt="Chart for Question {{ forloop.counter }}">
+                            {% endif %}
                         </div>
                     </div>
             {% endfor %}
@@ -295,7 +302,7 @@
         </table>
     </section>
 
-    <div class="page-break"></div> {% endcomment %}
+    <div class="page-break"></div>
 
     <!-- Team Commitments -->
     <section class="team-commitments">
