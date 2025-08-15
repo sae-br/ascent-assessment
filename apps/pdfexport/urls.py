@@ -9,5 +9,15 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("final-report/<int:assessment_id>/docraptor/", views.generate_final_report_pdf_docraptor, name="final_report_docraptor"),
+    path(
+        "final-report/<int:assessment_id>/docraptor/", 
+        views.generate_final_report_pdf_docraptor, 
+        name="final_report_docraptor"
+        ),
+    # TEMP TEST 
+    path(
+        "final-report/<int:assessment_id>/preview/", 
+        views.final_report_preview, 
+        name="final_report_preview"
+        ), 
 ]

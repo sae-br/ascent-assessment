@@ -170,6 +170,7 @@ from django.utils.text import slugify
 import os
 import tempfile
 import docraptor
+from docraptor.rest import ApiException
 
 from apps.reports.models import PeakActions, PeakInsights, ResultsSummary
 from apps.assessments.models import Peak, Question, Answer, Assessment
@@ -180,6 +181,25 @@ from apps.pdfexport.utils.charts import (
     generate_question_bar_chart,
 )
 from apps.pdfexport.utils.images import png_path_to_data_uri
+
+import logging
+logger = logging.getLogger(__name__)
+
+# A TEMP TEST
+def final_report_preview(request, assessment_id):
+    base = get_report_context_data(assessment_id)
+    assessment = base["assessment"]
+    ctx = {
+        "STATIC_ABS": request.build_absolute_uri(static("")),
+        "assessment": assessment,
+        "team_name": assessment.team.name,
+        "deadline": assessment.deadline,
+        "peak_sections": [],
+        "peak_score_summary": [],
+        "summary_text": "",
+    }
+    return HttpResponse(get_template("pdfexport/finalreport_docraptor.html").render(ctx))
+
 
 def generate_final_report_pdf_docraptor(request, assessment_id):
     # 0) Base context
@@ -289,9 +309,9 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
     baseurl = request.build_absolute_uri("/")  # e.g. https://orghealthascent.com/
 
     try:
-        # You can also pass "document_url" if you expose the HTML at a route; here we send content directly
+        # Can also pass "document_url" if you expose the HTML at a route; here we send content directly
         result = client.create_doc({
-            "test": True,  # test PDFs are watermarked / rate-limited, but free
+            "test": True,  # Change when done testing
             "document_type": "pdf",
             "name": f"{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf",
             "document_content": html,
@@ -302,6 +322,15 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
                 # "javascript": True,
             },
         })
+    except ApiException as e:
+        logger.exception("DocRaptor API error")
+        return HttpResponse(
+            f"DocRaptor error {getattr(e, 'status', '')}: {getattr(e, 'body', e)}",
+            status=502
+        )
+    except Exception as e:
+        logger.exception("Unexpected error generating DocRaptor PDF")
+        return HttpResponse(f"Unexpected error: {e}", status=500)
     finally:
         # 4) cleanup temp PNGs
         for p in temp_paths:
