@@ -7,9 +7,9 @@ class PeakAdmin(admin.ModelAdmin):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'peak', 'order')
+    list_display = ('text', 'peak', 'order',)
     list_filter = ('peak',)
-    ordering = ('peak', 'order')
+    ordering = ('peak', 'order',)
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
@@ -19,13 +19,13 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(Assessment)
 class AssessmentAdmin(admin.ModelAdmin):
-    list_display = ('team', 'deadline', 'created_at')
+    list_display = ('team', 'deadline', 'created_at', 'id',)
     list_filter = ('team',)
     search_fields = ('team__name',)
 
 @admin.register(AssessmentParticipant)
 class AssessmentParticipantAdmin(admin.ModelAdmin):
-    list_display = ('team_member', 'assessment', 'has_submitted', 'token')
+    list_display = ('team_member', 'assessment', 'has_submitted', 'token',)
     readonly_fields = ('token',)
-    list_filter = ('assessment__team', 'has_submitted')
-    search_fields = ('team_member__name', 'team_member__email', 'assessment__team__name')
+    list_filter = ('assessment__team', 'has_submitted',)
+    search_fields = ('team_member__name', 'team_member__email', 'assessment__team__name',)

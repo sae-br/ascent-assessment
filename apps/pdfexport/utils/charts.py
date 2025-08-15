@@ -1,43 +1,58 @@
-import plotly.graph_objects as go
 from collections import Counter
 from apps.assessments.models import Answer, Question
 import tempfile
 from contextlib import contextmanager
 import os
+import matplotlib
+matplotlib.use("Agg")  # headless
+import matplotlib.pyplot as plt
 
 
-# Area chart for each peak -- generate chart and create png
-def generate_peak_distribution_chart(peak_name, percentages, output_path):
-    labels = [
-        "Consistently<br>Untrue",
-        "Somewhat<br>Untrue",
-        "Somewhat<br>True",
-        "Consistently<br>True"
-    ]
+def generate_peak_distribution_chart(title: str, percentages, output_path: str):
+    # percentages is a list of length 4 for ratings 0..3
+    fig, ax = plt.subplots(figsize=(4, 2.5), dpi=150)
+    ax.bar(range(4), percentages)
+    ax.set_title(title)
+    ax.set_xlabel("Rating (0–3)")
+    ax.set_ylabel("Percent")
+    ax.set_xticks([0, 1, 2, 3])
+    ax.set_ylim(0, 100)
+    fig.tight_layout()
+    fig.savefig(output_path, format="png")
+    plt.close(fig)
 
-    # Create the area chart
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=labels,
-        y=percentages,
-        fill='tozeroy',
-        mode='lines+text',
-        line=dict(color='rgba(0, 147, 237, 1)'),
-        hoverinfo='x+y',
-        name=peak_name
-    ))
+# # Area chart for each peak -- generate chart and create png
+# def generate_peak_distribution_chart(peak_name, percentages, output_path):
+#     labels = [
+#         "Consistently<br>Untrue",
+#         "Somewhat<br>Untrue",
+#         "Somewhat<br>True",
+#         "Consistently<br>True"
+#     ]
 
-    fig.update_layout(
-        title=None,
-        xaxis=dict(title='', showgrid=False, tickangle=0, tickfont=dict(size=14)),
-        yaxis=dict(title='', showgrid=False, visible=False),
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        showlegend=False,
-        margin=dict(l=0, r=0, t=0, b=0)
-    )
+#     # Create the area chart
+#     fig = go.Figure()
+#     fig.add_trace(go.Scatter(
+#         x=labels,
+#         y=percentages,
+#         fill='tozeroy',
+#         mode='lines+text',
+#         line=dict(color='rgba(0, 147, 237, 1)'),
+#         hoverinfo='x+y',
+#         name=peak_name
+#     ))
 
-    fig.write_image(output_path, width=500, height=300)
+#     fig.update_layout(
+#         title=None,
+#         xaxis=dict(title='', showgrid=False, tickangle=0, tickfont=dict(size=14)),
+#         yaxis=dict(title='', showgrid=False, visible=False),
+#         plot_bgcolor='rgba(0,0,0,0)',
+#         paper_bgcolor='rgba(0,0,0,0)',
+#         showlegend=False,
+#         margin=dict(l=0, r=0, t=0, b=0)
+#     )
+
+#     fig.write_image(output_path, width=500, height=300)
 
 
 # Area chart for each peak -- get needed data
@@ -67,24 +82,37 @@ def get_peak_rating_distribution(assessment, peak_code):
     # Calculate percentages in the correct order
     return [round((counter.get(i, 0) / total) * 100) for i in range(4)]
 
-# Bar chart for each question - generate chart
-def generate_question_bar_chart(question_text, rating_counts, output_path):
-    labels = ["Consistently\nUntrue", "Somewhat\nUntrue", "Somewhat\nTrue", "Consistently\nTrue"]
 
-    fig = go.Figure(data=[
-        go.Bar(x=labels, y=rating_counts, text=rating_counts, textposition="outside", marker_color="#0093ED")
-    ])
+# # Bar chart for each question - generate chart
+def generate_question_bar_chart(question_text: str, counts, output_path: str):
+    # counts is a list of length 4 for answers 0..3
+    fig, ax = plt.subplots(figsize=(4, 2.5), dpi=150)
+    ax.bar(range(4), counts)
+    ax.set_title(question_text)
+    ax.set_xlabel("Rating (0–3)")
+    ax.set_ylabel("Responses")
+    ax.set_xticks([0, 1, 2, 3])
+    fig.tight_layout()
+    fig.savefig(output_path, format="png")
+    plt.close(fig)
 
-    fig.update_layout(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=0, r=0, t=0, b=10),  # t=0 instead of 10
-        height=180,
-        width=320,
-        showlegend=False
-    )
+# def generate_question_bar_chart(question_text, rating_counts, output_path):
+#     labels = ["Consistently\nUntrue", "Somewhat\nUntrue", "Somewhat\nTrue", "Consistently\nTrue"]
 
-    fig.write_image(output_path, width=320, height=180, format="svg")
+#     fig = go.Figure(data=[
+#         go.Bar(x=labels, y=rating_counts, text=rating_counts, textposition="outside", marker_color="#0093ED")
+#     ])
+
+#     fig.update_layout(
+#         plot_bgcolor='rgba(0,0,0,0)',
+#         paper_bgcolor='rgba(0,0,0,0)',
+#         margin=dict(l=0, r=0, t=0, b=10),  # t=0 instead of 10
+#         height=180,
+#         width=320,
+#         showlegend=False
+#     )
+
+#     fig.write_image(output_path, width=320, height=180, format="svg")
 
 # Creates temp pngs for graphs/charts
 @contextmanager
