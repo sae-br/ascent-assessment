@@ -9,7 +9,7 @@
   --text: #393446;
   --text-light: #6C7581;
   --border: #9FA8B8;
-  --primary: rgba(0, 147, 237); /* #0093ED in hex */
+  --primary: #0093ED;
   --primary-hover: #0b81cb;
   --secondary: #b5eaea;
   --accent-text: var(--bg);
@@ -140,38 +140,31 @@ tr, th, td {
 }
 
 /* Title Page */
-.title-page {  
-  font-family: var(--sans-font);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-height: 100vh;
+.title-page {
+  display: block; 
+  height: 100vh; 
+  break-inside: avoid;
+  page-break-inside: avoid;
   margin: 0;
   padding: 0;
 }
 
 .title-top {
-  flex: 1 1 auto;
   background-color: var(--bg-accent);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 20px 40px;
+  padding: 48pt 36pt 24pt; 
+  text-align: center;
 }
 
-.title-model img {
-  width: 200px;
-  margin-top: 100px;
-  margin-bottom: 20px;
+.title-logo img {
+  width: 200pt;
+  margin: 60pt 0 20pt; 
 }
 
 .report-title {
   font-size: 28pt;
-  font-weight: bold;
+  font-weight: 700;
   color: var(--primary);
-  margin-bottom: 120px;
+  margin: 12pt 0 100pt; 
 }
 
 .team-name {
@@ -187,16 +180,9 @@ tr, th, td {
 }
 
 .title-bottom {
-  flex-shrink: 0;
-  padding-top: 60px;
-  background-color: var(--bg);
+  padding: 18pt 36pt 36pt;
+  background-color: #fff;
 }
-
-/* .title-logo img {
-  width: 200px;
-  margin-top: 100px;
-  margin-bottom: 20px;
-} */
 
 .title-company-info {
   font-size: 9pt;
@@ -230,8 +216,10 @@ tr, th, td {
   width: 100%;
 }
 
+.toc-list li { overflow: hidden; }             /* keeps dots & number on the line */
+.toc-list a { display: block; }                /* block makes leader layout reliable */
 .toc-list a::after {
-  content: leader(dots) " " target-counter(attr(href), page);
+  content: leader(dots) " " target-counter(attr(href url), page);
   float: right;
 }
 
