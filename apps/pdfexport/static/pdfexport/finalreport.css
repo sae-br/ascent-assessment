@@ -114,6 +114,23 @@ li {
     margin-bottom: 5px;
 }
 
+section > h1 { margin: 0 0 14pt; }
+section > h2 { margin: 16pt 0 8pt; }
+
+/* Generic table & page-break guards for Prince */
+table { border-collapse: collapse; width: 100%; }
+thead { display: table-header-group; }   /* repeat headers on new pages */
+tfoot { display: table-footer-group; }
+
+tr, th, td {
+  page-break-inside: avoid;
+  break-inside: avoid;                   /* modern alias */
+}
+
+.avoid-break {
+  page-break-inside: avoid; 
+  break-inside: avoid;
+}
 
 /* Title Page */
 .title-page {  
@@ -140,14 +157,14 @@ li {
 .title-model img {
   width: 200px;
   margin-top: 100px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .report-title {
   font-size: 28pt;
   font-weight: bold;
   color: var(--primary);
-  margin-bottom: 140px;
+  margin-bottom: 120px;
 }
 
 .team-name {
@@ -213,7 +230,7 @@ li {
 .model-peak {
   float: left;
   width: 48%;
-  margin: 0 2% 16px 0;
+  margin: 0 2% 18px 0;
   display: table;
 }
 
@@ -241,18 +258,23 @@ li {
 /* Team Results Section */
 
 .score-grid {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  display: table;
+  table-layout: fixed;
+  width: 100%;
   margin-top: 1rem;
   margin-bottom: 2rem;
-  gap: 20px;
 }
 
 .score-item {
-  flex: 1 1 20%;
-  text-align: center;
+  display: table-cell;
+  vertical-align: bottom;
+  padding: 0 14px;
 }
+
+.score-item:first-child { padding-left: 0; }
+.score-item:last-child  { padding-right: 0; }
+
+.score-item { break-inside: avoid; page-break-inside: avoid; }
 
 .score-label {
   font-weight: bold;
@@ -292,15 +314,23 @@ li {
 }
 
 .score-summary {
-    display: grid;
-    grid-template-columns: 100px 100px 1fr;
-    gap: 30px;
-    align-items: center;
+    display: table;
+    width: 100%;
     background-color: var(--bg-accent);
     border-radius: var(--standard-border-radius);
     padding: 20px 40px;
     margin-bottom: 40px;
 }
+
+.score-summary > div {
+  display: table-cell;
+  vertical-align: middle;
+  padding-right: 30px; 
+}
+
+.score-summary > div:nth-child(1) { width: 100px; }
+.score-summary > div:nth-child(2) { width: 100px; }
+.score-summary > div:last-child   { padding-right: 0; }
 
 .score-summary h4 {
     margin: 0;
@@ -315,9 +345,15 @@ li {
 }
 
 .peak-chart {
-    width: 100%;
-    height: 100%;
+  display: block;
+  width: 100%;
+  height: auto;
 }
+
+.summary-text { margin: 8pt 0 0; }
+
+.team-score h2 { margin-top: 18pt; }
+
 
 /* Insights */
 .insight-layout {
@@ -349,28 +385,18 @@ li {
 }
 
 /* Questions and Responses */
-.question-block {
-    padding: 0;
-}
-
+.question-block { padding: 0; }
 .question-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 2rem;
-    margin-bottom: 1rem;
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  margin-bottom: 14pt;
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
-.question-text {
-    flex: 1 1 60%;
-    font-size: 10.5pt;
-}
-
-.question-chart {
-    flex: 1 1 35%;
-    text-align: right;
-    max-width: 320px;
-}
+.question-text  { display: table-cell; width: 60%; padding-right: 20px; }
+.question-chart { display: table-cell; width: 40%; text-align: right; }
 
 .question-chart img {
     max-width: 100%;
@@ -400,14 +426,14 @@ li {
 .action-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 40px;
+  table-layout: fixed;
+  margin: 14pt 0 28pt;
   font-family: var(--sans-font);
 }
 
-.action-table th,
-.action-table td {
+.action-table th, .action-table td {
   border: 1px solid var(--border);
-  padding: 10px;
+  padding: 10px 12px;
   vertical-align: top;
 }
 
@@ -419,19 +445,10 @@ li {
   font-weight: normal;
 }
 
-.action-table td:first-child {
-  height: 80px; /* Big writing area */
-}
-
+.action-table td:first-child { height: 80px; } /* writing area */
 .action-table td:nth-child(2),
-.action-table td:nth-child(3) {
-  width: 120px;
-}
+.action-table td:nth-child(3) { width: 120px; }
 
-.action-table td {
-  height: 80px;
-  font-size: 10pt;
-}
 
 /* Page Breaks */
 .page-break {
