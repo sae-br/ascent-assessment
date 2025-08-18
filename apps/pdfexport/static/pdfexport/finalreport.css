@@ -144,11 +144,10 @@ tr, th, td {
 
 /* Title Page */
 .title-page {
-  display: block; 
+  display: block;
   min-height: auto;
-  break-inside: avoid;
-  page-break-inside: avoid;
   justify-content: center;
+  align-items: center;
   margin: 0;
   padding: 0;
 }
@@ -185,19 +184,20 @@ tr, th, td {
 }
 
 .title-bottom {
+  align-items: center;
   padding: 24px 24px 36px;
   background-color: #fff;
 }
 
 .title-company-info {
   font-size: 9pt;
+  align-items: center;
   color: var(--text-light);
 }
 
 /* Table of Contents */
 
 .toc { padding: 0; }
-.toc h1 { margin-bottom: 10pt; }
 
 .toc-list {
   list-style: none;
@@ -218,6 +218,10 @@ tr, th, td {
   width: 100%; 
   text-decoration: none; 
   color: var(--primary); 
+}
+
+#toc li a::after {
+  content: " | Page " target-counter(attr(href), page);
 }
 
 .toc-list li { overflow: hidden; } /* makes sure the floated page number stays on the line */
