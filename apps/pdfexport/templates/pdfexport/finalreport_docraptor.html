@@ -63,17 +63,19 @@
     <!-- TOC -->
     <section class="toc" style="page: toc;">
         <h1>Contents</h1>
-        <ol class="toc-list">
-            <li><a href="#intro">Introduction</a></li>
-            <li><a href="#model">Review of the OrgHealth Ascent Model</a></li>
-            <li><a href="#team-score">Our Team’s Results</a></li>
+        <ol class="toc-list" id="toc">
+            <li data-target="#intro"><a href="#intro">Introduction</a></li>
+            <li data-target="#model"><a href="#model">Review of the OrgHealth Ascent Model</a></li>
+            <li data-target="#team-score"><a href="#team-score">Our Team’s Results</a></li>
 
             {% for peak in peak_sections %}
-            <li><a href="#peak-{{ peak.name|slugify }}">{{ peak.name }}</a></li>
+            <li data-target="#peak-{{ peak.name|slugify }}">
+                <a href="#peak-{{ peak.name|slugify }}">{{ peak.name }}</a>
+            </li>
             {% endfor %}
 
-            <li><a href="#action-ideas">My Action Ideas</a></li>
-            <li><a href="#commitments">Team Commitments</a></li>
+            <li data-target="#action-ideas"><a href="#action-ideas">My Action Ideas</a></li>
+            <li data-target="#commitments"><a href="#commitments">Team Commitments</a></li>
         </ol>
     </section>
 

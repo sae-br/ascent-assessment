@@ -18,9 +18,12 @@
 /* Page numbering and footer */
 .footer-left.running {
   position: running(footer-left);  /* exposes this node to margin boxes */
+  height: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden; 
 }
 .footer-left img {
-  height: 20pt;                    /* pick a crisp size for print */
+  height: 20pt; 
   width: auto;
   display: inline-block;
   vertical-align: middle;
@@ -142,17 +145,19 @@ tr, th, td {
 /* Title Page */
 .title-page {
   display: block; 
-  height: 100vh; 
+  min-height: auto;
   break-inside: avoid;
   page-break-inside: avoid;
+  justify-content: center;
   margin: 0;
   padding: 0;
 }
 
 .title-top {
   background-color: var(--bg-accent);
-  padding: 48pt 36pt 24pt; 
+  padding: 48px 24px 32px;
   text-align: center;
+  justify-content: center;
 }
 
 .title-logo img {
@@ -164,7 +169,7 @@ tr, th, td {
   font-size: 28pt;
   font-weight: 700;
   color: var(--primary);
-  margin: 12pt 0 100pt; 
+  margin-bottom: 48px;
 }
 
 .team-name {
@@ -180,7 +185,7 @@ tr, th, td {
 }
 
 .title-bottom {
-  padding: 18pt 36pt 36pt;
+  padding: 24px 24px 36px;
   background-color: #fff;
 }
 
@@ -204,23 +209,22 @@ tr, th, td {
 .toc-list li {
   display: block;
   margin: 6pt 0;
-  /* keep each line intact on page breaks */
   page-break-inside: avoid;
   break-inside: avoid;
 }
 
-.toc-list a {
-  text-decoration: none;
-  color: var(--primary);
-  display: inline-block;
-  width: 100%;
+.toc-list a { 
+  display: inline-block; 
+  width: 100%; 
+  text-decoration: none; 
+  color: var(--primary); 
 }
 
-.toc-list li { overflow: hidden; }             /* keeps dots & number on the line */
-.toc-list a { display: block; }                /* block makes leader layout reliable */
-.toc-list a::after {
-  content: leader(dots) " " target-counter(attr(href url), page);
+.toc-list li { overflow: hidden; } /* makes sure the floated page number stays on the line */
+.toc-list li::after {
+  content: leader(dots) " " target-counter(attr(data-target), page);
   float: right;
+  color: var(--text-light);
 }
 
 @page toc {
