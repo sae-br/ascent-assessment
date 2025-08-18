@@ -1,8 +1,7 @@
 /* Global variables. */
 :root {
-  --sans-font: -apple-system, BlinkMacSystemFont, "Avenir Next", Avenir,
-    "Nimbus Sans L", Roboto, "Noto Sans", "Segoe UI", Arial, Helvetica,
-    "Helvetica Neue", sans-serif;
+  --sans-font: "Metropolis", -apple-system, BlinkMacSystemFont, "Avenir Next",
+    Avenir, "Segoe UI", Roboto, "Noto Sans", Helvetica, Arial, sans-serif;
   --standard-border-radius: 8px;
   --border-width: 1px;
   --bg: white;
@@ -217,10 +216,20 @@ li {
   margin: 0 2% 16px 0;
   display: table;
 }
+
+.model-peak:nth-child(2n) {       /* every 2nd item */
+  margin-right: 0;                 /* no right gutter on right column */
+}
+
+.model-peak:nth-child(3) {         /* start of second row */
+  clear: both;
+}
+
 .model-peak img {
   display: table-cell;
   vertical-align: top;
-  width: 40px; height: 40px; 
+  width: 40px; 
+  height: 40px; 
   margin-right: 10px;
 }
 .model-peak > div {
