@@ -165,7 +165,7 @@ from django.http import HttpResponse, JsonResponse, Http404
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.conf import settings
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 
 import os
@@ -192,75 +192,86 @@ from docraptor.rest import ApiException
 
 # A TEMP TEST FOR TROUBLESHOOTING
 def final_report_preview(request, assessment_id):
-    base = get_report_context_data(assessment_id)
-    assessment = base["assessment"]
-    ctx = {
-        "STATIC_ABS": request.build_absolute_uri(static("")),
-        "assessment": assessment,
-        "team_name": assessment.team.name,
-        "deadline": assessment.deadline,
-        "peak_sections": [],
-        "peak_score_summary": [],
-        "summary_text": "",
-    }
-    return HttpResponse(get_template("pdfexport/finalreport_docraptor.html").render(ctx))
+    stage = int(request.GET.get("stage", "1") or 1)
+    stage = max(1, min(stage, 6))
 
-
-# TEMP BAREBONES DOCRAPTOR VIEW FOR TIMEOUT ISSUE
-def generate_final_report_pdf_docraptor(request, assessment_id):
-    t0_total = time.monotonic()
-    logger.info("[PDF] Start render for assessment_id=%s", assessment_id)
-
-    base = get_report_context_data(assessment_id)
-    assessment = base["assessment"]
+    assessment = get_object_or_404(Assessment, id=assessment_id)
+    peaks = list(Peak.objects.all().values("name", "code"))
     STATIC_ABS = request.build_absolute_uri(static(""))
 
-    # For now, skip the heavy peak loop — just pass empty lists
+    # flags for the template
+    show_scores = stage >= 1
+    show_insights_actions = stage >= 2
+    show_peak_charts = stage >= 3   # we won't actually render charts in preview, but flag stays consistent
+    show_question_rows = stage >= 4
+    show_question_charts = stage >= 5
+
+    # helper for LOW/MEDIUM/HIGH
+    def range_for(pct):
+        if pct < 34: return "LOW"
+        if pct < 67: return "MEDIUM"
+        return "HIGH"
+
+    # Preload answers once (cheap enough) to compute basic scores
+    participants = assessment.participants.all()
+    answers_qs = Answer.objects.filter(participant__in=participants)
+
+    peak_sections = []
+    for p in peaks:
+        section = {"name": p["name"], "code": p["code"]}
+
+        # (1) score/range
+        if show_scores:
+            # percentages for ratings 0..3
+            percents = get_peak_rating_distribution(assessment, p["code"])  # [p0,p1,p2,p3] sums to 100
+            score0_3 = sum((i * pct) for i, pct in enumerate(percents)) / 100.0
+            percentage_score = round(score0_3 * 100 / 3)
+            section["score"] = percentage_score
+            section["range_label"] = range_for(percentage_score)
+
+        # (2) insights/actions
+        if show_insights_actions:
+            rl = section.get("range_label")
+            insight = PeakInsights.objects.filter(peak=p["code"], range_label=rl).first() if rl else None
+            action  = PeakActions.objects.filter(peak=p["code"], range_label=rl).first() if rl else None
+            section["insights"] = insight.insight_text if insight else ""
+            section["actions"]  = action.action_text  if action  else ""
+
+        # (3) focus image (absolute URL)
+        if stage >= 3:
+            section["ascent_image"] = f"{STATIC_ABS}images/ascent-{p['code'].lower()}-focus.png"
+
+        # leave these empty in preview to keep it light
+        section.setdefault("questions", [])
+        section.setdefault("chart_path", "")
+
+        peak_sections.append(section)
+
+    # Basic summary table when scores are shown
+    if show_scores and peak_sections:
+        peak_score_summary = sorted(
+            [{"code": s["code"], "name": s["name"], "score": s["score"], "range": s["range_label"]} for s in peak_sections],
+            key=lambda x: x["score"]
+        )
+    else:
+        peak_score_summary = [{"name": p["name"], "score": 0, "range": "—"} for p in peaks]
+
     ctx = {
         "STATIC_ABS": STATIC_ABS,
-        "assessment": assessment,
         "team_name": assessment.team.name,
         "deadline": assessment.deadline,
-        "peak_sections": [],
-        "peak_score_summary": [],
-        "summary_text": "",
+        "peak_score_summary": peak_score_summary,
+        "peak_sections": peak_sections,
+        "show_scores": show_scores,
+        "show_insights_actions": show_insights_actions,
+        "show_peak_charts": show_peak_charts,
+        "show_question_rows": show_question_rows,
+        "show_question_charts": show_question_charts,
+        "stage": stage,
     }
+    logger.info("PREVIEW stage=%s sections=%s", stage, len(peak_sections))
+    return render(request, "pdfexport/finalreport_docraptor.html", ctx)
 
-    html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
-    html_len = len(html)
-    img_count = html.count("<img")
-    logger.info("[PDF] HTML size=%s bytes, img_count=%s", html_len, img_count)
-
-    client = docraptor.DocApi()
-    client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
-    baseurl = request.build_absolute_uri("/")
-
-    t0_docraptor = time.monotonic()
-    logger.info("[PDF] Calling DocRaptor...")
-    try:
-        result = client.create_doc({
-            "test": True,
-            "document_type": "pdf",
-            "name": f"{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf",
-            "document_content": html,
-            "prince_options": {
-                "media": "print",
-                "baseurl": baseurl,
-            },
-        },
-        _request_timeout=(10, 700)  # MEASURING: (connect_timeout, read_timeout) in seconds
-        )
-    except ApiException as e:
-        logger.exception("DocRaptor API error")
-        return HttpResponse(f"DocRaptor error: {e}", status=502)
-
-    docraptor_dt = time.monotonic() - t0_docraptor
-    logger.info("[PDF] DocRaptor returned in %.2f seconds", docraptor_dt)
-
-    total_dt = time.monotonic() - t0_total
-    logger.info("[PDF] Total view time %.2f seconds", total_dt)
-
-    return HttpResponse(result, content_type="application/pdf")
 
 # def generate_final_report_pdf_docraptor(request, assessment_id):
 #     # MEASURING: Start logging size and time used, to find bottleneck areas
@@ -436,6 +447,16 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
     from django.utils.text import slugify
 
     stage = int(request.GET.get("stage", 1))
+    # Clamp stage to [1, 6]
+    if stage < 1:
+        stage = 1
+    elif stage > 6:
+        stage = 6
+    show_scores = stage >= 2
+    show_insights_actions = stage >= 3
+    show_peak_charts = stage >= 4
+    show_question_rows = stage >= 5
+    show_question_charts = stage >= 6
     t0_total = time.monotonic()
     logger.info("[PDF] Start render for assessment_id=%s stage=%s", assessment_id, stage)
 
@@ -546,6 +567,12 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
         "peak_sections": peak_sections,
         "peak_score_summary": peak_score_summary,
         "summary_text": summary_text,
+        "stage": stage,
+        "show_scores": show_scores,
+        "show_insights_actions": show_insights_actions,
+        "show_peak_charts": show_peak_charts,
+        "show_question_rows": show_question_rows,
+        "show_question_charts": show_question_charts,
     }
     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
     logger.info("[PDF] HTML size=%s bytes, img_count=%s", len(html), html.count("<img"))
@@ -595,6 +622,8 @@ def final_report_docraptor_start(request, assessment_id):
     """
     from apps.pdfexport.utils.context import get_report_context_data
 
+    stage = request.GET.get("stage", "1")
+
     base = get_report_context_data(assessment_id)
     assessment = base["assessment"]
 
@@ -625,7 +654,7 @@ def final_report_docraptor_start(request, assessment_id):
             "document_type": "pdf",
             "name": filename,
             "document_url": request.build_absolute_uri(
-                f"/pdfexport/final-report/{assessment_id}/preview/" 
+                f"/pdfexport/final-report/{assessment_id}/preview/?stage={stage}"
             ),
             "prince_options": {
                 "media": "print",
