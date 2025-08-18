@@ -20,12 +20,10 @@
   position: running(footer-left);  /* exposes this node to margin boxes */
 }
 .footer-left img {
-  height: 14pt;                    /* pick a crisp size for print */
+  height: 20pt;                    /* pick a crisp size for print */
   width: auto;
   display: inline-block;
   vertical-align: middle;
-  /* optional fine-tuning */
-  /* margin-top: -1pt;  */
 }
 
 @page {
@@ -33,7 +31,6 @@
 
   @bottom {
     content: "";
-    border-top: 1px solid #0093ED;
   }
 
   @bottom-left {
@@ -213,7 +210,7 @@ tr, th, td {
 
 .toc-list {
   list-style: none;
-  margin: 0;
+  margin-top: 60px;
   padding: 0;
   font-size: 11pt;
 }
@@ -228,12 +225,14 @@ tr, th, td {
 
 .toc-list a {
   text-decoration: none;
-  color: inherit;
-  display: block;
+  color: var(--primary);
+  display: inline-block;
+  width: 100%;
 }
 
 .toc-list a::after {
   content: leader(dots) " " target-counter(attr(href), page);
+  float: right;
 }
 
 @page toc {
