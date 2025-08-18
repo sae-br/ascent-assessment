@@ -230,7 +230,7 @@ tr, th, td {
 .model-peak {
   float: left;
   width: 48%;
-  margin: 0 2% 18px 0;
+  margin: 0 2% 30px 0;
   display: table;
 }
 
@@ -246,7 +246,6 @@ tr, th, td {
   display: table-cell;
   vertical-align: top;
   width: 40px; 
-  height: 40px; 
   margin-right: 10px;
 }
 .model-peak > div {
@@ -284,7 +283,7 @@ tr, th, td {
 }
 
 .score-title {
-  font-size: 10.5pt;
+  font-size: 14pt;
   margin-bottom: 6px;
 }
 
@@ -315,10 +314,11 @@ tr, th, td {
 
 .score-summary {
     display: table;
-    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
     background-color: var(--bg-accent);
     border-radius: var(--standard-border-radius);
-    padding: 20px 40px;
+    padding: 20px 24px;
     margin-bottom: 40px;
 }
 
@@ -328,9 +328,13 @@ tr, th, td {
   padding-right: 30px; 
 }
 
-.score-summary > div:nth-child(1) { width: 100px; }
-.score-summary > div:nth-child(2) { width: 100px; }
-.score-summary > div:last-child   { padding-right: 0; }
+.score-summary > div:nth-child(1),
+.score-summary > div:nth-child(2) { width: 110px; }
+
+.score-summary > div:last-child   { 
+  padding-right: 0; 
+  width: auto; 
+}
 
 .score-summary h4 {
     margin: 0;
@@ -346,7 +350,7 @@ tr, th, td {
 
 .peak-chart {
   display: block;
-  width: 100%;
+  max-width: 100%;
   height: auto;
 }
 
