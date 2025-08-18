@@ -2,25 +2,48 @@
 {% load markdown_extras %}
 <!DOCTYPE html>
 <html lang="en">
-<!-- DEBUG START -->
-<p style="font:12px/1.3 monospace; color:#666">
-  team_name={{ team_name|default:"(missing)" }} |
-  deadline={{ deadline|default:"(missing)" }} |
-  peak_sections.len={{ peak_sections|length }} |
-  peak_score_summary.len={{ peak_score_summary|length }} |
-  show_scores={{ show_scores|default:"?" }} |
-  show_insights_actions={{ show_insights_actions|default:"?" }}
-</p>
-<hr>
-<!-- DEBUG END -->
 <head>
     <meta charset="UTF-8">
     <title>{{ team_name }} – Assessment Report</title>
+    <style>
+        @font-face {
+            font-family: "Metropolis";
+            src: url("{{ STATIC_ABS }}fonts/Metropolis/Metropolis-Regular.woff2") format("woff2"),
+                url("{{ STATIC_ABS }}fonts/Metropolis/Metropolis-Regular.woff") format("woff");
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Metropolis";
+            src: url("{{ STATIC_ABS }}fonts/Metropolis/Metropolis-Medium.woff2") format("woff2"),
+                url("{{ STATIC_ABS }}fonts/Metropolis/Metropolis-Medium.woff") format("woff");
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: "Metropolis";
+            src: url("{{ STATIC_ABS }}fonts/Metropolis/Metropolis-Bold.woff2") format("woff2"),
+                url("{{ STATIC_ABS }}fonts/Metropolis/Metropolis-Bold.woff") format("woff");
+            font-weight: 700;
+            font-style: normal;
+        }
+        html, body { font-family: "Metropolis", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    </style>
     <link rel="stylesheet" href="{{ STATIC_ABS }}pdfexport/finalreport.css">
 </head>
 
 <body style='string-set: team_meta "{{ team_name }} – {{ deadline|date:"F Y" }}";'>
-
+    {% comment %} <!-- DEBUG START -->
+    <p style="font:12px/1.3 monospace; color:#666">
+        team_name={{ team_name|default:"(missing)" }} |
+        deadline={{ deadline|default:"(missing)" }} |
+        peak_sections.len={{ peak_sections|length }} |
+        peak_score_summary.len={{ peak_score_summary|length }} |
+        show_scores={{ show_scores|default:"?" }} |
+        show_insights_actions={{ show_insights_actions|default:"?" }}
+    </p>
+    <hr>
+    <!-- DEBUG END --> {% endcomment %}
     <!-- Title Page -->
     <div class="title-page" style="page: cover;">
         <div class="title-top">

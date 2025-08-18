@@ -186,16 +186,20 @@ li {
 }
 
 .model-layout {
-  display: flex;
-  align-items: flex-start;
-  gap: 2rem;
+  display: table;
+  width: 100%;
   margin-bottom: 2rem;
 }
 
-.model-image img {
-  width: 250px;
-  height: auto;
+.model-image, .model-description {
+  display: table-cell;
+  vertical-align: top;
 }
+.model-image {
+  width: 250px; 
+  padding-right: 24px;
+}
+.model-image img { display: block; width: 100%; height: auto; }
 
 .model-description {
   flex: 1;
@@ -204,22 +208,26 @@ li {
 
 .model-peaks {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
   font-size: 10.5pt;
 }
 
 .model-peak {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+  float: left;
+  width: 48%;
+  margin: 0 2% 16px 0;
+  display: table;
 }
-
 .model-peak img {
-  width: 30px;
-  height: auto;
-  flex-shrink: 0;
+  display: table-cell;
+  vertical-align: top;
+  width: 40px; height: 40px; 
+  margin-right: 10px;
 }
+.model-peak > div {
+  display: table-cell;
+  vertical-align: top;
+}
+.model-peaks::after { content: ""; display: block; clear: both; }
 
 /* Team Results Section */
 
@@ -418,5 +426,9 @@ li {
 
 /* Page Breaks */
 .page-break {
-  page-break-after: always;
+  display: block !important;
+  page-break-before: always; /* legacy */
+  break-before: page;        /* modern */
+  height: 0;
+  margin: 0; padding: 0; border: 0;
 }
