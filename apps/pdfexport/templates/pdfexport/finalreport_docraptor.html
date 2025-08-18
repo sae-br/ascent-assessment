@@ -33,43 +33,54 @@
 </head>
 
 <body style='string-set: team_meta "{{ team_name }} – {{ deadline|date:"F Y" }}";'>
-    {% comment %} <!-- DEBUG START -->
-    <p style="font:12px/1.3 monospace; color:#666">
-        team_name={{ team_name|default:"(missing)" }} |
-        deadline={{ deadline|default:"(missing)" }} |
-        peak_sections.len={{ peak_sections|length }} |
-        peak_score_summary.len={{ peak_score_summary|length }} |
-        show_scores={{ show_scores|default:"?" }} |
-        show_insights_actions={{ show_insights_actions|default:"?" }}
-    </p>
-    <hr>
-    <!-- DEBUG END --> {% endcomment %}
+
+    <!-- Running element used in page footer -->
+    <div class="footer-left running">
+        <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment" />
+    </div>
+
     <!-- Title Page -->
     <div class="title-page" style="page: cover;">
         <div class="title-top">
-            <div class="title-model">
-                <img src="{{ STATIC_ABS }}images/small-icon.png" alt="Model"/>
+            <div class="title-logo">
+                <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment for Teams"/>
             </div>
-            <h1 class="report-title">Ascent Assessment Report</h1>
+            <h1 class="report-title">Final Report</h1>
             <p class="team-name">{{ team_name }}</p>
             <p class="report-date">{{ deadline|date:"F Y" }}</p>
         </div>
 
         <div class="title-bottom">
-            <div class="title-logo">
-                <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment">
-            </div>
             <div class="title-company-info">
-                <p>www.orghealthteam.com</p>
-                <p>Copyright 2025</p>
+                <p>The Ascent Assessment for Teams is a product of OrgHealth.</br>www.orghealthteam.com</p>
+                <p class="">Copyright 2025</p>
             </div>
         </div>
     </div>
 
     <div class="page-break"></div>
 
+    <!-- TOC -->
+    <section class="toc" style="page: toc;">
+        <h1>Contents</h1>
+        <ol class="toc-list">
+            <li><a href="#intro">Introduction</a></li>
+            <li><a href="#model">Review of the OrgHealth Ascent Model</a></li>
+            <li><a href="#team-score">Our Team’s Results</a></li>
+
+            {% for peak in peak_sections %}
+            <li><a href="#peak-{{ peak.name|slugify }}">{{ peak.name }}</a></li>
+            {% endfor %}
+
+            <li><a href="#action-ideas">My Action Ideas</a></li>
+            <li><a href="#commitments">Team Commitments</a></li>
+        </ol>
+        </section>
+
+        <div class="page-break"></div>
+
     <!-- Introduction -->
-    <section class="intro-section">
+    <section id="intro" class="intro-section">
         <h1>Introduction</h1>
         <p>There are few things more important for an organization than its health. 
             The greatest change a leadership team can make for their organization is 
@@ -100,7 +111,7 @@
     <div class="page-break"></div>
 
     <!-- Review of the Model -->
-    <section class="model-overview-section">
+    <section id="model" class="model-overview-section">
         <h1>Review of the OrgHealth Ascent Model</h1>
 
         <div class="model-layout">
@@ -167,7 +178,7 @@
     <div class="page-break"></div>
 
     <!-- Team Score Summary -->
-    <section class="team-score">
+    <section id="team-score" class="team-score">
         <h1>Our Team’s Results</h1>
         <div class="score-grid">
             {% for peak in peak_score_summary %}
@@ -192,7 +203,7 @@
 
     <!-- Peak Sections -->
     {% for peak in peak_sections %}
-        <section class="peak-section">
+        <section id="peak-{{ peak.name|slugify }}" class="peak-section">
             <h1>{{ peak.name }}</h1>
 
             <!-- Score Summary -->
@@ -264,7 +275,7 @@
     {% endfor %}
 
     <!-- Action Ideas -->
-    <section class="action-ideas">
+    <section id="action-ideas" class="action-ideas">
         <h1>Action Ideas</h1>
         <h3>Collaborative Culture</h3>
         <table class="action-table">
@@ -339,7 +350,7 @@
     <div class="page-break"></div>
 
     <!-- Team Commitments -->
-    <section class="team-commitments">
+    <section id="commitments" class="team-commitments">
         <h1>Team Commitments</h1>
         <h3>Collaborative Culture</h3>
         <table class="action-table">
