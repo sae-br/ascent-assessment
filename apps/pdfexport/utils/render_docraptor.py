@@ -12,7 +12,7 @@ def render_pdf_from_html(html_content: str, filename: str, *, test: bool = True,
     Send HTML to DocRaptor and return PDF bytes.
     - html_content: fully rendered HTML string
     - filename: a friendly name recorded by DocRaptor
-    - test: True => free test PDFs with watermark (recommended while developing)
+    - test: True => free test PDFs with watermark 
     - javascript: True if your HTML uses Chart.js (or any JS)
     """
     api_key = _get_api_key()

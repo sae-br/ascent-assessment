@@ -33,7 +33,7 @@ urlpatterns = [
         views.generate_final_report_pdf_docraptor, 
         name="final_report_docraptor"
     ),
-    # TEMP TEST 
+    # preview for simple tests (will not render like DocRaptor)  
     path(
         "final-report/<int:assessment_id>/preview/", 
         views.final_report_preview, 
