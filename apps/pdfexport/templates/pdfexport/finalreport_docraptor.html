@@ -53,11 +53,6 @@
         </div>
     </div>
 
-    <!-- Running element used in page footer -->
-    <div class="footer-left running">
-        <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment" />
-    </div>
-
     <!-- TOC -->
     <section class="toc" style="page: toc;">
         <h1>Contents</h1>
@@ -77,7 +72,10 @@
         </ol>
     </section>
 
-    <div class="page-break"></div>
+    <!-- Running element used in footer; NOTE: causes page break -->
+    <div class="footer-left running">
+        <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment" />
+    </div>
 
     <!-- Introduction -->
     <section id="intro" class="intro-section">
@@ -245,6 +243,7 @@
 
             <!-- Questions and Responses -->
             <h2>Questions and Responses</h2>
+            {% if show_question_rows %}
             {% for question in peak.questions %}
                 <div class="question-block">
                     <div class="question-row"> 
@@ -260,6 +259,7 @@
                         </div>
                     </div>
             {% endfor %}
+            {% endif %}
 
             <!-- Suggested Actions -->
             <h2>Suggested Actions</h2>

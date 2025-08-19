@@ -476,7 +476,7 @@ tr, th, td {
 }
 
 .question-text  { display: table-cell; width: 60%; padding-right: 20px; }
-.question-chart { display: table-cell; width: 40%; text-align: right; }
+.question-chart { display: table-cell; width: 35%; text-align: right; }
 
 .question-chart img {
     max-width: 100%;
@@ -561,7 +561,7 @@ tr, th, td {
 }
 
 .commitment-table td:first-child { 
-  height: 1000px;
+  height: 600px;
   width: 120px;
 }
 .commitment-table td:nth-child(2) {

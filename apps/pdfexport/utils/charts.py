@@ -37,8 +37,8 @@ def generate_peak_mountain_chart(title, percentages, output_path):
     # Wide/short figure so it tucks into the score panel
     fig, ax = plt.subplots(figsize=(6.5, 2.2), dpi=180)
 
-    ax.fill_between(x, 0, y)         # filled area
-    ax.plot(x, y, linewidth=1.0)     # thin outline
+    ax.fill_between(x, 0, y, color="#0093ED")       # filled area
+    ax.plot(x, y, linewidth=1.0, color="#0b81cb")   # thin outline
 
     # Minimal axes: only x labels, no y axis, no spines
     ax.set_xlim(0, 3)
@@ -49,30 +49,29 @@ def generate_peak_mountain_chart(title, percentages, output_path):
         "Somewhat\nTrue",
         "Consistently\nTrue",
     ])
-    ax.tick_params(axis="x", labelsize=8, pad=2)
+    ax.tick_params(axis="x", labelsize=14, pad=8)
 
     ax.set_yticks([])
     for side in ("top", "right", "left", "bottom"):
         ax.spines[side].set_visible(False)
 
-    # Tight and transparent so it blends with your light-blue panel
     plt.tight_layout(pad=0.2)
     fig.savefig(output_path, bbox_inches="tight", pad_inches=0.02, transparent=True)
     plt.close(fig)
 
 
-def generate_peak_distribution_chart(title: str, percentages, output_path: str):
-    # percentages is a list of length 4 for ratings 0..3
-    fig, ax = plt.subplots(figsize=(4, 2.5), dpi=150)
-    ax.bar(range(4), percentages)
-    ax.set_title(title)
-    ax.set_xlabel("Rating (0–3)")
-    ax.set_ylabel("Percent")
-    ax.set_xticks([0, 1, 2, 3])
-    ax.set_ylim(0, 100)
-    fig.tight_layout()
-    fig.savefig(output_path, format="png")
-    plt.close(fig)
+# def generate_peak_distribution_chart(title: str, percentages, output_path: str):
+#     # percentages is a list of length 4 for ratings 0..3
+#     fig, ax = plt.subplots(figsize=(4, 2.5), dpi=150)
+#     ax.bar(range(4), percentages)
+#     ax.set_title(title)
+#     ax.set_xlabel("Rating (0–3)")
+#     ax.set_ylabel("Percent")
+#     ax.set_xticks([0, 1, 2, 3])
+#     ax.set_ylim(0, 100)
+#     fig.tight_layout()
+#     fig.savefig(output_path, format="png")
+#     plt.close(fig)
 
 # # Area chart for each peak -- generate chart and create png
 # def generate_peak_distribution_chart(peak_name, percentages, output_path):
