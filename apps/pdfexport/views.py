@@ -614,29 +614,113 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
 
 
 # --- Async DocRaptor flow ---
+# in apps/pdfexport/views.py
 def final_report_docraptor_start(request, assessment_id):
-    """
-    Kick off an async DocRaptor render and redirect to a status/poll page.
-    For now we use the same minimal context you used for the preview
-    (you can swap back to the full context once we’re confident).
-    """
-    from apps.pdfexport.utils.context import get_report_context_data
+    stage = int(request.GET.get("stage", "1") or 1)
+    stage = max(1, min(stage, 6))
 
-    stage = request.GET.get("stage", "1")
-
+    # Build the SAME context as the sync view does for the chosen stage
     base = get_report_context_data(assessment_id)
     assessment = base["assessment"]
-
+    peaks = base["peaks"]
     STATIC_ABS = request.build_absolute_uri(static(""))
+
+    def range_for(pct):
+        if pct < 34: return "LOW"
+        if pct < 67: return "MEDIUM"
+        return "HIGH"
+
+    peak_sections, temp_paths = [], []
+
+    # Build per-peak blocks just like in generate_final_report_pdf_docraptor
+    for peak in peaks:
+        section = {"name": peak.name, "code": peak.code}
+
+        # scores/range
+        if stage >= 1:
+            perc = get_peak_rating_distribution(assessment, peak.code)
+            score0_3 = sum((i * p) for i, p in enumerate(perc)) / 100.0
+            pct_score = round(score0_3 * 100 / 3)
+            section["score"] = pct_score
+            section["range_label"] = range_for(pct_score)
+
+        # insights/actions
+        if stage >= 2:
+            rl = section.get("range_label")
+            insight = PeakInsights.objects.filter(peak=peak.code, range_label=rl).first() if rl else None
+            action  = PeakActions.objects.filter(peak=peak.code, range_label=rl).first() if rl else None
+            section["insights"] = insight.insight_text if insight else None
+            section["actions"]  = action.action_text  if action  else None
+
+        # focus image
+        if stage >= 3:
+            section["ascent_image_abs"] = f"{STATIC_ABS}images/ascent-{peak.code.lower()}-focus.png"
+
+        # peak distribution chart
+        if stage >= 4:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                path = tmp.name
+            generate_peak_distribution_chart(peak.name, get_peak_rating_distribution(assessment, peak.code), path)
+            temp_paths.append(path)
+            from apps.pdfexport.utils.images import png_path_to_data_uri
+            section["chart_data_uri"] = png_path_to_data_uri(path)
+
+        # per-question rows
+        if stage >= 5:
+            q_rows = []
+            participants = assessment.participants.all()
+            answers = Answer.objects.filter(participant__in=participants)
+            for q in Question.objects.filter(peak=peak):
+                qa = answers.filter(question=q)
+                counts = [0,0,0,0]
+                for a in qa:
+                    if 0 <= a.value <= 3:
+                        counts[a.value] += 1
+                total = sum(counts)
+                if total:
+                    weighted = sum(i*c for i,c in enumerate(counts))
+                    hp = round((weighted / total) * 100 / 3)
+                else:
+                    hp = 0
+                row = {"text": q.text, "health_percentage": hp}
+                if stage >= 6:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as qtmp:
+                        qpath = qtmp.name
+                    generate_question_bar_chart(q.text, counts, qpath)
+                    temp_paths.append(qpath)
+                    row["chart_data_uri"] = png_path_to_data_uri(qpath)
+                q_rows.append(row)
+            section["questions"] = q_rows
+
+        peak_sections.append(section)
+
+    # summary (only when scores exist)
+    peak_score_summary, summary_text = [], ""
+    if stage >= 1 and peak_sections:
+        peak_score_summary = sorted(
+            [{"code": s["code"], "name": s["name"], "score": s["score"], "range": s["range_label"]} for s in peak_sections],
+            key=lambda x: x["score"]
+        )
+        lowest = peak_score_summary[0]["code"]
+        highest = peak_score_summary[-1]["code"]
+        rs = ResultsSummary.objects.filter(high_peak=highest, low_peak=lowest).first()
+        summary_text = rs.summary_text if rs else ""
+
+    # flags consumed by the template
     ctx = {
         "STATIC_ABS": STATIC_ABS,
         "assessment": assessment,
         "team_name": assessment.team.name,
         "deadline": assessment.deadline,
-        # keep these empty for now to avoid big payloads; you can restore later
-        "peak_sections": [],
-        "peak_score_summary": [],
-        "summary_text": "",
+        "peak_sections": peak_sections,
+        "peak_score_summary": peak_score_summary,
+        "summary_text": summary_text,
+        "stage": stage,
+        "show_scores": (stage >= 2),
+        "show_insights_actions": (stage >= 3),
+        "show_peak_charts": (stage >= 4),
+        "show_question_rows": (stage >= 5),
+        "show_question_charts": (stage >= 6),
     }
 
     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
@@ -644,40 +728,29 @@ def final_report_docraptor_start(request, assessment_id):
 
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
-
     baseurl = request.build_absolute_uri("/")
 
     try:
-        # Start async job (non-blocking)
         job = client.create_async_doc({
-            "test": True,  # keep True for testing
+            "test": True,
             "document_type": "pdf",
             "name": filename,
-            "document_url": request.build_absolute_uri(
-                f"/pdfexport/final-report/{assessment_id}/preview/?stage={stage}"
-            ),
+            "document_content": html,       # <— key change
             "prince_options": {
                 "media": "print",
                 "baseurl": baseurl,
-                # enable later if you move to Chart.js:
-                # "javascript": True,
             },
         })
-    except ApiException as e:
-        logger.exception("DocRaptor async create failed")
-        return HttpResponse(f"DocRaptor error: {e}", status=502)
+    finally:
+        # cleanup temp PNGs
+        for p in temp_paths:
+            try: os.remove(p)
+            except OSError: pass
 
-    # job.status_id is what we poll with
     status_id = getattr(job, "status_id", None)
     if not status_id:
-        logger.error("DocRaptor async job did not return a status_id: %r", job)
         return HttpResponse("Failed to start PDF job.", status=502)
-
-    # Render a tiny page that polls our status endpoint
-    return render(request, "pdfexport/doc_status.html", {
-        "status_id": status_id,
-        "filename": filename,
-    })
+    return render(request, "pdfexport/doc_status.html", {"status_id": status_id, "filename": filename})
 
 
 def docraptor_status(request, status_id):
