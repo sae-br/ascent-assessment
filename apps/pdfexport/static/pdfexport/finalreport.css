@@ -148,7 +148,7 @@ tr, th, td {
   flex-direction: column;
   min-height: auto;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   margin: 0;
   padding: 0;
 }
@@ -161,6 +161,8 @@ tr, th, td {
   justify-content: center; 
   background-color: var(--bg-accent);
   padding: 48px 24px 32px; 
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .title-logo img {
@@ -195,6 +197,8 @@ tr, th, td {
   text-align: center;
   padding: 24px 24px 36px;
   background-color: var(--bg);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .title-company-info {
