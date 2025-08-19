@@ -465,6 +465,7 @@ tr, th, td {
 
 /* Questions and Responses */
 .question-block { padding: 0; }
+
 .question-row {
   display: table;
   width: 100%;
@@ -474,13 +475,25 @@ tr, th, td {
   break-inside: avoid;
 }
 
-.question-text  { display: table-cell; width: 60%; padding-right: 20px; }
-.question-chart { display: table-cell; width: 35%; text-align: right; }
+.question-text { 
+  display: table-cell; 
+  vertical-align: top;
+  width: 60%; 
+  padding-right: 20px; 
+}
+
+.question-chart { 
+  display: table-cell; 
+  vertical-align: top;
+  width: 35%; 
+  text-align: right; 
+}
 
 .question-chart img {
     max-width: 100%;
     height: auto;
-    display: block;
+    display: inline-block;
+    vertical-align: top;
     margin: 0 auto;
 }
 

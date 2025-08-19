@@ -135,7 +135,7 @@ def get_peak_rating_distribution(assessment, peak_code):
     return [round((counter.get(i, 0) / total) * 100) for i in range(4)]
 
 
-# # Bar chart for each question - generate chart
+# Bar chart for each question
 def generate_question_bar_chart(question_text: str, counts, output_path: str):
     """
     Render a compact, minimalist bar chart for a single question (answers 0..3).
@@ -170,10 +170,11 @@ def generate_question_bar_chart(question_text: str, counts, output_path: str):
         ax.spines[side].set_visible(False)
 
     ax.set_xticks(x, labels=labels)
-    ax.tick_params(axis="x", labelsize=10, pad=2, rotation=32)
-    # Ensure right alignment for multi-line tick labels after rotation
+    ax.tick_params(axis="x", labelsize=10, pad=2, rotation=-32)
+    # Slant x-labels; aligned top left, down to the right
     for t in ax.get_xticklabels():
-        t.set_ha("right")
+        t.set_ha("left")
+        t.set_va("top")
 
     ax.set_yticks([])
     ax.set_ylabel("")
