@@ -421,14 +421,13 @@ tr, th, td {
   display: block;
   max-width: 100%;
   height: auto;
-  max-height: 180px;
+  max-height: 120px;
 }
 
 .peak-chart-wrap { 
-  max-width: 560px; 
+  max-width: 260px; 
   margin-left: auto; 
   margin-right: 8px;
-  padding-top: 8px;        /* above axis labels */
 }
 
 .summary-text { margin: 8pt 0 0; }
@@ -506,7 +505,6 @@ tr, th, td {
 /* Action Ideas Section */
 .action-table {
   width: 100%;
-  border-collapse: collapse;
   table-layout: fixed;
   margin: 14pt 0 28pt;
   font-family: var(--sans-font);
@@ -524,11 +522,54 @@ tr, th, td {
   text-transform: uppercase;
   color: var(--text-light);
   font-weight: normal;
+  border-bottom: var(--bg);
 }
 
-.action-table td:first-child { height: 80px; } /* writing area */
-.action-table td:nth-child(2),
-.action-table td:nth-child(3) { width: 120px; }
+.action-table td:first-child { 
+  height: 80px;
+  width: 120px;
+}
+.action-table td:nth-child(2) {
+  width: 120px;
+}
+.action-table td:nth-child(3) { 
+  width: auto; 
+}
+
+
+/* Commitments Section */
+.commitment-table {
+  width: 100%;
+  table-layout: fixed;
+  margin: 14pt 0 28pt;
+  font-family: var(--sans-font);
+}
+
+.commitment-table th, .action-table td {
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.commitment-table thead th {
+  background-color: var(--bg-accent);
+  font-size: 9pt;
+  text-transform: uppercase;
+  color: var(--text-light);
+  font-weight: normal;
+  border-bottom: var(--bg);
+}
+
+.commitment-table td:first-child { 
+  height: 1000px;
+  width: 120px;
+}
+.commitment-table td:nth-child(2) {
+  width: 120px;
+}
+.commitment-table td:nth-child(3) { 
+  width: auto; 
+}
 
 
 /* Page Breaks */

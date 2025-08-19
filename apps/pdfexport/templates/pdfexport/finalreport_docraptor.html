@@ -34,11 +34,6 @@
 
 <body style='string-set: team_meta "{{ team_name }} – {{ deadline|date:"F Y" }}";'>
 
-    <!-- Running element used in page footer -->
-    <div class="footer-left running">
-        <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment" />
-    </div>
-
     <!-- Title Page -->
     <div class="title-page avoid-break" style="page: cover;">
         <div class="title-top">
@@ -56,6 +51,11 @@
                 <p class="">Copyright 2025</p>
             </div>
         </div>
+    </div>
+
+    <!-- Running element used in page footer -->
+    <div class="footer-left running">
+        <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment" />
     </div>
 
     <!-- TOC -->
@@ -357,59 +357,7 @@
     <!-- Team Commitments -->
     <section id="commitments" class="team-commitments">
         <h1>Team Commitments</h1>
-        <h3>Collaborative Culture</h3>
-        <table class="action-table">
-            <thead>
-                <tr>
-                    <th>Action Commitment(s):</th>
-                    <th>Complete By:</th>
-                    <th>Assigned To:</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-        <h3>Leadership Accountability</h3>
-        <table class="action-table">
-            <thead>
-                <tr>
-                    <th>Action Commitment(s):</th>
-                    <th>Complete By:</th>
-                    <th>Assigned To:</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-        <h3>Strategic Momentum</h3>
-        <table class="action-table">
-            <thead>
-                <tr>
-                    <th>Action Commitment(s):</th>
-                    <th>Complete By:</th>
-                    <th>Assigned To:</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-        <h3>Talent Magnetism</h3>
-        <table class="action-table">
+        <table class="commitment-table">
             <thead>
                 <tr>
                     <th>Action Commitment(s):</th>
