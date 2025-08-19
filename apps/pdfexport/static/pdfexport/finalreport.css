@@ -313,8 +313,7 @@ tr, th, td {
   display: table;
   table-layout: fixed;
   width: 100%;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
+  margin: 30px 0 60px;
 }
 
 .score-item {
@@ -374,7 +373,7 @@ tr, th, td {
     background-color: var(--bg-accent);
     border-radius: var(--standard-border-radius);
     padding: 28px 32px;
-    margin: 22px 0 44px;
+    margin: 30px 0 60px;
     page-break-inside: avoid;
     break-inside: avoid;
     min-height: 220px;
@@ -440,7 +439,7 @@ tr, th, td {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 2rem;
+    gap: 30px;
 }
 
 .insights {
@@ -522,15 +521,14 @@ tr, th, td {
   text-transform: uppercase;
   color: var(--text-light);
   font-weight: normal;
-  border-bottom: var(--bg);
 }
 
 .action-table td:first-child { 
   height: 80px;
-  width: 120px;
+  width: 100px;
 }
 .action-table td:nth-child(2) {
-  width: 120px;
+  width: 100px;
 }
 .action-table td:nth-child(3) { 
   width: auto; 
@@ -557,15 +555,14 @@ tr, th, td {
   text-transform: uppercase;
   color: var(--text-light);
   font-weight: normal;
-  border-bottom: var(--bg);
 }
 
 .commitment-table td:first-child { 
-  height: 600px;
-  width: 120px;
+  height: 500px;
+  width: 100px;
 }
 .commitment-table td:nth-child(2) {
-  width: 120px;
+  width: 100px;
 }
 .commitment-table td:nth-child(3) { 
   width: auto; 

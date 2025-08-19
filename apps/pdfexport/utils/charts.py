@@ -137,15 +137,66 @@ def get_peak_rating_distribution(assessment, peak_code):
 
 # # Bar chart for each question - generate chart
 def generate_question_bar_chart(question_text: str, counts, output_path: str):
-    # counts is a list of length 4 for answers 0..3
-    fig, ax = plt.subplots(figsize=(4, 2.5), dpi=150)
-    ax.bar(range(4), counts)
-    ax.set_title(question_text)
-    ax.set_xlabel("Rating (0–3)")
-    ax.set_ylabel("Responses")
-    ax.set_xticks([0, 1, 2, 3])
-    fig.tight_layout()
-    fig.savefig(output_path, format="png")
+    """
+    Render a compact, minimalist bar chart for a single question (answers 0..3).
+
+    - Blue brand bars
+    - No y-axis or spines
+    - Diagonal x tick labels (Consistently Untrue .. Consistently True)
+    - Small numeric labels above each bar
+    - Transparent background so it sits on your PDF panel nicely
+    """
+    import numpy as np
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    # Defensive: force 4 values for 0..3
+    vals = [(int(counts[i]) if i < len(counts) else 0) for i in range(4)]
+    labels = [
+        "Consistently\nUntrue",
+        "Somewhat\nUntrue",
+        "Somewhat\nTrue",
+        "Consistently\nTrue",
+    ]
+
+    # Compact figure that tucks to the right of the question text
+    fig, ax = plt.subplots(figsize=(3.6, 1.8), dpi=180)
+    x = np.arange(4)
+    bars = ax.bar(x, vals, width=0.65, color="#0093ED")
+
+    # Minimal styling
+    for side in ("top", "right", "left", "bottom"):
+        ax.spines[side].set_visible(False)
+
+    ax.set_xticks(x, labels=labels)
+    ax.tick_params(axis="x", labelsize=10, pad=2, rotation=32)
+    # Ensure right alignment for multi-line tick labels after rotation
+    for t in ax.get_xticklabels():
+        t.set_ha("right")
+
+    ax.set_yticks([])
+    ax.set_ylabel("")
+    ax.set_xlabel("")
+
+    # Pad the top a bit so value labels don't clip
+    ymax = max(vals + [1])
+    ax.set_ylim(0, ymax * 1.35)
+
+    # Value labels above bars
+    for rect in bars:
+        h = rect.get_height()
+        ax.text(
+            rect.get_x() + rect.get_width() / 2,
+            h + ymax * 0.04,
+            f"{int(h)}",
+            ha="center",
+            va="bottom",
+            fontsize=12,
+        )
+
+    fig.tight_layout(pad=0.2)
+    fig.savefig(output_path, bbox_inches="tight", pad_inches=0.02, transparent=True)
     plt.close(fig)
 
 # def generate_question_bar_chart(question_text, rating_counts, output_path):
