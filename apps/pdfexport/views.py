@@ -177,7 +177,7 @@ from apps.assessments.models import Peak, Question, Answer, Assessment
 from apps.pdfexport.utils.context import get_report_context_data
 from apps.pdfexport.utils.charts import (
     get_peak_rating_distribution,
-    generate_peak_distribution_chart,
+    generate_peak_mountain_chart,
     generate_question_bar_chart,
 )
 from apps.pdfexport.utils.images import png_path_to_data_uri
@@ -508,7 +508,7 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
         if stage >= 4:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
                 spread_png = tmp.name
-            generate_peak_distribution_chart(peak.name, get_peak_rating_distribution(assessment, peak.code), spread_png)
+            generate_peak_mountain_chart(peak.name, get_peak_rating_distribution(assessment, peak.code), spread_png)
             temp_paths.append(spread_png)
             section["chart_data_uri"] = png_path_to_data_uri(spread_png)
 
@@ -660,7 +660,7 @@ def final_report_docraptor_start(request, assessment_id):
         if stage >= 4:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
                 path = tmp.name
-            generate_peak_distribution_chart(peak.name, get_peak_rating_distribution(assessment, peak.code), path)
+            generate_peak_mountain_chart(peak.name, get_peak_rating_distribution(assessment, peak.code), path)
             temp_paths.append(path)
             from apps.pdfexport.utils.images import png_path_to_data_uri
             section["chart_data_uri"] = png_path_to_data_uri(path)

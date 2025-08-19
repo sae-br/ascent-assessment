@@ -6,6 +6,59 @@ import os
 import matplotlib
 matplotlib.use("Agg")  # headless
 import matplotlib.pyplot as plt
+import numpy as np
+
+
+def generate_peak_mountain_chart(title, percentages, output_path):
+    """
+    Render a minimalist 'mountain' area chart for a 0–3 rating distribution.
+
+    Args:
+        title (str): Peak name (not rendered for now)
+        percentages (list[float|int]): Four values for ratings 0..3
+        output_path (str): PNG path to save to
+    """
+    import numpy as np
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    # Defensive / normalize
+    vals = [(float(percentages[i]) if i < len(percentages) else 0.0) for i in range(4)]
+    total = sum(vals) or 1.0
+    vals = [v * 100.0 / total for v in vals]  # keep on a 0–100 scale
+
+    # x = four buckets; build a smoothed line between them
+    x_base = np.array([0, 1, 2, 3], dtype=float)
+    y_base = np.array(vals, dtype=float)
+    x = np.linspace(0, 3, 121)
+    y = np.interp(x, x_base, y_base)
+
+    # Wide/short figure so it tucks into the score panel
+    fig, ax = plt.subplots(figsize=(6.5, 2.2), dpi=180)
+
+    ax.fill_between(x, 0, y)         # filled area
+    ax.plot(x, y, linewidth=1.0)     # thin outline
+
+    # Minimal axes: only x labels, no y axis, no spines
+    ax.set_xlim(0, 3)
+    ax.set_ylim(bottom=0)
+    ax.set_xticks([0, 1, 2, 3], labels=[
+        "Consistently\nUntrue",
+        "Somewhat\nUntrue",
+        "Somewhat\nTrue",
+        "Consistently\nTrue",
+    ])
+    ax.tick_params(axis="x", labelsize=8, pad=2)
+
+    ax.set_yticks([])
+    for side in ("top", "right", "left", "bottom"):
+        ax.spines[side].set_visible(False)
+
+    # Tight and transparent so it blends with your light-blue panel
+    plt.tight_layout(pad=0.2)
+    fig.savefig(output_path, bbox_inches="tight", pad_inches=0.02, transparent=True)
+    plt.close(fig)
 
 
 def generate_peak_distribution_chart(title: str, percentages, output_path: str):

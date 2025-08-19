@@ -420,6 +420,8 @@ tr, th, td {
   height: auto;
 }
 
+.peak-chart-wrap { max-width: 460px; margin-left: auto; }
+
 .summary-text { margin: 8pt 0 0; }
 
 .team-score h2 { margin-top: 18pt; }
