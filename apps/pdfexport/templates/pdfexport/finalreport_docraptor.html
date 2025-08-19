@@ -217,9 +217,15 @@
                     <p>{{ peak.range_label }}</p>
                 </div>
                 <div>
-                    {% if peak.chart_data_uri %}
-                        <img src="{{ peak.chart_data_uri }}" 
-                            alt="{{ peak.name }} Rating Spread" class="peak-chart" />
+                    {% if show_peak_charts and peak.chart_data_uri %}
+                        <figure class="peak-chart-wrap avoid-break">
+                            <img
+                                src="{{ peak.chart_data_uri }}"
+                                alt="{{ peak.name }} rating distribution"
+                                class="peak-chart"
+                            />
+                            <figcaption class="peak-chart-caption">Rating distribution (0–3)</figcaption>
+                        </figure>
                     {% endif %}
                 </div>
             </div>
