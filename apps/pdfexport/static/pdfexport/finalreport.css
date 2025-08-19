@@ -18,9 +18,7 @@
 /* Page numbering and footer */
 .footer-left.running {
   position: running(footer-left);  /* exposes this node to margin boxes */
-  height: 0 !important;
-  overflow: hidden !important;
-  visibility: hidden; 
+  line-height: 0
 }
 .footer-left img {
   height: 20pt; 
@@ -30,11 +28,7 @@
 }
 
 @page {
-  margin: 1in;
-
-  @bottom {
-    content: "";
-  }
+  margin: 40px 1in 1.15in;
 
   @bottom-left {
     content: element(footer-left);
@@ -248,6 +242,14 @@ tr, th, td {
   @bottom-center { content: none; }
   @bottom-right { content: none; }
 }
+
+
+/* Introduction */
+
+.intro-section {
+  counter-reset: page 1;
+}
+
 
 /* Model Review Section */
 .model-overview-section {
@@ -464,7 +466,8 @@ tr, th, td {
 }
 
 /* Questions and Responses */
-.question-block { padding: 0; }
+.question-block { 
+  margin: 20px 0 0; }
 
 .question-row {
   display: table;
@@ -536,15 +539,22 @@ tr, th, td {
   font-weight: normal;
 }
 
-.action-table td:first-child { 
-  height: 80px;
-  width: 100px;
+.action-table th:first-child,
+.action-table td:first-child {
+  width: 65%;
 }
+
+.action-table th:nth-child(2),
 .action-table td:nth-child(2) {
-  width: 100px;
+  width: 17.5%;
 }
+.action-table th:nth-child(3),
 .action-table td:nth-child(3) { 
-  width: auto; 
+  width: 17.5%; 
+}
+
+.action-table tbody td {
+  min-height: 80px; /*  space for handwriting */
 }
 
 
@@ -570,15 +580,22 @@ tr, th, td {
   font-weight: normal;
 }
 
-.commitment-table td:first-child { 
-  height: 500px;
-  width: 100px;
+.commitment-table th:first-child,
+.commitment-table td:first-child {
+  width: 65%;
 }
+.commitment-table th:nth-child(2),
 .commitment-table td:nth-child(2) {
-  width: 100px;
+  width: 17.5%;
 }
+.commitment-table th:nth-child(3),
 .commitment-table td:nth-child(3) { 
-  width: auto; 
+  width: 17.5%; 
+}
+
+/* Taller writing area on commitments */
+.commitment-table tbody td {
+  min-height: 380px;
 }
 
 
