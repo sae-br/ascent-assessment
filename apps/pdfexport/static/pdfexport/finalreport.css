@@ -18,7 +18,7 @@
 /* Page numbering and footer */
 .footer-left.running {
   position: running(footer-left);  /* exposes this node to margin boxes */
-  line-height: 0
+  line-height: 0 !important;
 }
 .footer-left img {
   height: 20pt; 
@@ -28,7 +28,7 @@
 }
 
 @page {
-  margin: 40px 1in 1.15in;
+  margin: 1in 1in 1.15in;
 
   @bottom-left {
     content: element(footer-left);
@@ -39,7 +39,6 @@
     content: string(team_meta);
     font-size: 10px;
     font-family: var(--sans-font);
-    padding-top: 4px;
     color: var(--text-light);
   }
 
@@ -47,7 +46,6 @@
     content: "Page " counter(page);
     font-size: 10px;
     font-family: var(--sans-font);
-    padding-top: 4px;
     color: var(--text-light);
   }
 }
@@ -62,9 +60,6 @@
     content: none;
   }
   @bottom-right {
-    content: none;
-  }
-  @bottom {
     content: none;
   }
 }
@@ -511,8 +506,8 @@ tr, th, td {
 .action-prompt-box {
     background-color: var(--bg-accent);
     border-left: 4px solid var(--primary);
-    padding: 1rem;
-    margin-top: 1.5rem;
+    padding: 30px;
+    margin-top: 1rem;
     font-size: 10.5pt;
     color: var(--text-light);
 }
@@ -566,7 +561,7 @@ tr, th, td {
   font-family: var(--sans-font);
 }
 
-.commitment-table th, .action-table td {
+.commitment-table th, .commitment-table td {
   border: 1px solid var(--border);
   padding: 10px 12px;
   vertical-align: top;
