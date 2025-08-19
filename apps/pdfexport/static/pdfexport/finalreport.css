@@ -144,7 +144,8 @@ tr, th, td {
 
 /* Title Page */
 .title-page {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-height: auto;
   justify-content: center;
   align-items: center;
@@ -153,14 +154,19 @@ tr, th, td {
 }
 
 .title-top {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; 
   background-color: var(--bg-accent);
-  padding: 48px 24px 32px;
-  text-align: center;
-  justify-content: center;
+  padding: 48px 24px 32px; 
 }
 
 .title-logo img {
+  display: block;
   width: 200pt;
+  height: auto;
   margin: 60pt 0 20pt; 
 }
 
@@ -184,9 +190,11 @@ tr, th, td {
 }
 
 .title-bottom {
+  flex: 0 0 auto;
   align-items: center;
+  text-align: center;
   padding: 24px 24px 36px;
-  background-color: #fff;
+  background-color: var(--bg);
 }
 
 .title-company-info {
