@@ -23,6 +23,54 @@ from apps.pdfexport.utils.images import png_path_to_data_uri
 import logging
 logger = logging.getLogger(__name__)
 
+# ---- Canonical peak order and names (for display + tiebreaks) -----------
+ORDER = ["CC", "LA", "SM", "TM"]
+NAMES = {
+    "CC": "Collaborative Culture",
+    "LA": "Leadership Accountability",
+    "SM": "Strategic Momentum",
+    "TM": "Talent Magnetism",
+}
+
+def compute_summary_and_display_rows(peak_sections):
+    """
+    Given peak_sections (each has at least code, name, and maybe score/range_label),
+    return:
+      - peak_score_summary (always in canonical display order),
+      - summary_text derived from lowest/highest scores with deterministic tiebreaks,
+      - lowest and highest row dicts (for logging / future needs).
+    """
+    # Normalize into a dict keyed by code
+    rows_by_code = {}
+    for s in peak_sections:
+        code = s.get("code")
+        if not code:
+            continue
+        rows_by_code[code] = {
+            "code": code,
+            "name": s.get("name") or NAMES.get(code, code),
+            "score": s.get("score"),
+            "range": s.get("range_label"),
+        }
+
+    # Always display in the fixed canonical order
+    peak_score_summary = [rows_by_code[c] for c in ORDER if c in rows_by_code]
+
+    # Pick lowest/highest with deterministic tie-breaks using ORDER
+    scored = [r for r in peak_score_summary if r.get("score") is not None]
+    lowest = highest = None
+    summary_text = ""
+    if scored:
+        lowest = min(scored, key=lambda r: (r["score"], ORDER.index(r["code"])))
+        highest = max(scored, key=lambda r: (r["score"], -ORDER.index(r["code"])))
+        from apps.reports.models import ResultsSummary  # local import to avoid cycles
+
+        rs = ResultsSummary.objects.filter(high_peak=highest["code"], low_peak=lowest["code"]).first()
+        summary_text = rs.summary_text if rs else ""
+
+    return peak_score_summary, summary_text, lowest, highest
+
+
 import time
 import docraptor
 from docraptor.rest import ApiException
@@ -87,19 +135,17 @@ def final_report_preview(request, assessment_id):
 
     # Basic summary table when scores are shown
     if show_scores and peak_sections:
-        rows = [
-            {"code": s["code"], "name": s["name"], "score": s["score"], "range": s["range_label"]}
-            for s in peak_sections
-        ]
-        DISPLAY_ORDER = [
-            "Collaborative Culture",
-            "Leadership Accountability",
-            "Strategic Momentum",
-            "Talent Magnetism",
-        ]
-        order_map = {name: i for i, name in enumerate(DISPLAY_ORDER)}
-        peak_score_summary = sorted(rows, key=lambda r: order_map.get(r["name"], 99))
+        peak_score_summary, summary_text, low_row, high_row = compute_summary_and_display_rows(peak_sections)
+        logger.info("PREVIEW summary order=%s low=%s high=%s",
+                    [r["code"] for r in peak_score_summary],
+                    getattr(low_row, "code", 
+                            getattr(low_row, "get", lambda k=None: None)("code") 
+                            if isinstance(low_row, dict) else None),
+                    getattr(high_row, "code", 
+                            getattr(high_row, "get", lambda k=None: None)("code") 
+                            if isinstance(high_row, dict) else None))
     else:
+        summary_text = ""
         peak_score_summary = [{"name": p["name"], "score": 0, "range": "—"} for p in peaks]
 
     ctx = {
@@ -114,6 +160,7 @@ def final_report_preview(request, assessment_id):
         "show_question_rows": show_question_rows,
         "show_question_charts": show_question_charts,
         "stage": stage,
+        "summary_text": summary_text,
     }
     logger.info("PREVIEW stage=%s sections=%s", stage, len(peak_sections))
     return render(request, "pdfexport/finalreport_docraptor.html", ctx)
@@ -233,35 +280,11 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
     peak_score_summary = []
     summary_text = ""
     if stage >= 1 and peak_sections:
-        summary_rows = [
-            {
-                "code": p["code"],
-                "name": p["name"],
-                "score": p.get("score"),
-                "range": p.get("range_label"),
-            }
-            for p in peak_sections
-        ]
-        # Define display order for bar row
-        DISPLAY_ORDER = [
-            "Collaborative Culture",
-            "Leadership Accountability",
-            "Strategic Momentum",
-            "Talent Magnetism",
-        ]
-        order_map = {name: i for i, name in enumerate(DISPLAY_ORDER)}
-        peak_score_summary = sorted(summary_rows, key=lambda r: order_map.get(r["name"], 99))
-
-        # Use pre-defined weighting for Results at a Glance
-        scored_sort = sorted(
-            [r for r in summary_rows if r["score"] is not None],
-            key=lambda r: r["score"]
-        )
-        if scored_sort:
-            lowest = scored_sort[0]["code"]
-            highest = scored_sort[-1]["code"]
-            rs = ResultsSummary.objects.filter(high_peak=highest, low_peak=lowest).first()
-            summary_text = rs.summary_text if rs else ""
+        peak_score_summary, summary_text, low_row, high_row = compute_summary_and_display_rows(peak_sections)
+        logger.info("[PDF] summary order=%s low=%s high=%s",
+                    [r["code"] for r in peak_score_summary],
+                    low_row and low_row.get("code"),
+                    high_row and high_row.get("code"))
 
     # --- Render HTML for DocRaptor ------------------------------------------
     ctx = {
@@ -406,20 +429,13 @@ def final_report_docraptor_start(request, assessment_id):
         peak_sections.append(section)
 
     # summary (only when scores exist)
-    peak_score_summary, summary_text = [], ""
+    summary_text = ""
     if stage >= 1 and peak_sections:
-        rows = [
-            {"code": s["code"], "name": s["name"], "score": s["score"], "range": s["range_label"]}
-            for s in peak_sections
-        ]
-        DISPLAY_ORDER = [
-            "Collaborative Culture",
-            "Leadership Accountability",
-            "Strategic Momentum",
-            "Talent Magnetism",
-        ]
-        order_map = {name: i for i, name in enumerate(DISPLAY_ORDER)}
-        peak_score_summary = sorted(rows, key=lambda r: order_map.get(r["name"], 99))
+        peak_score_summary, summary_text, low_row, high_row = compute_summary_and_display_rows(peak_sections)
+        logger.info("[ASYNC] summary order=%s low=%s high=%s",
+                    [r["code"] for r in peak_score_summary],
+                    low_row and low_row.get("code"),
+                    high_row and high_row.get("code"))
     else:
         peak_score_summary = [{"name": p["name"], "score": 0, "range": "—"} for p in peaks]
 
