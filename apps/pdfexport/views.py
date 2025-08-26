@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse, Http404, HttpResponseBadRequ
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.conf import settings
+from django.core.cache import cache
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 
@@ -495,13 +496,10 @@ def final_report_docraptor_start(request, assessment_id):
             except OSError: pass
 
     status_id = getattr(job, "status_id", None)
-    if not status_id:
-        return HttpResponse("Failed to start PDF job.", status=502)
-
-    return render(
-        request,
-        "pdfexport/doc_status.html",
-        {"status_id": status_id, "filename": filename}
+    cache.set(
+        f"docraptor:{status_id}",
+        {"assessment_id": assessment.id, "filename": filename},
+        timeout=60 * 60, 
     )
 
 
@@ -544,27 +542,42 @@ def docraptor_status(request, status_id):
 
 def docraptor_download(request, status_id):
     """
-    Resolve the PDF by status_id, upload once to S3 if needed, then
-    redirect to a short-lived signed S3 URL. No name parsing.
+    Resolve the PDF by status_id using cache metadata, upload once to S3 if needed,
+    then redirect to a short-lived signed S3 URL. 
+    No FinalReport.status_id/is_ready usage.
     """
-    # Look up our tracker row; this ties status_id -> assessment
-    fr = FinalReport.objects.filter(status_id=status_id).select_related("assessment").first()
-    if not fr:
+    # Pull assessment + filename from cache where we stored it in final_report_docraptor_start
+    meta = cache.get(f"docraptor:{status_id}")
+    if not meta:
         raise Http404("Unknown or expired job")
 
-    # If already uploaded, just presign and bounce
-    if fr.is_ready and fr.s3_key:
-        uploader = S3Uploader(
-            bucket=settings.AWS_S3_REPORTS_BUCKET,
-            region=settings.AWS_S3_REGION_NAME,
-            access_key=settings.AWS_ACCESS_KEY_ID,
-            secret_key=settings.AWS_SECRET_ACCESS_KEY,
-        )
+    assessment_id = meta.get("assessment_id")
+    filename = meta.get("filename") or f"final-report-{assessment_id}.pdf"
+
+    # Use a stable S3 key (avoid relying on fields that don't exist on FinalReport)
+    key = f"reports/assessments/{assessment_id}/final-report-{assessment_id}.pdf"
+
+    # Prefer explicit reports bucket setting but fall back to the standard storage bucket
+    bucket = getattr(settings, "AWS_S3_REPORTS_BUCKET", getattr(settings, "AWS_STORAGE_BUCKET_NAME", None))
+    if not bucket:
+        return HttpResponse("S3 bucket not configured", status=500)
+
+    uploader = S3Uploader(
+        bucket=bucket,
+        region=getattr(settings, "AWS_S3_REGION_NAME", None),
+        access_key=getattr(settings, "AWS_ACCESS_KEY_ID", None),
+        secret_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
+    )
+
+    # If we've already uploaded a FinalReport for this assessment, just presign and return
+    fr, _ = FinalReport.objects.get_or_create(assessment_id=assessment_id)
+    if fr.s3_key:
         return redirect(uploader.presign_get(fr.s3_key, expires_seconds=300))
 
-    # Otherwise, fetch from DocRaptor and upload
+    # Otherwise fetch the finished bytes from DocRaptor and upload
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
     try:
         status = client.get_async_doc_status(status_id)
     except ApiException:
@@ -586,24 +599,13 @@ def docraptor_download(request, status_id):
         logger.exception("Fetching DocRaptor download failed")
         return HttpResponse("Could not retrieve PDF.", status=502)
 
-    # Upload to S3 under a stable key per assessment
-    assessment_id = fr.assessment_id
-    key = f"reports/assessments/{assessment_id}/final-report-{assessment_id}.pdf"
-
-    uploader = S3Uploader(
-        bucket=settings.AWS_S3_REPORTS_BUCKET,
-        region=settings.AWS_S3_REGION_NAME,
-        access_key=settings.AWS_ACCESS_KEY_ID,
-        secret_key=settings.AWS_SECRET_ACCESS_KEY,
-    )
     uploaded_key, size_bytes = uploader.upload_bytes(
         pdf_bytes, key, content_type="application/pdf"
     )
 
-    # Mark ready
+    # Persist the S3 location/size on FinalReport (no is_ready field on model)
     fr.s3_key = uploaded_key
     fr.size_bytes = size_bytes
-    fr.is_ready = True
-    fr.save(update_fields=["s3_key", "size_bytes", "is_ready"])
+    fr.save(update_fields=["s3_key", "size_bytes"]) 
 
     return redirect(uploader.presign_get(uploaded_key, expires_seconds=300))
