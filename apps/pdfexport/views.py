@@ -502,6 +502,58 @@ def final_report_docraptor_start(request, assessment_id):
         timeout=60 * 60, 
     )
 
+    # --- Return a tiny self-contained status page that polls until ready ---
+    if not status_id:
+        return HttpResponse("Failed to start DocRaptor job.", status=502)
+
+    status_poll_url = request.build_absolute_uri(f"/pdfexport/docraptor/status/{status_id}/")
+
+    html_poll = f"""
+<!doctype html>
+<html>
+  <head>
+    <meta charset=\"utf-8\">
+    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">
+    <title>Generating report…</title>
+    <style>
+      body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif; margin: 2rem; }}
+      .muted {{ color: #666; }}
+      code {{ background: #f6f8fa; padding: 0.2rem 0.4rem; border-radius: 4px; }}
+    </style>
+  </head>
+  <body>
+    <h1>Generating your PDF…</h1>
+    <p class=\"muted\">This page will refresh automatically. You can leave it open.</p>
+    <p class=\"muted\">Status ID: <code>{status_id}</code></p>
+    <div id=\"status\" class=\"muted\">Starting…</div>
+    <script>
+      const statusUrl = {status_poll_url!r};
+      async function poll() {{
+        try {{
+          const res = await fetch(statusUrl, {{credentials: 'same-origin'}});
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const data = await res.json();
+          document.getElementById('status').textContent = 'Status: ' + (data.status || 'unknown');
+          if (data.status === 'completed' && data.download) {{
+            window.location.replace(data.download);
+            return;
+          }}
+          if (data.status === 'failed') {{
+            document.getElementById('status').textContent = 'Failed: ' + (data.message || 'DocRaptor failed');
+            return;
+          }}
+        }} catch (e) {{
+          document.getElementById('status').textContent = 'Error: ' + e.message;
+        }}
+        setTimeout(poll, 2000);
+      }}
+      poll();
+    </script>
+  </body>
+</html>
+"""
+    return HttpResponse(html_poll)
+
 
 def docraptor_status(request, status_id):
     """
