@@ -1,5 +1,5 @@
 # DocRaptor Version
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import HttpResponse, JsonResponse, Http404, HttpResponseBadRequest
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.conf import settings
@@ -19,6 +19,8 @@ from apps.pdfexport.utils.charts import (
     generate_question_bar_chart,
 )
 from apps.pdfexport.utils.images import png_path_to_data_uri
+from apps.pdfexport.utils.storage import S3Uploader
+from apps.pdfexport.models import FinalReport
 
 import logging
 logger = logging.getLogger(__name__)
@@ -349,6 +351,17 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
       2: Display a JS status page to the client while job works
       3: Load the completed download file for the client
     """
+def start_final_report_job(request, assessment_id):
+    assessment = get_object_or_404(Assessment, pk=assessment_id)
+
+    # hard gate: do not regenerate if a report exists
+    if hasattr(assessment, "final_report"):
+        return HttpResponseBadRequest("A final report already exists for this assessment.")
+
+    # enqueue the async job (Celery) with assessment_id
+    # enqueue_generate_report.delay(assessment_id)
+    return JsonResponse({"ok": True, "queued": True})
+
 def final_report_docraptor_start(request, assessment_id):
     stage = int(request.GET.get("stage", "1") or 1)
     stage = max(1, min(stage, 6))
@@ -457,7 +470,7 @@ def final_report_docraptor_start(request, assessment_id):
     }
 
     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
-    filename = f"orghealth-ascent-{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf"
+    filename = f"orghealth-ascent-{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}__aid-{assessment.id}.pdf"
 
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
@@ -525,8 +538,8 @@ def docraptor_status(request, status_id):
 
 def docraptor_download(request, status_id):
     """
-    When the job is completed, fetch the file from DocRaptor’s download_url
-    and stream it to the user as application/pdf.
+    When the job is completed, persist the PDF to S3 on first access and
+    redirect to a signed S3 URL. Subsequent requests skip DocRaptor.
     """
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
@@ -540,18 +553,64 @@ def docraptor_download(request, status_id):
     if getattr(status, "status", None) != "completed":
         raise Http404("PDF not ready")
 
+    # We put the assessment id into the job name in final_report_docraptor_start
+    job_name = getattr(status, "name", "") or "report.pdf"
+    # Expect something like "orghealth-ascent-<slug>-<YYYY-MM>__aid-<id>.pdf"
+    assessment_id = None
+    if "__aid-" in job_name and job_name.endswith(".pdf"):
+        try:
+            assessment_id = int(job_name.rsplit("__aid-", 1)[1].split(".pdf")[0])
+        except Exception:
+            pass
+
+    if not assessment_id:
+        # Fallback: you could carry assessment_id in a separate param if preferred
+        logger.warning("Could not parse assessment_id from job name: %s", job_name)
+        raise Http404("Missing assessment context")
+
+    # If we already have a stored report, just redirect to S3
+    try:
+        fr = FinalReport.objects.get(assessment_id=assessment_id)
+        uploader = S3Uploader(
+            bucket=settings.AWS_S3_REPORTS_BUCKET,
+            region=settings.AWS_S3_REGION_NAME,
+            access_key=settings.AWS_ACCESS_KEY_ID,
+            secret_key=settings.AWS_SECRET_ACCESS_KEY,
+        )
+        return redirect(uploader.presign_get(fr.s3_key, expires_seconds=300))
+    except FinalReport.DoesNotExist:
+        pass
+
+    # First time: fetch from DocRaptor then upload to S3 and create the row
     download_url = getattr(status, "download_url", None)
     if not download_url:
         raise Http404("No download URL available")
 
-    # Stream the file
     try:
         r = requests.get(download_url, stream=True, timeout=30)
         r.raise_for_status()
-    except requests.RequestException as e:
+        pdf_bytes = r.content
+    except requests.RequestException:
         logger.exception("Fetching DocRaptor download failed")
         return HttpResponse("Could not retrieve PDF.", status=502)
 
-    resp = HttpResponse(r.content, content_type="application/pdf")
-    resp["Content-Disposition"] = 'inline; filename="report.pdf"'
-    return resp
+    # Upload to S3
+    uploader = S3Uploader(
+        bucket=settings.AWS_S3_REPORTS_BUCKET,
+        region=settings.AWS_S3_REGION_NAME,
+        access_key=settings.AWS_ACCESS_KEY_ID,
+        secret_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+    # stable key per assessment
+    key = f"reports/assessments/{assessment_id}/final-report-{assessment_id}.pdf"
+    uploaded_key, size_bytes = uploader.upload_bytes(pdf_bytes, key, content_type="application/pdf")
+
+    # Create DB record (enforces the one-report rule at the model layer)
+    FinalReport.objects.create(
+        assessment_id=assessment_id,
+        s3_key=uploaded_key,
+        size_bytes=size_bytes,
+    )
+
+    # Redirect the user to the signed S3 URL
+    return redirect(uploader.presign_get(uploaded_key, expires_seconds=300))

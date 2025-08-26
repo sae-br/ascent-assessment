@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'apps.pdfexport',
     'apps.common',
     # third party
+    'storages',
     'markdownx',
 ]
 
@@ -201,6 +202,24 @@ SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 # DocRaptor
 DOCRAPTOR_API_KEY = os.getenv("DOCRAPTOR_API_KEY", "")
 DOCRAPTOR_TEST = env_bool("DOCRAPTOR_TEST", True)
+
+# --- AWS / S3 (Reports storage) ---
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "")  # e.g., "ca-central-1"
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+
+# We use boto3 on the server to:
+#  - upload the final PDF to a private S3 bucket
+#  - generate short-lived pre-signed GET URLs for users to download
+# Because downloads are simple redirects (not AJAX), no CORS is needed.
+# We do NOT change DEFAULT_FILE_STORAGE; static files remain on WhiteNoise.
+
+# Where to place report PDFs within the bucket
+REPORTS_S3_PREFIX = os.getenv("REPORTS_S3_PREFIX", "final-reports/")
+
+# Signature version for pre-signed URLs
+AWS_S3_SIGNATURE_VERSION = os.getenv("AWS_S3_SIGNATURE_VERSION", "s3v4")
 
 
 # --- Email backend selection (console for dev, SMTP for prod) ---

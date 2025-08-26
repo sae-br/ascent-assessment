@@ -1,4 +1,3 @@
-# apps/pdfexport/utils/render_docraptor.py
 import os
 import docraptor
 

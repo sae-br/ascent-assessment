@@ -34,8 +34,43 @@
             <div class="assessment-meta">
                 <p><strong>Target Date:</strong> {{ selected_assessment.deadline|date:"F d, Y" }}</p>
                 <p><strong>Invitations Sent:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
-                <p><strong>Report Generated:</strong> {{ selected_assessment.report_generated|default:"none" }}</p>
-            </div>
+                <p>Report Generated:
+                {% if selected_assessment.finalreport and selected_assessment.finalreport.is_ready %}
+                    <strong>Yes</strong>
+                {% elif selected_assessment.finalreport %}
+                    <strong>In progress…</strong>
+                {% else %}
+                    <strong>None</strong>
+                {% endif %}
+                </p>
+
+                <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                {% if selected_assessment.finalreport and selected_assessment.finalreport.is_ready %}
+                    <a
+                    class="button button--secondary"
+                    href="{% url 'docraptor_download' selected_assessment.finalreport.status_id %}"
+                    >
+                    Download Final Report
+                    </a>
+                {% elif selected_assessment.finalreport %}
+                    <a
+                    class="button button--secondary"
+                    href="{% url 'docraptor_status' selected_assessment.finalreport.status_id %}"
+                    title="View generation status"
+                    >
+                    View Status
+                    </a>
+                {% else %}
+                    <form
+                    method="post"
+                    action="{% url 'final_report_docraptor_start' selected_assessment.id %}"
+                    style="display:inline"
+                    >
+                    {% csrf_token %}
+                    <button class="button button--primary">Generate Final Report</button>
+                    </form>
+                {% endif %}
+                </div>
 
             <div class="table-wrapper">
                 <table class="table">
