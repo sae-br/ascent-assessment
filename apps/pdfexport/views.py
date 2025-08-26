@@ -498,18 +498,6 @@ def final_report_docraptor_start(request, assessment_id):
     if not status_id:
         return HttpResponse("Failed to start PDF job.", status=502)
 
-    # Persist a tracker row so later we can resolve status_id -> assessment without parsing names
-    FinalReport.objects.update_or_create(
-        assessment=assessment,
-        defaults={
-            "status_id": status_id,
-            "filename": filename,
-            "s3_key": "",
-            "size_bytes": 0,
-            "is_ready": False,
-        },
-    )
-
     return render(
         request,
         "pdfexport/doc_status.html",
