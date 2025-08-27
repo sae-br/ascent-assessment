@@ -21,8 +21,9 @@
             <tbody>
             {% for report in reports %}
             <tr>
-                <td>{{ report.name }}</td>
+                <td>{{ report.name|default:"Final Report" }}</td>
                 <td>{{ report.date_generated|date:"M j, Y" }}</td>
+                <td>
                     {% if report.id %}
                         <a class="text-button" href="{% url 'reports:download_report' report.id %}">Download</a>
                     {% else %}
