@@ -27,6 +27,23 @@ import logging
 import boto3
 logger = logging.getLogger(__name__)
 
+
+# --- Helper: build consistent filenames for PDFs ---
+def build_report_filenames(assessment):
+    """Return (pretty_filename, slug_filename) for a report.
+    pretty: human friendly, used for download header.
+    slug: safe for S3 object key and DocRaptor name.
+    """
+    team_name = getattr(getattr(assessment, "team", None), "name", None) or str(getattr(assessment, "team", "team"))
+    deadline = getattr(assessment, "deadline", None)
+    if deadline:
+        pretty = f"{team_name} – {deadline:%B %Y}.pdf"
+        slug_part = f"{slugify(team_name)}-{deadline:%Y-%m}"
+    else:
+        pretty = f"{team_name} – report.pdf"
+        slug_part = f"{slugify(team_name)}-report"
+    return pretty, f"{slug_part}.pdf"
+
 # ---- Canonical peak order and names (for display + tiebreaks) -----------
 ORDER = ["CC", "LA", "SM", "TM"]
 NAMES = {
@@ -310,6 +327,7 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
     logger.info("[PDF] HTML size=%s bytes, img_count=%s", len(html), html.count("<img"))
 
     # --- DocRaptor call ------------------------------------------------------
+    pretty_name, slug_name = build_report_filenames(assessment)
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
     baseurl = request.build_absolute_uri("/")
@@ -320,7 +338,7 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
         result = client.create_doc({
             "test": True,  # keep True while testing
             "document_type": "pdf",
-            "name": f"{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}.pdf",
+            "name": slug_name,
             "document_content": html,  
             "prince_options": {
                 "media": "print",
@@ -329,7 +347,9 @@ def generate_final_report_pdf_docraptor(request, assessment_id):
         },
         _request_timeout=(10, 700))
         logger.info("[PDF] DocRaptor returned in %.2fs", time.monotonic() - t0_docraptor)
-        return HttpResponse(result, content_type="application/pdf")
+        resp = HttpResponse(result, content_type="application/pdf")
+        resp["Content-Disposition"] = f"attachment; filename*=UTF-8''{pretty_name}"
+        return resp
     except ApiException as e:
         logger.exception("DocRaptor API error")
         return HttpResponse(f"DocRaptor error {getattr(e, 'status', '')}: {getattr(e, 'body', e)}", status=502)
@@ -472,7 +492,8 @@ def final_report_docraptor_start(request, assessment_id):
     }
 
     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
-    filename = f"orghealth-ascent-{slugify(assessment.team.name)}-{assessment.deadline:%Y-%m}__aid-{assessment.id}.pdf"
+    pretty_name, slug_name = build_report_filenames(assessment)
+    filename = slug_name
 
     client = docraptor.DocApi()
     client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
@@ -498,7 +519,7 @@ def final_report_docraptor_start(request, assessment_id):
     status_id = getattr(job, "status_id", None)
     cache.set(
         f"docraptor:{status_id}",
-        {"assessment_id": assessment.id, "filename": filename},
+        {"assessment_id": assessment.id, "filename": filename, "pretty_name": pretty_name},
         timeout=60 * 60, 
     )
 
@@ -606,8 +627,12 @@ def docraptor_download(request, status_id):
     assessment_id = meta.get("assessment_id")
     filename = meta.get("filename") or f"final-report-{assessment_id}.pdf"
 
+    # Build names from the real Assessment for consistent S3 keys
+    assessment = get_object_or_404(Assessment, pk=assessment_id)
+    pretty_name, slug_name = build_report_filenames(assessment)
+
     # Use a stable S3 key (avoid relying on fields that don't exist on FinalReport)
-    key = f"reports/assessments/{assessment_id}/final-report-{assessment_id}.pdf"
+    key = f"reports/assessments/{assessment_id}/{slug_name}"
 
     # Prefer explicit reports bucket setting but fall back to the standard storage bucket
     bucket = getattr(settings, "AWS_S3_REPORTS_BUCKET", getattr(settings, "AWS_STORAGE_BUCKET_NAME", None))
@@ -615,8 +640,8 @@ def docraptor_download(request, status_id):
         return HttpResponse("S3 bucket not configured", status=500)
 
     uploader = S3Uploader(
-        bucket=bucket,
-        region=getattr(settings, "AWS_S3_REGION_NAME", None),
+        bucket=settings.AWS_STORAGE_BUCKET_NAME,
+        region=settings.AWS_S3_REGION_NAME,
         access_key=getattr(settings, "AWS_ACCESS_KEY_ID", None),
         secret_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
     )

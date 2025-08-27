@@ -1,10 +1,12 @@
 from django.db import models
 from django.conf import settings
 from apps.assessments.models import Assessment
+from django.utils.text import slugify
 
 class FinalReport(models.Model):
     assessment = models.OneToOneField(Assessment, on_delete=models.CASCADE, related_name="final_report")
     s3_key = models.CharField(max_length=512)
+    file_name = models.CharField(max_length=255, blank=True, default="")
     size_bytes = models.BigIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

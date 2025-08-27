@@ -44,6 +44,8 @@ def download_report(request, report_id: int):
     uploader = S3Uploader(
         bucket=settings.AWS_STORAGE_BUCKET_NAME,
         region=settings.AWS_S3_REGION_NAME,
+        access_key=getattr(settings, "AWS_ACCESS_KEY_ID", None),
+        secret_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
     )
     url = uploader.presign_get(fr.s3_key, expires_seconds=300)
     return redirect(url)
