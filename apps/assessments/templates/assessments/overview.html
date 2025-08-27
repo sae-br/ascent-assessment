@@ -4,11 +4,6 @@
 {% block content %}
 <div class="main-heading">
     <h1>Assessments</h1>
-    <a href="{% url 'new_assessment' %}" class="button--primary">Create Assessment</a>
-</div>
-
-<section class="section">
-    <h2>Review an Assessment</h2>
 
     <!-- If there are no assessments yet, show an empty state -->
     {% if not assessments %}
@@ -17,7 +12,7 @@
 
         <!-- Filter/select control -->
         <form method="get" action="{% url 'assessments_overview' %}">
-            <label for="assessment">Select Assessment</label>
+            <label for="assessment">Select Assessment:</label>
             <div class="assessment-select">
                 <select name="assessment" id="assessment">
                     {% for a in assessments %}
@@ -26,7 +21,7 @@
                     </option>
                     {% endfor %}
                 </select>
-                <button type="submit" class="button--secondary">Select</button>
+                <button type="submit" class="button">Select</button>
             </div>
         </form>
 
@@ -34,13 +29,13 @@
             <div class="assessment-meta">
                 <p><strong>Target Date:</strong> {{ selected_assessment.deadline|date:"F d, Y" }}</p>
                 <p><strong>Invitations Sent:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
-                <p>Report Generated:
+                <p><strong>Report Generated:</strong>
                 {% if selected_assessment.finalreport and selected_assessment.finalreport.is_ready %}
-                    <strong>Yes</strong>
+                    Yes
                 {% elif selected_assessment.finalreport %}
-                    <strong>In progress…</strong>
+                    In progress…
                 {% else %}
-                    <strong>None</strong>
+                    None
                 {% endif %}
                 </p>
 
