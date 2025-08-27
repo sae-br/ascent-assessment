@@ -12,7 +12,6 @@
     <p>Create a new team here and you will be able to select it in the dropdown below.</p>
     <form method="post" class="team-create-form">
       {% csrf_token %}
-      <!-- TeamForm only has a single "name" field -->
       <input
         type="text"
         name="name"
@@ -20,7 +19,7 @@
         required
         class="team-input"
       >
-      <button type="submit" name="create_team" class="button--primary">
+      <button type="submit" name="create_team" class="button">
         Create
       </button>
     </form>
@@ -46,7 +45,7 @@
             >{{ t.name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" name="edit_team">
+        <button type="submit" name="edit_team" class="button">
           Go
         </button>
       </div>

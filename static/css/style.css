@@ -24,6 +24,7 @@
   --form-border: 1px solid var(--border);
   --form-radius: var(--standard-border-radius);
   --form-spacing: 0.5rem;
+  --row-height: 2.5rem;
 }
 
 /* Reset box-sizing */
@@ -125,17 +126,20 @@ h3 {
 /* Buttons */
 
 .button {
-  display: inline-block;
+  display: inline-flex;           /* center label vertically */
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   border-radius: var(--standard-border-radius);
-  border: var(--border-width) solid var(--primary);
+  border-width: var(--border-width);
   background-color: var(--primary);
   color: var(--bg);
-  padding: 0.4em 1rem;
+  padding: 0.4rem 1rem;
   font-size: 0.95rem;
   font-family: inherit;
   line-height: normal;
   text-decoration: none;
+  min-height: var(--row-height);
 }
 .button:disabled,
 .button[aria-disabled="true"] {
@@ -341,17 +345,17 @@ h3 {
 
 .header-actions {
   display: flex;
-  align-items: right;
+  align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
 .logout-link {
   color: var(--primary);
-  padding: 0.4em 1rem;
+  padding: 1rem;
   font-size: 0.9rem;
   font-weight: 500;
   text-decoration: none;
-  margin-right: 20px;
 }
 
 .logout-link:hover {
@@ -709,19 +713,34 @@ table caption {
 }
 
 input:not([type="button"]):not([type="reset"]):not([type="submit"]),
-textarea,
-select {
+textarea {
   font: inherit;
+  color: var(--text);
   padding: var(--form-padding);
   margin-bottom: var(--form-spacing);
   border: var(--form-border);
   border-radius: var(--form-radius);
   background: var(--bg);
-  color: var(--text);
   box-shadow: none;
   display: inline-block;
   width: 300px;
   max-width: 100%;
+  height: var(--row-height);
+}
+
+select {
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  border: var(--form-border);
+  border-radius: var(--form-radius);
+  background: var(--bg);
+  padding: var(--form-padding);
+  margin-bottom: var(--form-spacing);
+  display: inline-block;
+  width: 300px;
+  max-width: 100%;
+  height: var(--row-height);
 }
 
 button,
@@ -733,7 +752,7 @@ input[type="reset"] {
   border-radius: var(--form-radius);
   background: var(--primary);
   color: var(--accent-text);
-  padding: 0.4em 1.2rem;
+  padding: var(--form-padding);
   line-height: normal;
   text-decoration: none;
   display: inline-block;

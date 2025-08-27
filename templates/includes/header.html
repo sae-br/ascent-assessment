@@ -7,7 +7,7 @@
       <span>{{ request.user.username }}</span>
     </div>
     <div class="header-actions">
-      <a href="{% url 'accounts:logout' %}" class="text-button">Log Out</a>
+      <a href="{% url 'accounts:logout' %}" class="logout-link">Log Out</a>
       <a href="{% url 'new_assessment' %}" class="button">New Assessment</a>
     </div>
   {% endif %}
