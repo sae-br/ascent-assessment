@@ -25,7 +25,7 @@
                 <td>{{ report.created_at|date:"M j, Y" }}</td>
                 <td>
                     {% if report.id %}
-                        <a class="text-button" href="{% url 'reports:download_report' report.id %}">Download</a>
+                        <a class="text-button" href="{% url 'reports:download_report' report.id %}" target="blank">Download</a>
                     {% else %}
                         <span class="text-button" aria-disabled="true" style="color: var(--text-light); cursor: default;">Download</span>
                     {% endif %}

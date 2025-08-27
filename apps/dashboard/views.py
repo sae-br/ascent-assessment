@@ -1,10 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.db.models import Count, Q
-from datetime import date
 
 from apps.teams.models import Team
-from apps.assessments.models import Assessment, AssessmentParticipant
+from apps.assessments.models import Assessment
+from apps.pdfexport.models import FinalReport
 
 
 @login_required
@@ -37,17 +36,15 @@ def dashboard_home(request):
     # Teams (sorted by most recently created)
     teams = Team.objects.filter(admin=user).order_by("-created_at")
 
-    # Reports (assessments where all participants have submitted)
-    report_ready_assessments = (
-        Assessment.objects
-        .filter(team__admin=user)
-        .annotate(incomplete_count=Count("participants", filter=Q(participants__has_submitted=False)))
-        .filter(incomplete_count=0)
-        .order_by("-created_at")
+    # Reports 
+    reports = (
+        FinalReport.objects
+        .select_related("assessment__team")
+        .order_by("-created_at")[:5]
     )
 
     return render(request, "dashboard/home.html", {
         "assessments_data": assessments_data,
         "teams": teams,
-        "reports": report_ready_assessments,
+        "reports": reports, 
     })

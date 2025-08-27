@@ -8,15 +8,24 @@
             <ul class="table-list">
                 {% for report in reports %}
                     <li class="table-row">
-                    <span class="row-left">{{ report.title }}</span>
+                    <span class="row-left">
+                        {{ report.file_name|default:report.assessment.team.name }}
+                    </span>
                     <span class="row-right">
-                        <a href="{{ report.download_url }}" class="row-button">Download</a>
+                        <a
+                            href="{% url 'reports:download_report' report.id %}"
+                            class="row-button"
+                            target="_blank"
+                            rel="noopener"
+                        >Download</a>
                     </span>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p>No completed assessments yet. Reports will appear here once all team members have submitted.</p>
+            <p>No reports have been purchased yet. Generating a report closes an assessment; 
+                once all participants have submitted their responses, purchase the final 
+                report in the Assessments tab.</p>
         {% endif %}
     </div>
 </div>
