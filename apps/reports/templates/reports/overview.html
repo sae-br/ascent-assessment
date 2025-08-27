@@ -22,13 +22,12 @@
             {% for report in reports %}
             <tr>
                 <td>{{ report.name }}</td>
-                <td>{{ report.date_generated|date:"M j, Y H:i" }}</td>
-                <td>
-                <a 
-                    href="{% url 'download_report' report.status_id %}" 
-                    class="text-button">
-                    Download
-                </a>
+                <td>{{ report.date_generated|date:"M j, Y" }}</td>
+                    {% if report.id %}
+                        <a class="text-button" href="{% url 'reports:download_report' report.id %}">Download</a>
+                    {% else %}
+                        <span class="text-button" aria-disabled="true" style="color: var(--text-light); cursor: default;">Download</span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
