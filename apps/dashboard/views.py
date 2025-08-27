@@ -39,6 +39,7 @@ def dashboard_home(request):
     # Reports 
     reports = (
         FinalReport.objects
+        .filter(assessment__team__admin=user)
         .select_related("assessment__team")
         .order_by("-created_at")[:5]
     )
