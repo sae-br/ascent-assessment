@@ -3,7 +3,7 @@
 
 <aside class="sidebar">
   <div class="sidebar-header">
-    <a href="{% url 'dashboard:dashboard_home' %}">
+    <a href="{% url 'dashboard:home' %}">
       <img src="{% static 'images/logo.png' %}" alt="Ascent Assessment Logo" class="sidebar-logo" />
     </a>
   </div>
@@ -12,8 +12,8 @@
     <p class="nav-section">MENU</p>
     <ul>
       <li>
-        <a href="{% url 'dashboard:dashboard_home' %}" 
-           class="nav-link {% if section == 'dashboard_home' %}active{% endif %}">
+        <a href="{% url 'dashboard:home' %}" 
+           class="nav-link {% if section == 'dashboard' %}active{% endif %}">
           <i data-lucide="layout-dashboard"></i> Dashboard
         </a>
       </li>

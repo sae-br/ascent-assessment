@@ -234,7 +234,7 @@ def confirm_launch(request):
                            "failed": failed})
         request.session.pop("new_assessment", None)
         messages.success(request, f"Assessment for {team.name} launched!")
-        return redirect("dashboard_home")
+        return redirect("dashboard:home")
 
     return render(request, "assessments/confirm_launch.html", {
         "assessment": assessment,

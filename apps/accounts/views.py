@@ -12,7 +12,7 @@ from django import forms
 
 def signup_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard_home")
+        return redirect("dashboard:home")
     elif request.method == "POST":
         form = CustomUserCreationForm(request.POST)  
         if form.is_valid():
@@ -26,7 +26,7 @@ def signup_view(request):
                 recipient_list=[settings.SUPERADMIN_EMAIL],
                 fail_silently=True
             )
-            return redirect("dashboard_home")
+            return redirect("dashboard:home")
     else:
         form = CustomUserCreationForm()
     return render(request, "accounts/signup.html", {"form": form})
@@ -34,14 +34,14 @@ def signup_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard_home")
+        return redirect("dashboard:home")
     elif request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             messages.success(request, "Login successful.")
-            return redirect("dashboard_home")
+            return redirect("dashboard:home")
     else:
         form = AuthenticationForm()
     return render(request, "accounts/login.html", {"form": form})

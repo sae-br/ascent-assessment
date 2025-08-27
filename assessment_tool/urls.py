@@ -20,13 +20,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('alao/', admin.site.urls), #admin level access only
+    path('alao/', admin.site.urls), #Admin Level Access Only
     path('accounts/', include(('apps.accounts.urls', 'accounts'), namespace='accounts')),
     path('teams/', include(('apps.teams.urls', 'teams'), namespace='teams')),
     path('assessments/', include(('apps.assessments.urls', 'assessments'), namespace='assessments')),
     path('reports/', include(('apps.reports.urls', 'reports'), namespace='reports')),
     path('payments/', include(('apps.payments.urls', 'payments'), namespace='payments')),
     path('dashboard/', include(('apps.dashboard.urls', 'dashboard'), namespace='dashboard')),
+    path('', include(('apps.dashboard.urls', 'dashboard'), namespace='dashboard_root')),
     path('pdfexport/', include('apps.pdfexport.urls')),
     path('markdownx/', include('markdownx.urls')),
 ]
