@@ -15,7 +15,7 @@ def reports_overview(request):
     reports = (
         FinalReport.objects
         .filter(assessment__team__admin=request.user)
-        .exclude(id__isnull=True)
+        .filter(s3_key__isnull=False).exclude(s3_key="")
         .select_related('assessment', 'assessment__team')
         .order_by('-created_at')
     )
@@ -37,7 +37,6 @@ def download_report(request, report_id: int):
     )
 
     if not fr.s3_key:
-        # Nothing uploaded yet — for now, show 404. (We can enhance to regenerate later.)
         from django.http import Http404
         raise Http404("Report file is not available yet.")
 
