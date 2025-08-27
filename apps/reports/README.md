@@ -37,35 +37,6 @@ Bullet points offering a short interpretation of the team’s result for a given
 
 Suggested leadership actions based on score range for a given peak.
 
-## Views
-
-generate_report
-	•	URL: /generate/
-	•	Purpose: Presents a form to choose a team to generate a report for.
-	•	Template: reports/generate.html
-
-review_team_report_redirect
-	•	URL: /team_report/
-	•	Purpose: Simple redirect handler that grabs team_id from GET parameters and sends user to the correct team report URL.
-
-review_team_report
-	•	URL: /team_report/<team_id>/
-	•	Purpose:
-    	•	Fetches the specified team and its members.
-    	•	For each peak:
-            •	Retrieves all questions under that peak.
-            •	Aggregates all answers submitted by that team’s members.
-            •	Calculates a percentage score per question and per peak:
-                •	question_score = total_score / (responses * 3) * 100
-                •	peak_score = sum(question_scores) / max_possible_score * 100
-            •	All scores are rounded to whole percentages.
-        •	Passes the full dataset to the report template.
-	•	Template: reports/team_report.html
-
-Dependencies
-	•	apps.teams: To fetch team and member data
-	•	apps.assessments: To retrieve peaks, questions, and answers
-	•	django.db.models: Used to aggregate data (Sum, Count)
 
 ## Report Summary Component
 

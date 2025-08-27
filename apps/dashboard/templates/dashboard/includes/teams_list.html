@@ -1,7 +1,7 @@
 <div class="dashboard-section">
   <div class="section-header">
     <h2>Your Teams</h2>
-    <a href="{% url 'teams_overview' %}" class="unstyled-link">See All</a>
+    <a href="{% url 'teams:teams_overview' %}" class="unstyled-link">See All</a>
   </div>
 
   <div class="card">
@@ -13,7 +13,7 @@
             <span class="row-right">
               <!-- link into the overview, scoping to this team -->
               <a 
-                href="{% url 'teams_overview' %}?team={{ team.id }}" 
+                href="{% url 'teams:teams_overview' %}?team={{ team.id }}" 
                 class="row-button"
               >Details</a>
             </span>
@@ -21,7 +21,7 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>No teams yet. <a href="{% url 'teams_overview' %}">Create one</a>.</p>
+      <p>No teams yet. <a href="{% url 'teams:teams_overview' %}">Create one</a>.</p>
     {% endif %}
   </div>
 </div>

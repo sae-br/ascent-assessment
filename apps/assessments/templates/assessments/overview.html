@@ -11,7 +11,7 @@
     {% else %}
 
         <!-- Filter/select control -->
-        <form method="get" action="{% url 'assessments_overview' %}">
+        <form method="get" action="{% url 'assessments:assessments_overview' %}">
             <label for="assessment">Select Assessment:</label>
             <div class="assessment-select">
                 <select name="assessment" id="assessment">
@@ -91,7 +91,7 @@
                         </td>
                         <td>
                             {% if not participant.has_submitted %}
-                            <form method="post" action="{% url 'resend_invite' participant.id %}">
+                            <form method="post" action="{% url 'assessments:resend_invite' participant.id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="text-button">Resend Invite</button>
                             </form>

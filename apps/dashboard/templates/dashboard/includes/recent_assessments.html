@@ -1,7 +1,7 @@
 <div class="dashboard-section">
   <div class="section-header">
     <h2>Recent Assessments</h2>
-    <a href="{% url 'assessments_overview' %}" class="unstyled-link">See All</a>
+    <a href="{% url 'assessments:assessments_overview' %}" class="unstyled-link">See All</a>
   </div>
 
   {% if assessments_data %}
@@ -29,6 +29,6 @@
       {% endfor %}
     </div>
   {% else %}
-    <p>No assessments yet. <a href="{% url 'new_assessment' %}">Start a new one</a>.</p>
+    <p>No assessments yet. <a href="{% url 'assessments:new_assessment' %}">Start a new one</a>.</p>
   {% endif %}
 </div>

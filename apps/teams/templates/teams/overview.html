@@ -97,7 +97,7 @@
                       &nbsp;|&nbsp;
                       <!-- cancel simply drops the edit param -->
                       <a
-                        href="{% url 'teams_overview' %}?team={{ selected_team.id }}"
+                        href="{% url 'teams:teams_overview' %}?team={{ selected_team.id }}"
                         class="text-button text-muted"
                       >Cancel</a>
                     </td>
@@ -110,7 +110,7 @@
                   <td>{{ member.email }}</td>
                   <td class="text-right">
                     <a
-                      href="{% url 'teams_overview' %}?team={{ selected_team.id }}&edit={{ member.id }}"
+                      href="{% url 'teams:teams_overview' %}?team={{ selected_team.id }}&edit={{ member.id }}"
                       class="text-button"
                     >Edit</a>
                     &nbsp;|&nbsp;
@@ -178,13 +178,13 @@
       <!-- Rename / Delete Team links -->
       <div class="section-footer" style="margin-top:1rem;">
         <a
-          href="{% url 'rename_team' selected_team.id %}"
+          href="{% url 'teams:rename_team' selected_team.id %}"
           class="text-button"
         >Rename Team</a>
         &nbsp;|&nbsp;
         <form
           method="post"
-          action="{% url 'delete_team' selected_team.id %}"
+          action="{% url 'teams:delete_team' selected_team.id %}"
           style="display:inline;"
           onsubmit="return confirm('Delete team & all its members?')"
         >

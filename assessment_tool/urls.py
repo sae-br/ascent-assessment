@@ -20,15 +20,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('accounts/', include('apps.accounts.urls')),
-    path('teams/', include('apps.teams.urls')),
-    path('assessments/', include('apps.assessments.urls')),
-    path('reports/', include('apps.reports.urls')),
-    path('payments/', include('apps.payments.urls')),
-    path('', include('apps.dashboard.urls')),  
+    path('alao/', admin.site.urls), #admin level access only
+    path('accounts/', include(('apps.accounts.urls', 'accounts'), namespace='accounts')),
+    path('teams/', include(('apps.teams.urls', 'teams'), namespace='teams')),
+    path('assessments/', include(('apps.assessments.urls', 'assessments'), namespace='assessments')),
+    path('reports/', include(('apps.reports.urls', 'reports'), namespace='reports')),
+    path('payments/', include(('apps.payments.urls', 'payments'), namespace='payments')),
+    path('dashboard/', include(('apps.dashboard.urls', 'dashboard'), namespace='dashboard')),
+    path('pdfexport/', include('apps.pdfexport.urls')),
     path('markdownx/', include('markdownx.urls')),
-    path("pdfexport/", include("apps.pdfexport.urls")),
 ]
 
 if settings.DEBUG:

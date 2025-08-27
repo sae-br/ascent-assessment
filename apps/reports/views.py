@@ -1,19 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.db.models import Sum
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 
-from apps.assessments.models import Peak, Answer, Assessment
-from apps.reports.models import ResultsSummary, UniformRangeSummary, PeakInsights, PeakActions
-from apps.reports.utils import get_score_range_label
 from apps.pdfexport.models import FinalReport
 from apps.pdfexport.utils.storage import S3Uploader
 
-
-@login_required
-def generate_report(request):
-    assessments = Assessment.objects.filter(team__admin=request.user).select_related('team')
-    return render(request, 'reports/generate.html', {'assessments': assessments})
 
 @login_required
 def reports_overview(request):
@@ -24,6 +15,7 @@ def reports_overview(request):
     reports = (
         FinalReport.objects
         .filter(assessment__team__admin=request.user)
+        .exclude(id__isnull=True)
         .select_related('assessment', 'assessment__team')
         .order_by('-created_at')
     )

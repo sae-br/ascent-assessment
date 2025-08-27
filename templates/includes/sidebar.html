@@ -3,7 +3,7 @@
 
 <aside class="sidebar">
   <div class="sidebar-header">
-    <a href="{% url 'dashboard_home' %}">
+    <a href="{% url 'dashboard:dashboard_home' %}">
       <img src="{% static 'images/logo.png' %}" alt="Ascent Assessment Logo" class="sidebar-logo" />
     </a>
   </div>
@@ -12,25 +12,25 @@
     <p class="nav-section">MENU</p>
     <ul>
       <li>
-        <a href="{% url 'dashboard_home' %}" 
+        <a href="{% url 'dashboard:dashboard_home' %}" 
            class="nav-link {% if section == 'dashboard_home' %}active{% endif %}">
           <i data-lucide="layout-dashboard"></i> Dashboard
         </a>
       </li>
       <li>
-        <a href="{% url 'assessments_overview' %}" 
+        <a href="{% url 'assessments:assessments_overview' %}" 
            class="nav-link {% if section == 'assessments' %}active{% endif %}">
           <i data-lucide="clipboard-list"></i> Assessments
         </a>
       </li>
       <li>
-        <a href="{% url 'teams_overview' %}" 
+        <a href="{% url 'teams:teams_overview' %}" 
           class="nav-link {% if section == 'teams' %}active{% endif %}">
           <i data-lucide="users"></i> Teams
         </a>
       </li>
       <li>
-        <a href="{% url 'reports_overview' %}" 
+        <a href="{% url 'reports:reports_overview' %}" 
            class="nav-link {% if section == 'reports' %}active{% endif %}">
           <i data-lucide="file-text"></i> Reports
         </a>

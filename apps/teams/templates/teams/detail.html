@@ -56,7 +56,7 @@
   <hr>
 
   <!-- Delete Team (optional at bottom) -->
-  <form method="post" action="{% url 'delete_team' team.id %}" onsubmit="return confirm('This will delete the team and all its members. This cannot be undone.')">
+  <form method="post" action="{% url 'teams:delete_team' team.id %}" onsubmit="return confirm('This will delete the team and all its members. This cannot be undone.')">
     {% csrf_token %}
     <button type="submit" class="btn btn-outline-danger mt-4">Delete Entire Team</button>
   </form>
