@@ -183,7 +183,6 @@ h3 {
   color: var(--bg) !important;
 }
 
-
 /* Flex container */
 .page-wrapper {
   display: flex;
@@ -495,20 +494,6 @@ h3 {
   width: 4rem;                  /* fixed width keeps columns aligned */
 }
 
-.table .text-button {
-  background: transparent;
-  border: none;
-  color: var(--primary);
-  padding: 0;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-.table .text-button:hover {
-  color: var(--primary-hover);
-  text-decoration: underline;
-}
-
 .status-icon {
   width: 20px;
   height: 20px;
@@ -777,9 +762,23 @@ button:focus-visible {
   outline-offset: 2px;
 }
 
+/* Ensure button elements styled as text-buttons never pick up filled-hover styles */
+button.text-button,
+button.text-button:hover,
+input.text-button,
+input.text-button:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+
 label {
   display: block;
-  margin-bottom: 0.25rem;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  font-style: italic;
 }
 
 .form-group input,
@@ -797,6 +796,11 @@ label {
 .notice {
   color: var(--alert);
   font-size: 1rem;
+}
+
+.form--extend-table {
+  display: block;
+  margin-top: 20px;
 }
 
 /* Hide native controls but keep them accessible to a11y tree and labels */
@@ -957,6 +961,23 @@ input[type="radio"]:checked + label.custom-control.radio::after {
 
 
 /* Misc body elements */
+
+.text-button {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  padding: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+.text-button:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+  background: transparent;
+}
+
 hr {
   border: none;
   height: var(--border-width);

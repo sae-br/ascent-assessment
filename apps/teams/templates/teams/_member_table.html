@@ -1,5 +1,7 @@
 {% if team %}
   <h3>Team Members in {{ team.name }}</h3>
+  <p>Editing a team that has already been assigned to an assessment will change the team 
+    from this point forward. Closed assessments will not be affected.</p>
   <div class="table-wrapper">
     <table class="table">
       <thead>
@@ -10,21 +12,22 @@
         </tr>
       </thead>
       <tbody>
-        {% for member in team.members.all %}
+        {% with rows=members|default:team.members.all %}
+        {% for member in rows %}
           <tr>
             <form method="post">
               {% csrf_token %}
               <td>
-                <input type="text" name="edit_member_name" value="{{ member.name }}" required>
+                <input type="text" name="name" value="{{ member.name }}" required>
               </td>
               <td>
-                <input type="email" name="edit_member_email" value="{{ member.email }}" required>
+                <input type="email" name="email" value="{{ member.email }}" required>
               </td>
               <td class="text-right">
                 <input type="hidden" name="member_id" value="{{ member.id }}">
                 <button type="submit" name="edit_member" class="text-button">Update</button>
                 &nbsp;|&nbsp;
-                <button type="submit" name="delete_member" class="text-button" 
+                <button type="submit" name="delete_member" class="text-button"
                   onclick="return confirm('Are you sure you want to delete this member?')">Delete
                 </button>
               </td>
@@ -33,16 +36,17 @@
         {% empty %}
           <tr><td colspan="3">No members yet.</td></tr>
         {% endfor %}
+        {% endwith %}        
       </tbody>
     </table>
   </div>
-  <hr>
 
-  <h4>Add New Member</h4>
-  <form method="post" style="margin-top: 10px;">
+  <form method="post" class="form--extend-table">
+    <p><em>Add New Member:</em></p>
     {% csrf_token %}
-    <input type="text" name="new_member_name" placeholder="Name" required>
-    <input type="email" name="new_member_email" placeholder="Email" required>
+    <input type="hidden" name="selected_team" value="{{ team.id }}">
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="email" name="email" placeholder="Email" required>
     <button type="submit" name="add_member">Add</button>
   </form>
 

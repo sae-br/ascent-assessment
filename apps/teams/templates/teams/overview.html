@@ -10,18 +10,10 @@
   <section class="section">
     <h2>Create a New Team</h2>
     <p>Create a new team here and you will be able to select it in the dropdown below.</p>
-    <form method="post" class="team-create-form">
+    <form method="post" class="team-create-form" action="{% url 'teams:teams_overview' %}">
       {% csrf_token %}
-      <input
-        type="text"
-        name="name"
-        placeholder="Enter Team Name"
-        required
-        class="team-input"
-      >
-      <button type="submit" name="create_team" class="button">
-        Create
-      </button>
+      <input type="text" name="name" placeholder="Enter Team Name" required class="team-input">
+      <button type="submit" name="create_team" class="button">Create</button>
     </form>
   </section>
 
@@ -30,158 +22,37 @@
     <h2>Edit a Team</h2>
 
     <!-- switcher dropdown -->
-    <form method="post" class="team-switch-form">
+    <form method="post" class="team-switch-form" action="{% url 'teams:teams_overview' %}">
       {% csrf_token %}
       <label for="selected_team">Select the team you’d like to edit:</label>
       <div class="team-switch">
         <select name="selected_team" id="selected_team">
-          <option value="" disabled {% if not selected_team %}selected{% endif %}>
-            -- Select Team --
-          </option>
+          <option value="" disabled {% if not selected_team %}selected{% endif %}>-- Select Team --</option>
           {% for t in teams %}
-            <option
-              value="{{ t.id }}"
-              {% if selected_team and t.id == selected_team.id %}selected{% endif %}
-            >{{ t.name }}</option>
+            <option value="{{ t.id }}" {% if selected_team and t.id == selected_team.id %}selected{% endif %}>
+              {{ t.name }}
+            </option>
           {% endfor %}
         </select>
-        <button type="submit" name="edit_team" class="button">
-          Go
-        </button>
+        <button type="submit" name="edit_team" class="button">Go</button>
       </div>
     </form>
 
     {% if selected_team %}
-      <!-- Member table -->
-      <div class="table-wrapper">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th class="text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for member in members %}
-              {% if editing_id == member.id|stringformat:"s" %}
-                <!-- inline EDIT row -->
-                <tr>
-                  <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="member_id" value="{{ member.id }}">
-                    <td>
-                      <input
-                        type="text"
-                        name="edit_member_name"
-                        value="{{ member.name }}"
-                        required
-                        class="team-input"
-                      >
-                    </td>
-                    <td>
-                      <input
-                        type="email"
-                        name="edit_member_email"
-                        value="{{ member.email }}"
-                        required
-                        class="team-input"
-                      >
-                    </td>
-                    <td class="text-right">
-                      <button
-                        type="submit"
-                        name="edit_member"
-                        class="text-button"
-                      >Save</button>
-                      &nbsp;|&nbsp;
-                      <!-- cancel simply drops the edit param -->
-                      <a
-                        href="{% url 'teams:teams_overview' %}?team={{ selected_team.id }}"
-                        class="text-button text-muted"
-                      >Cancel</a>
-                    </td>
-                  </form>
-                </tr>
-              {% else %}
-                <!-- normal VIEW row -->
-                <tr>
-                  <td>{{ member.name }}</td>
-                  <td>{{ member.email }}</td>
-                  <td class="text-right">
-                    <a
-                      href="{% url 'teams:teams_overview' %}?team={{ selected_team.id }}&edit={{ member.id }}"
-                      class="text-button"
-                    >Edit</a>
-                    &nbsp;|&nbsp;
-                    <form
-                      method="post"
-                      style="display:inline"
-                      onsubmit="return confirm('Delete {{ member.name }}?')"
-                    >
-                      {% csrf_token %}
-                      <input type="hidden" name="member_id" value="{{ member.id }}">
-                      <button
-                        type="submit"
-                        name="delete_member"
-                        class="text-button text-danger"
-                      >Delete</button>
-                    </form>
-                  </td>
-                </tr>
-              {% endif %}
-            {% empty %}
-              <tr>
-                <td colspan="3" class="text-center text-light">
-                  No members yet.
-                </td>
-              </tr>
-            {% endfor %}
+      {% include "teams/_member_table.html" with team=selected_team editing_id=editing_id %}
 
-            <!-- “Add New” inline row -->
-            <tr>
-              <form method="post">
-                {% csrf_token %}
-                <!-- ensure we carry the team-id in the POST -->
-                <input type="hidden" name="selected_team" value="{{ selected_team.id }}">
-                <td>
-                  <input
-                    type="text"
-                    name="new_member_name"
-                    placeholder="Name"
-                    required
-                    class="team-input"
-                  >
-                </td>
-                <td>
-                  <input
-                    type="email"
-                    name="new_member_email"
-                    placeholder="Email"
-                    required
-                    class="team-input"
-                  >
-                </td>
-                <td class="text-right">
-                  <button
-                    type="submit"
-                    name="add_member"
-                    class="text-button"
-                  >Add</button>
-                </td>
-              </form>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- Rename Team -->
+      <form method="post" class="form--extend-table" action="{% url 'teams:rename_team' selected_team.id %}">
+        {% csrf_token %}
+        <p><em>Rename Team:</em></p>
+        <input type="text" name="name" value="{{ selected_team.name }}" required>
+        <button type="submit" class="button">Rename</button>
+      </form>
+      
+      <!-- Delete Team -->
+      <hr>
 
-      <!-- Rename / Delete Team links -->
-      <div class="section-footer" style="margin-top:1rem;">
-        <a
-          href="{% url 'teams:rename_team' selected_team.id %}"
-          class="text-button"
-        >Rename Team</a>
-        &nbsp;|&nbsp;
+      <div class="section" style="margin-top:1rem;">
         <form
           method="post"
           action="{% url 'teams:delete_team' selected_team.id %}"
