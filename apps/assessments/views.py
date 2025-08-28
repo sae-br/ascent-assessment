@@ -17,19 +17,23 @@ logger = logging.getLogger(__name__)
 @login_required
 def assessments_overview(request):
     user = request.user
-    teams = Team.objects.filter(admin=request.user)
-    assessments = Assessment.objects.filter(team__in=teams).order_by('-deadline')
+    teams = Team.objects.filter(admin=user)
+
+    assessments = (
+        Assessment.objects
+        .filter(team__in=teams)
+        .select_related("team", "final_report")
+        .order_by("-deadline")
+    )
 
     selected_assessment_id = request.GET.get("assessment")
     selected_assessment = (
         assessments.filter(id=selected_assessment_id).first()
-        if selected_assessment_id
-        else assessments.first()
+        if selected_assessment_id else assessments.first()
     )
 
     if not selected_assessment:
-        logger.debug("assessments_overview: no assessments for user", 
-                     extra={"user_id": user.id})
+        logger.debug("assessments_overview: no assessments for user", extra={"user_id": user.id})
         participants = []
     else:
         participants = (
@@ -37,7 +41,6 @@ def assessments_overview(request):
             .filter(assessment=selected_assessment)
             .select_related("team_member")
             .order_by("team_member__name")
-            if selected_assessment else []
         )
 
     return render(request, "assessments/overview.html", {

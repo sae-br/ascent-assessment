@@ -2,9 +2,18 @@
 {% load static %}
 
 {% block content %}
-<div class="main-heading">
-    <h1>Assessments</h1>
+<div class="container--narrow">
+    <div class="main-heading">
+        <h1>Assessments</h1>
+        <p>Manage current assessments and review past ones by selecting from the list.</p>
+        <p>Once your participants have submitted their responses, you can purchase
+            the one-time final report, closing the assessment. All reports will
+            be available for download in the Reports section.
+        </p>
+    </div>
+</div>
 
+<div class="section">
     <!-- If there are no assessments yet, show an empty state -->
     {% if not assessments %}
     <p>No assessments have been created yet.</p>
@@ -29,43 +38,39 @@
             <div class="assessment-meta">
                 <p><strong>Target Date:</strong> {{ selected_assessment.deadline|date:"F d, Y" }}</p>
                 <p><strong>Invitations Sent:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
+
+                {# Grab the one-to-one FinalReport if it exists #}
+                {% with fr=selected_assessment.final_report %}
                 <p><strong>Report Generated:</strong>
-                {% if selected_assessment.finalreport and selected_assessment.finalreport.is_ready %}
-                    Yes
-                {% elif selected_assessment.finalreport %}
+                    {% if fr and fr.s3_key %}
+                    {{ fr.created_at|date:"F j, Y" }}
+                    &nbsp;—&nbsp;
+                    <a
+                        class="text-button"
+                        href="{% url 'reports:download_report' fr.id %}"
+                        target="_blank" rel="noopener"
+                    >Download</a>
+                    {% elif fr %}
                     In progress…
-                {% else %}
+                    {% else %}
                     None
-                {% endif %}
+                    {% endif %}
                 </p>
 
                 <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                {% if selected_assessment.finalreport and selected_assessment.finalreport.is_ready %}
-                    <a
-                    class="button button--secondary"
-                    href="{% url 'docraptor_download' selected_assessment.finalreport.status_id %}"
-                    >
-                    Download Final Report
-                    </a>
-                {% elif selected_assessment.finalreport %}
-                    <a
-                    class="button button--secondary"
-                    href="{% url 'docraptor_status' selected_assessment.finalreport.status_id %}"
-                    title="View generation status"
-                    >
-                    View Status
-                    </a>
-                {% else %}
+                    {# Only show the Generate button when there is no finished file #}
+                    {% if not fr or not fr.s3_key %}
                     <form
-                    method="post"
-                    action="{% url 'final_report_docraptor_start' selected_assessment.id %}"
-                    style="display:inline"
+                        method="post"
+                        action="{% url 'final_report_docraptor_start' selected_assessment.id %}"
+                        style="display:inline"
                     >
-                    {% csrf_token %}
-                    <button class="button button--primary">Generate Final Report</button>
+                        {% csrf_token %}
+                        <button class="button button--primary">Generate Final Report</button>
                     </form>
-                {% endif %}
+                    {% endif %}
                 </div>
+                {% endwith %}
 
             <div class="table-wrapper">
                 <table class="table">
@@ -90,14 +95,21 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if not participant.has_submitted %}
-                            <form method="post" action="{% url 'assessments:resend_invite' participant.id %}">
-                                {% csrf_token %}
-                                <button type="submit" class="text-button">Resend Invite</button>
-                            </form>
-                            {% else %}
-                            <span class="text-muted">—</span>
-                            {% endif %}
+                            {% with fr=selected_assessment.final_report %}
+                                {# If a final report file exists, disable resends for everyone #}
+                                {% if fr and fr.s3_key %}
+                                    <span class="text-muted">—</span>
+                                {# Otherwise, if this participant already submitted, also disable #}
+                                {% elif participant.has_submitted %}
+                                    <span class="text-muted">—</span>
+                                {# Otherwise, allow resending #}
+                                {% else %}
+                                    <form method="post" action="{% url 'assessments:resend_invite' participant.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="text-button">Resend Invite</button>
+                                    </form>
+                                {% endif %}
+                            {% endwith %}
                         </td>
                         </tr>
                     {% endfor %}
@@ -106,5 +118,5 @@
             </div>
         {% endif %}
     {% endif %}
-</section>
+</div>
 {% endblock %}
