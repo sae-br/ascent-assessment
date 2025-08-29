@@ -11,20 +11,29 @@
 >
   {% csrf_token %}
   <button type="submit" class="text-button">Resend Invite</button>
-  <span class="sent-pill" data-autofade="5000" style="margin-left:.5rem;">Sent!</span>
+  <span class="message-slot" aria-live="polite" aria-atomic="true">
+    <span
+      class="sent-message"
+      data-autofade
+      style="--dur: 5s;"
+      role="status"
+    >Sent!</span>
+  </span>
 </form>
 
 {# Update the participant's "Last Invite" cell out-of-band #}
 <span id="last-invite-{{ participant.id }}" hx-swap-oob="true">
-  {% if participant.last_invited_at %}
-    {{ participant.last_invited_at|date:"M j, Y" }}
-  {% else %}
-    —
-  {% endif %}
+  {% with li=participant.last_invited_at|default:assessment.created_at %}
+    {% if li %}
+      {{ li|date:"M j, Y" }}
+    {% else %}
+      —
+    {% endif %}
+  {% endwith %}
 </span>
 
 {# Update the assessment meta "Last Invite Sent" out-of-band #}
-<span id="js-assessment-last-invite" hx-swap-oob="true">
+<span id="assessment-last-invite" hx-swap-oob="true">
   {% if assessment.last_invite_sent %}
     {{ assessment.last_invite_sent|date:"F d, Y" }}
   {% else %}

@@ -96,13 +96,17 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if participant.last_invited_at %}
-                                {{ participant.last_invited_at|date:"M j, Y" }}
-                            {% else %}
-                                —
-                            {% endif %}
+                            <span id="last-invite-{{ participant.id }}">
+                                {% with li=participant.last_invited_at|default:selected_assessment.created_at %}
+                                {% if li %}
+                                    {{ li|date:"M j, Y" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                                {% endwith %}
+                            </span>
                         </td>
-                        <td>
+                        <td class="actions-cell">
                             {% with fr=selected_assessment.final_report %}
                                 {# If a final report file exists, disable resends for everyone #}
                                 {% if fr and fr.s3_key %}
@@ -124,7 +128,10 @@
                                     >
                                         {% csrf_token %}
                                         <button type="submit" class="text-button">Resend Invite</button>
-                                        <span class="sent-pill" style="display:none;">Sent!</span>
+                                        <span class="message-slot" aria-live="polite" aria-atomic="true">
+                                            <!-- starts invisible via CSS opacity:0; keeps the cell width stable -->
+                                            <span class="sent-message" aria-hidden="true">Sent!</span>
+                                        </span>
                                     </form>
                                 {% endif %}
                             {% endwith %}

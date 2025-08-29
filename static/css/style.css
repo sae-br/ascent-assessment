@@ -500,6 +500,36 @@ h3 {
   vertical-align: middle;
 }
 
+.table td.actions-cell { white-space: nowrap; }
+
+.message-slot {
+  display: inline-block;
+  width: 64px; 
+  position: relative;
+  vertical-align: middle;
+}
+
+.sent-message {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0; 
+}
+
+.sent-message[data-autofade] {
+  opacity: 1;                 /* become visible when flagged */
+  animation: msgFade var(--dur, 5s) forwards;
+}
+
+@keyframes msgFade {
+  0%   { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 .status-icon.submitted {
   color: var(--check);
 }

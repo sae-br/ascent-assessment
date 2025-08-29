@@ -266,6 +266,8 @@ def confirm_launch(request):
                         fail_silently=False,
                     )
                     sent += 1
+                    participant.last_invited_at = timezone.now()
+                    participant.save(update_fields=["last_invited_at"])
                 except Exception:
                     failed += 1
                     logger.exception("invite.send_failed",
@@ -354,10 +356,15 @@ def start_assessment(request, token):
 @login_required
 @require_http_methods(["POST"])
 def resend_invite(request, participant_id):
-    participant = get_object_or_404(AssessmentParticipant, id=participant_id)
+    participant = get_object_or_404(
+        AssessmentParticipant,
+        id=participant_id,
+        assessment__team__admin=request.user
+    )
     member = participant.team_member
     assessment = participant.assessment
 
+    # Permission check (defense in depth)
     if member.team.admin != request.user:
         if request.headers.get("HX-Request"):
             return HttpResponse("Permission denied.", status=403)
@@ -381,11 +388,10 @@ def resend_invite(request, participant_id):
             recipient_list=[member.email],
             fail_silently=False,
         )
+        # Stamp the participant to show on the table
         now = timezone.now()
         participant.last_invited_at = now
         participant.save(update_fields=["last_invited_at"])
-        assessment.last_invite_sent = now
-        assessment.save(update_fields=["last_invite_sent"])
 
         # HTMX response: return fragment HTML that replaces the form
         if request.headers.get("HX-Request"):
@@ -397,15 +403,16 @@ def resend_invite(request, participant_id):
             return HttpResponse(html)
 
         messages.success(request, f"Resent invite to {member.name}.")
-        now = timezone.now()
-        participant.last_invited_at = now
-        participant.save(update_fields=["last_invited_at"])
-        
+
     except Exception:
-        logger.exception("resend_invite: send_failed",
-                         extra={"user_id": request.user.id,
-                                "assessment_id": assessment.id,
-                                "participant_id": participant.id})
+        logger.exception(
+            "resend_invite: send_failed",
+            extra={
+                "user_id": request.user.id,
+                "assessment_id": assessment.id,
+                "participant_id": participant.id,
+            },
+        )
         if request.headers.get("HX-Request"):
             return HttpResponse("Send failed.", status=500)
         messages.error(request, "Could not send invite. Please try again later.")
