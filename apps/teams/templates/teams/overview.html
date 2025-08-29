@@ -39,7 +39,7 @@
     </form>
 
     {% if selected_team %}
-      {% include "teams/_member_table.html" with team=selected_team editing_id=editing_id %}
+      {% include "teams/_member_table.html" with team=selected_team use_htmx=True %}
 
       <!-- Rename Team -->
       <form method="post" class="form--extend-table" action="{% url 'teams:rename_team' selected_team.id %}">

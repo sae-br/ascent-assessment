@@ -86,7 +86,7 @@ def new_assessment(request):
                 }
                 logger.debug("new_assessment: session primed", 
                              extra={"user_id": user.id, "team_id": team_id})
-                return redirect("confirm_team")
+                return redirect("assessments:confirm_team")
 
             except ValueError:
                 logger.warning("new_assessment: invalid deadline format", 
@@ -108,7 +108,7 @@ def confirm_team(request):
     if not session_data:
         logger.warning("confirm_team: missing session data", extra={"user_id": user.id})
         messages.error(request, "Assessment setup data missing.")
-        return redirect("new_assessment")
+        return redirect("assessments:new_assessment")
 
     team = get_object_or_404(Team, id=session_data["team_id"], admin=request.user)
     try:
@@ -163,7 +163,7 @@ def confirm_team(request):
         elif "confirm_team_done" in request.POST:
             logger.info("confirm_team: proceed to confirm_launch", 
                         extra={"user_id": user.id, "team_id": team.id})
-            return redirect("confirm_launch")
+            return redirect("assessments:confirm_launch")
 
         else:
             logger.warning("confirm_team: unknown POST action", 
@@ -184,7 +184,7 @@ def confirm_launch(request):
     if not session_data:
         logger.warning("confirm_launch: missing session data", extra={"user_id": user.id})
         messages.error(request, "Missing assessment setup data.")
-        return redirect("new_assessment")
+        return redirect("assessments:new_assessment")
 
     team = get_object_or_404(Team, id=session_data["team_id"])
     deadline = datetime.strptime(session_data["deadline"], "%Y-%m-%d").date()
@@ -325,7 +325,7 @@ def resend_invite(request, participant_id):
                        extra={"user_id": request.user.id, 
                               "team_id": member.team_id})
         messages.error(request, "You don't have permission to do that.")
-        return redirect("assessments_overview")
+        return redirect("assessments:assessments_overview")
 
     invite_url = request.build_absolute_uri(reverse("start_assessment", args=[participant.token])),
     try:
@@ -353,4 +353,4 @@ def resend_invite(request, participant_id):
                                 "participant_id": participant.id})
         messages.error(request, "Could not send invite. Please try again later.")
     
-    return redirect(f"{reverse('assessments_overview')}?assessment={assessment.id}")
+    return redirect(f"{reverse('assessments:assessments_overview')}?assessment={assessment.id}")

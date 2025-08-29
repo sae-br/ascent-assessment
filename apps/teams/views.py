@@ -141,3 +141,70 @@ def rename_team(request, team_id):
     else:
         messages.error(request, "Please provide a valid team name.")
     return redirect(f"{reverse('teams:teams_overview')}?team={team.id}")
+
+
+@login_required
+def member_table(request, team_id):
+    """
+    HTMX-friendly endpoint that returns the member table partial.
+    - GET: render current table
+    - POST: handle add/edit/delete then render updated table
+    """
+    user = request.user
+    team = get_object_or_404(Team, id=team_id, admin=user)
+
+    if request.method == "POST":
+        logger.debug("member_table POST", extra={"post_keys": list(request.POST.keys())})
+
+        # Normalize input names (coming from shared partial)
+        data = request.POST.copy()
+
+        if "add_member" in data:
+            if not data.get("name"):
+                data["name"] = data.get("new_member_name", "")
+            if not data.get("email"):
+                data["email"] = data.get("new_member_email", "")
+            form = TeamMemberForm(data)
+            if form.is_valid():
+                m = form.save(commit=False)
+                m.team = team
+                m.save()
+                messages.success(request, f"Added member: {m.name}")
+            else:
+                messages.error(request, "Please provide a valid name and email.")
+
+        elif "edit_member" in data:
+            member_id = data.get("member_id")
+            member = get_object_or_404(TeamMember, id=member_id, team=team)
+            if not data.get("name"):
+                data["name"] = data.get("edit_member_name", member.name)
+            if not data.get("email"):
+                data["email"] = data.get("edit_member_email", member.email)
+            form = TeamMemberForm(data, instance=member)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"Updated member: {member.name}")
+            else:
+                messages.error(request, "Could not update member. Check the fields.")
+
+        elif "delete_member" in data:
+            member_id = data.get("member_id")
+            member = get_object_or_404(TeamMember, id=member_id, team=team)
+            member.delete()
+            messages.success(request, "Deleted member.")
+
+    members = team.members.all().order_by("name")
+    member_form = TeamMemberForm()
+
+    # Always return the partial so HTMX can swap it in
+    return render(
+        request,
+        "teams/_member_table.html",
+        {
+            "team": team,
+            "members": members,
+            "member_form": member_form,
+            "use_htmx": True,           # tells the partial to emit hx-* attributes
+            "selected_team": team,      # keeps hidden selected_team filled
+        },
+    )
