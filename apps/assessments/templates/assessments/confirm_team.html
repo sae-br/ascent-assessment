@@ -4,12 +4,13 @@
 {% block content %}
 <h1>Create New Assessment</h1>
 
-<h2>Step 2/3: Set Up Assessment</h2>
+<h2>Step 2/3: Set Up Team Member Info</h2>
 
 <section class="container--narrow">
 
   <p>You are launching the assessment:<br><strong>{{ team.name }} - {{ deadline|date:"F Y" }}</strong></p>
 
+  <hr>
   <br>
 
   <!-- Includes table + add/delete forms -->
@@ -22,8 +23,9 @@
 
   <hr>
 
-  <form method="post">
+  <form method="post" style="margin-bottom:1rem">
     {% csrf_token %}
-    <button type="submit" name="confirm_team_done" class="button--secondary">Continue</button>
+    <button class="button button--secondary" name="back_to_new" value="1">← Back to Basic Info</button>
+    <button class="button button--secondary" type="submit" name="confirm_team_done" value="1">Continue</button>
   </form>
 {% endblock %}

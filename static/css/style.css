@@ -803,6 +803,18 @@ label {
   margin-top: 20px;
 }
 
+.element--actions-row {
+  display: flex;
+  gap: .5rem;
+  align-items: stretch; 
+}
+.element--actions-row .button {
+  display: inline-flex; 
+  align-items: center;
+  justify-content: center;
+}
+
+
 /* Hide native controls but keep them accessible to a11y tree and labels */
 input[type="checkbox"],
 input[type="radio"] {

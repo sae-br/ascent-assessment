@@ -29,9 +29,17 @@
         will receive an update email.</p>
     <br>
 
-    <form method="post">
+    <form method="post" class="element--actions-row">
         {% csrf_token %}
-        <button type="submit" class="button--primary">Launch Assessment</button>
+        <button class="button button--secondary" name="edit_basics" value="1">
+            Edit Basics
+        </button>
+        <button class="button button--secondary" name="edit_team_members" value="1">
+            Edit Team Members
+        </button>
+        <button class="button button--primary" name="launch_assessment" value="1">
+            Launch Assessment
+        </button>
     </form>
 </section>
 {% endblock %}

@@ -58,6 +58,30 @@ def new_assessment(request):
     teams = Team.objects.filter(admin=request.user)
     selected_team = None
 
+    # 1) If coming from Step 3 with ?assessment=<id>, prefill and seed session
+    assessment_id = request.GET.get("assessment")
+    if assessment_id:
+        existing = (
+            Assessment.objects
+            .filter(id=assessment_id, team__admin=user)
+            .select_related("team")
+            .first()
+        )
+        if existing:
+            selected_team = existing.team
+            deadline_str = existing.deadline.strftime("%Y-%m-%d")
+            request.session["new_assessment"] = {
+                "team_id": existing.team_id,
+                "deadline": deadline_str,
+            }
+
+    # 2) Or fall back to session if present
+    session_data = request.session.get("new_assessment")
+    if not selected_team and session_data:
+        pre_team_id = session_data.get("team_id")
+        if pre_team_id:
+            selected_team = Team.objects.filter(id=pre_team_id, admin=user).first()
+
     if request.method == "POST":
         team_id = request.POST.get("team")
         deadline_str = request.POST.get("deadline")
@@ -96,6 +120,8 @@ def new_assessment(request):
     return render(request, "assessments/new_assessment.html", {
         "teams": teams,
         "selected_team": selected_team,
+        "initial_team_id": selected_team.id if selected_team else None,
+        "initial_deadline": (request.session.get("new_assessment") or {}).get("deadline"),
     })
 
 @login_required
@@ -103,6 +129,8 @@ def new_assessment(request):
 def confirm_team(request):
     user = request.user
     logger.debug("confirm_team: entered", extra={"user_id": user.id})
+    if "back_to_new" in request.POST:
+        return redirect("assessments:new_assessment")
     session_data = request.session.get("new_assessment")
 
     if not session_data:
@@ -204,40 +232,47 @@ def confirm_launch(request):
         )
 
     if request.method == "POST":
-        sent = failed = 0
-        for m in team.members.all():
-            participant = AssessmentParticipant.objects.get(team_member=m, 
-                                                            assessment=assessment)
-            invite_url = request.build_absolute_uri(reverse("start_assessment", args=[participant.token])),
-            try:
-                send_mail(
-                    subject="You're invited to complete a team assessment",
-                    message=(
-                        f"Hello {m.name},\n\n"
-                        f"Please complete your team assessment by visiting this link:\n\n"
-                        f"{invite_url}/\n\n"
-                        f"Deadline: {assessment.deadline.strftime('%B %Y')}"
-                    ),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[m.email],
-                    fail_silently=False,
-                )
-                sent += 1
-            except Exception:
-                failed += 1
-                logger.exception("invite.send_failed", 
-                                 extra={"user_id": user.id, 
-                                        "assessment_id": assessment.id, 
-                                        "member_id": m.id})
+        # Let users jump back without losing session
+        if "edit_basics" in request.POST:
+            messages.info(request, "You can adjust the basics and continue.")
+            return redirect(f"{reverse('assessments:new_assessment')}?assessment={assessment.id}")
 
-        logger.info("invite.batch_complete", 
-                    extra={"user_id": user.id, 
-                           "assessment_id": assessment.id, 
-                           "sent": sent, 
-                           "failed": failed})
-        request.session.pop("new_assessment", None)
-        messages.success(request, f"Assessment for {team.name} launched!")
-        return redirect("dashboard:home")
+        if "edit_team_members" in request.POST:
+            messages.info(request, "You can update team members and continue.")
+            return redirect(f"{reverse('assessments:confirm_team')}?assessment={assessment.id}")
+
+        # Only launch when the explicit button is pressed
+        if "launch_assessment" in request.POST:
+            sent = failed = 0
+            for m in team.members.all():
+                participant = AssessmentParticipant.objects.get(team_member=m, assessment=assessment)
+                invite_url = request.build_absolute_uri(
+                    reverse("assessments:start_assessment", args=[participant.token])
+                )
+                try:
+                    send_mail(
+                        subject="You're invited to complete a team assessment",
+                        message=(
+                            f"Hello {m.name},\n\n"
+                            f"Please complete your team assessment by visiting this link:\n\n"
+                            f"{invite_url}\n\n"
+                            f"Deadline: {assessment.deadline.strftime('%B %Y')}"
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[m.email],
+                        fail_silently=False,
+                    )
+                    sent += 1
+                except Exception:
+                    failed += 1
+                    logger.exception("invite.send_failed",
+                                    extra={"user_id": user.id, "assessment_id": assessment.id, "member_id": m.id})
+
+            logger.info("invite.batch_complete",
+                        extra={"user_id": user.id, "assessment_id": assessment.id, "sent": sent, "failed": failed})
+            request.session.pop("new_assessment", None)
+            messages.success(request, f"Assessment for {team.name} launched!")
+            return redirect("dashboard:home")
 
     return render(request, "assessments/confirm_launch.html", {
         "assessment": assessment,
@@ -327,14 +362,16 @@ def resend_invite(request, participant_id):
         messages.error(request, "You don't have permission to do that.")
         return redirect("assessments:assessments_overview")
 
-    invite_url = request.build_absolute_uri(reverse("start_assessment", args=[participant.token])),
+    invite_url = request.build_absolute_uri(
+        reverse("assessments:start_assessment", args=[participant.token])
+    )
     try:
         send_mail(
             subject="You're invited to complete a team assessment",
             message=(
                 f"Hello {member.name},\n\n"
                 f"Please complete your team assessment by visiting this link:\n\n"
-                f"{invite_url}/\n\n"
+                f"{invite_url}\n\n"
                 f"Deadline: {assessment.deadline.strftime('%B %Y')}"
             ),
             from_email=settings.DEFAULT_FROM_EMAIL,
