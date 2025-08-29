@@ -37,7 +37,7 @@
         {% if selected_assessment %}
             <div class="assessment-meta">
                 <p><strong>Target Date:</strong> {{ selected_assessment.deadline|date:"F d, Y" }}</p>
-                <p><strong>Invitations Sent:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
+                <p><strong>Assessment Launched:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
 
                 {# Grab the one-to-one FinalReport if it exists #}
                 {% with fr=selected_assessment.final_report %}
@@ -79,6 +79,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Submitted?</th>
+                            <th>Last Invited</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -95,6 +96,13 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if participant.last_invited_at %}
+                                {{ participant.last_invited_at|date:"M j, Y" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
                             {% with fr=selected_assessment.final_report %}
                                 {# If a final report file exists, disable resends for everyone #}
                                 {% if fr and fr.s3_key %}
@@ -104,9 +112,19 @@
                                     <span class="text-muted">—</span>
                                 {# Otherwise, allow resending #}
                                 {% else %}
-                                    <form method="post" action="{% url 'assessments:resend_invite' participant.id %}">
+                                    <form
+                                        method="post"
+                                        action="{% url 'assessments:resend_invite' participant.id %}"
+                                        hx-post="{% url 'assessments:resend_invite' participant.id %}"
+                                        hx-target="closest form"
+                                        hx-swap="outerHTML"
+                                        class="resend-form"
+                                        data-participant-id="{{ participant.id }}"
+                                        style="display:inline"
+                                    >
                                         {% csrf_token %}
                                         <button type="submit" class="text-button">Resend Invite</button>
+                                        <span class="sent-pill" style="display:none;">Sent!</span>
                                     </form>
                                 {% endif %}
                             {% endwith %}
@@ -115,6 +133,21 @@
                     {% endfor %}
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Delete Team -->
+            <hr>
+
+            <div class="section" style="margin-top:1rem;">
+                {% if not selected_assessment.final_report %}
+                    <form method="post"
+                            action="{% url 'assessments:delete_assessment' selected_assessment.id %}"
+                            onsubmit="return confirm('Delete this assessment? This will remove its participants and their responses.');"
+                            style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="text-button danger">Delete Assessment</button>
+                    </form>
+                {% endif %}
             </div>
         {% endif %}
     {% endif %}

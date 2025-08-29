@@ -41,6 +41,7 @@ class AssessmentParticipant(models.Model):
     team_member = models.ForeignKey(TeamMember, on_delete=models.CASCADE, related_name="assessment_links")
     has_submitted = models.BooleanField(default=False)
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    last_invited_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
     def __str__(self):
         return f"{self.team_member.name} for {self.assessment}"

@@ -2,9 +2,12 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render, get_object_or_404, redirect
+from django.template.loader import render_to_string
 from .models import TeamMember, Question, Answer, Assessment, AssessmentParticipant
 from apps.teams.models import Team
 from datetime import datetime
@@ -356,15 +359,15 @@ def resend_invite(request, participant_id):
     assessment = participant.assessment
 
     if member.team.admin != request.user:
-        logger.warning("resend_invite: permission_denied", 
-                       extra={"user_id": request.user.id, 
-                              "team_id": member.team_id})
+        if request.headers.get("HX-Request"):
+            return HttpResponse("Permission denied.", status=403)
         messages.error(request, "You don't have permission to do that.")
         return redirect("assessments:assessments_overview")
 
     invite_url = request.build_absolute_uri(
         reverse("assessments:start_assessment", args=[participant.token])
     )
+
     try:
         send_mail(
             subject="You're invited to complete a team assessment",
@@ -378,16 +381,63 @@ def resend_invite(request, participant_id):
             recipient_list=[member.email],
             fail_silently=False,
         )
-        logger.info("invite.resent", 
-                    extra={"user_id": request.user.id, 
-                           "assessment_id": assessment.id, 
-                           "participant_id": participant.id})
+        now = timezone.now()
+        participant.last_invited_at = now
+        participant.save(update_fields=["last_invited_at"])
+        assessment.last_invite_sent = now
+        assessment.save(update_fields=["last_invite_sent"])
+
+        # HTMX response: return fragment HTML that replaces the form
+        if request.headers.get("HX-Request"):
+            html = render_to_string(
+                "assessments/_resend_invite_fragment.html",
+                {"participant": participant, "assessment": assessment},
+                request=request,
+            )
+            return HttpResponse(html)
+
         messages.success(request, f"Resent invite to {member.name}.")
+        now = timezone.now()
+        participant.last_invited_at = now
+        participant.save(update_fields=["last_invited_at"])
+        
     except Exception:
-        logger.exception("resend_invite: send_failed", 
-                         extra={"user_id": request.user.id, 
-                                "assessment_id": assessment.id, 
+        logger.exception("resend_invite: send_failed",
+                         extra={"user_id": request.user.id,
+                                "assessment_id": assessment.id,
                                 "participant_id": participant.id})
+        if request.headers.get("HX-Request"):
+            return HttpResponse("Send failed.", status=500)
         messages.error(request, "Could not send invite. Please try again later.")
     
     return redirect(f"{reverse('assessments:assessments_overview')}?assessment={assessment.id}")
+
+
+
+# Delete an assessment view
+@login_required
+@require_http_methods(["POST"])
+def delete_assessment(request, assessment_id: int):
+    # Delete an assessment the current user owns, then return to overview
+    assessment = get_object_or_404(
+        Assessment,
+        id=assessment_id,
+        team__admin=request.user,
+    )
+
+    team_name = assessment.team.name
+    deadline_str = assessment.deadline.strftime("%B %Y") if assessment.deadline else ""
+
+    # Deleting the Assessment should cascade to participants/answers via models
+    assessment.delete()
+
+    logger.info(
+        "assessment.deleted",
+        extra={
+            "user_id": request.user.id,
+            "team": team_name,
+            "deadline": deadline_str,
+        },
+    )
+    messages.success(request, f"Deleted assessment for {team_name} ({deadline_str}).")
+    return redirect("assessments:assessments_overview")
