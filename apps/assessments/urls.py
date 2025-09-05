@@ -10,5 +10,5 @@ urlpatterns = [
     path('confirm/', views.confirm_launch, name='confirm_launch'),
     path('resend/<int:participant_id>/', views.resend_invite, name='resend_invite'),
     path('start/<uuid:token>/', views.start_assessment, name='start_assessment'),
-    path("delete/<int:assessment_id>/", views.delete_assessment, name="delete_assessment"),
+    path('delete/<int:assessment_id>/', views.delete_assessment, name='delete_assessment'),
 ]

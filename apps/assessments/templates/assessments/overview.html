@@ -62,9 +62,9 @@
                     {% if not fr or not fr.s3_key %}
                     <form
                         method="post"
-                        action="{% url 'final_report_docraptor_start' selected_assessment.id %}"
+                        action="{% url 'payments:create_checkout_session' selected_assessment.id %}"
                         style="display:inline"
-                    >
+                        >
                         {% csrf_token %}
                         <button class="button button--primary">Generate Final Report</button>
                     </form>

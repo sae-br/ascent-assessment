@@ -211,7 +211,7 @@ if _admins_env:
         ADMINS.append((name, email))
 
 
-# DocRaptor
+# --- DocRaptor ---
 DOCRAPTOR_API_KEY = os.getenv("DOCRAPTOR_API_KEY", "")
 DOCRAPTOR_TEST = env_bool("DOCRAPTOR_TEST", True)
 
@@ -232,6 +232,15 @@ REPORTS_S3_PREFIX = os.getenv("REPORTS_S3_PREFIX", "final-reports/")
 
 # Signature version for pre-signed URLs
 AWS_S3_SIGNATURE_VERSION = os.getenv("AWS_S3_SIGNATURE_VERSION", "s3v4")
+
+
+# --- Stripe ---
+STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_PRICE_FINAL_REPORT = os.getenv("STRIPE_PRICE_FINAL_REPORT")   # e.g. price_123
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")           # from Stripe CLI/dashboard
+STRIPE_CHECKOUT_SUCCESS_PATH = "/payments/success/"
+STRIPE_CHECKOUT_CANCEL_PATH = "/assessments/overview/"
 
 
 # --- Logging ---
