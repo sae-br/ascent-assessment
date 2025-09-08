@@ -5,18 +5,18 @@
   --sans-font: "Metropolis", -apple-system, BlinkMacSystemFont, "Avenir Next",
     Avenir, "Segoe UI", Roboto, "Noto Sans", Helvetica, Arial, sans-serif;
 
-  --bg: white;
-  --bg-accent: AliceBlue;
-  --text: #373d48;
-  --text-light: #6C7581;
-  --text-xlight: #9ba3af;
-  --border: #d3dce8;
-  --primary: rgba(0, 147, 237); /* #0093ED in hex */
-  --secondary: #b5eaea;
-  --primary-hover: #0b81cb;
+  --bg: oklch(100% 0 0);             --bg: #ffffff;
+  --bg-accent: oklch(98.5% 0.01 250); --bg-accent: #f0f8ff;
+  --text: oklch(29.5% 0.01 260);      --text: #373d48;
+  --text-light: oklch(47% 0.01 260);  --text-light: #6C7581;
+  --text-xlight: oklch(63% 0.01 260); --text-xlight: #9ba3af;
+  --border: oklch(86% 0.01 250);      --border: #d3dce8;
+  --primary: oklch(65% 0.18 250);     --primary: #0093ED;
+  --secondary: oklch(90% 0.09 180);   --secondary: #b5eaea;
+  --primary-hover: oklch(59% 0.18 250); --primary-hover: #0b81cb;
   --accent-text: var(--bg);
-  --alert: #CC0101;
-  --disabled: #9ba3af;
+  --alert: oklch(45% 0.25 30);        --alert: #CC0101;
+  --disabled: oklch(63% 0.01 260);    --disabled: #9ba3af;
 
   --standard-border-radius: 8px;
   --border-width: 1px;
