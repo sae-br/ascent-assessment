@@ -60,12 +60,7 @@
                 <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     {# Only show the Generate button when there is no finished file #}
                     {% if not fr or not fr.s3_key %}
-                    <form
-                        method="post"
-                        action="{% url 'payments:create_checkout_session' selected_assessment.id %}"
-                        style="display:inline"
-                        >
-                        {% csrf_token %}
+                    <form method="get" action="{% url 'payments:checkout' selected_assessment.id %}" style="display:inline">
                         <button class="button button--primary">Generate Final Report</button>
                     </form>
                     {% endif %}

@@ -77,12 +77,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # my apps
     'apps.accounts.apps.AccountsConfig',
-    'apps.teams.apps.TeamsConfig',
     'apps.assessments.apps.AssessmentsConfig',
-    'apps.reports.apps.ReportsConfig',
+    'apps.common',
     'apps.dashboard.apps.DashboardConfig',
     'apps.pdfexport',
-    'apps.common',
+    'apps.payments.apps.PaymentsConfig',
+    'apps.reports.apps.ReportsConfig',
+    'apps.teams.apps.TeamsConfig',
+
     # third party
     'storages',
     'markdownx',

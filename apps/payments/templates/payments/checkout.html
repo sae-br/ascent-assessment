@@ -1,10 +1,80 @@
 {% extends "base.html" %}
-{% block title %}Checkout{% endblock %}
+{% block title %}Final Report Checkout{% endblock %}
+
 {% block content %}
-<h1>Checkout</h1>
-<p>Have you ensured all participants have submitted their answers? Once you purchase 
-    the report, this assessment will be closed. This action cannot be reversed.</p>
-<p>If you're ready to generate your team's final report, proceed with payment. After
-    purchasing the report, you will be able to download the report.</p>
-<button class="button--secondary">Purchase</button>
+<h1>Purchasing Your Final Report</h1>
+
+<p>Have you ensured all participants have submitted their answers?
+  Once you purchase the report, this assessment will be closed.
+  This action cannot be reversed.</p>
+<p>Confirm you’re ready. After payment, we’ll generate your final report.</p>
+
+<div class="payment-container">
+  <div id="payment-form"><!-- Stripe injects here --></div>
+  <button id="pay-btn" class="button--primary">Pay now</button>
+  <p id="error-text" class="text-danger" style="margin-top:.5rem;"></p>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+  (function(){
+    const stripe = Stripe("{{ stripe_publishable_key }}");
+    const clientSecret = "{{ client_secret }}"; 
+    const returnUrl = "{{ success_url }}"; 
+
+    const elements = stripe.elements({clientSecret});
+    const paymentElement = elements.create("payment");
+    paymentElement.mount("#payment-form");
+
+    const btn = document.getElementById("pay-btn");
+    const err = document.getElementById("error-text");
+
+    function setProcessing(isOn){
+      btn.disabled = isOn;
+      btn.textContent = isOn ? "Processing…" : "Pay now";
+    }
+
+    btn.addEventListener("click", async function(){
+      err.textContent = "";
+      setProcessing(true);
+
+      try {
+        const result = await stripe.confirmPayment({
+          elements,
+          confirmParams: { return_url: returnUrl },
+          // Keep the user on-page for simple card payments; Stripe will still
+          // redirect for 3DS when necessary:
+          redirect: "if_required",
+        });
+
+        console.debug("confirmPayment result:", result);
+
+        if (result.error) {
+          err.textContent = result.error.message || "Payment failed. Try another card.";
+          return;
+        }
+
+        // If we get here without error, either:
+        //  A) There was no redirect needed and paymentIntent is available:
+        const pi = result.paymentIntent;
+        if (pi && pi.status === "succeeded") {
+          // Navigate to success page (which starts polling for the PDF)
+          window.location.href = returnUrl + (returnUrl.includes("?") ? "&" : "?") + "pi=" + pi.id;
+          return;
+        }
+
+        //  B) If 3DS was required, Stripe redirected; if we’re here after return,
+        //     will land directly on success URL (not this block).
+        //     As a fallback, say something helpful:
+        err.textContent = "Verifying your payment… If nothing happens, please refresh.";
+      } catch (e) {
+        console.error(e);
+        err.textContent = "Unexpected error. Please try again.";
+      } finally {
+        // Always re-enable the button unless we already navigated away
+        setProcessing(false);
+      }
+    });
+  })();
+</script>
 {% endblock %}

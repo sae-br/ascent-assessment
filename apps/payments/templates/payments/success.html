@@ -1,10 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Payment Success{% endblock %}
+{% block title %}Final Report Successful Purchase{% endblock %}
+
 {% block content %}
-<h2>Payment Success</h2>
-  <section class="section">
-    <div class="container">
-      <p>Your payment succeeded.</p>
+<h1>Purchasing Your Final Report</h1>
+<p>Your payment was successful, thank you! We’re now generating your final report for
+   <strong>{{ assessment.team.name }}</strong>.</p>
+
+<!-- 1) Kick off generation exactly once on load -->
+<form
+  hx-post="{% url 'final_report_docraptor_start' assessment.id %}"
+  hx-trigger="load"
+  hx-swap="none"
+>
+  {% csrf_token %}
+</form>
+
+<!-- 2) Poll for completion -->
+<div id="report-status"
+     hx-get="{% url 'payments:report_status' assessment.id %}"
+     hx-trigger="load, every 3s"
+     hx-swap="outerHTML">
+  {% if final_report %}
+    {# If already ready (edge case), show the final state right away #}
+    <div class="ready">
+      <p>Your report is ready.</p>
+      <a class="button button--secondary"
+         href="{% url 'reports:download_report' final_report.id %}"
+         target="_blank" rel="noopener">Download Final Report</a>
     </div>
-  </section>
+  {% else %}
+    <p>Generating your report… This usually takes under a minute.</p>
+  {% endif %}
+</div>
+
+<p style="margin-top:1rem;">
+  You can navigate away — we’ll keep this available to download in
+  <a class="text-button" href="{% url 'assessments:assessments_overview' %}?assessment={{ assessment.id }}">Assessments</a>
+  and in <a class="text-button" href="{% url 'reports:reports_overview' %}">Reports</a>.
+</p>
 {% endblock %}

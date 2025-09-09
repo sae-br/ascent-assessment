@@ -1,10 +1,11 @@
-# apps/payments/views.py
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -17,11 +18,10 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 @login_required
-@require_POST
-def create_checkout_session(request, assessment_id: int):
+def checkout(request, assessment_id: int):
     """
-    Creates a Stripe Checkout Session for the one-time Final Report purchase,
-    then 303-redirects the user to Stripe's hosted Checkout page.
+    Render the on-page checkout with Stripe Payment Element.
+    Creates or reuses a PaymentIntent and passes its client_secret to the template.
     """
     assessment = get_object_or_404(
         Assessment,
@@ -29,72 +29,144 @@ def create_checkout_session(request, assessment_id: int):
         team__admin=request.user
     )
 
-    # If a report already exists (uploaded to S3), don't sell again.
+    # If a report file already exists, don't let them pay again.
     if FinalReport.objects.filter(assessment=assessment, s3_key__isnull=False).exists():
         messages.info(request, "A final report already exists for this assessment.")
         return redirect(f"{reverse('assessments:assessments_overview')}?assessment={assessment.id}")
 
-    # Build URLs
-    success_url = request.build_absolute_uri(
-        reverse("payments:checkout_success")
-    ) + "?session_id={CHECKOUT_SESSION_ID}"
+    # Prices set in Stripe
+    price_id = getattr(settings, "STRIPE_PRICE_FINAL_REPORT", None)
+    if not price_id:
+        return HttpResponseBadRequest("Price not configured. Please contact support.")
 
-    cancel_url = request.build_absolute_uri(
-        f"{reverse('assessments:assessments_overview')}?assessment={assessment.id}"
-    )
+    # Retrieve the Price to get amount + currency
+    price_obj = stripe.Price.retrieve(price_id)
+    amount = price_obj["unit_amount"]          # integer, in the currency’s minor unit
+    currency = price_obj["currency"]           # e.g. "usd"
+    amount_display = f"${amount / 100:,.2f}"
 
-    # Create the Checkout Session
-    session = stripe.checkout.Session.create(
-        mode="payment",
-        line_items=[{
-            # Use a Price you created in Stripe and expose via env
-            "price": settings.STRIPE_PRICE_FINAL_REPORT,
-            "quantity": 1,
-        }],
-        customer_email=request.user.email or None,
-        allow_promotion_codes=True,
-        success_url=success_url,
-        cancel_url=cancel_url,
+    # Create the PaymentIntent for the Payment Element
+    pi = stripe.PaymentIntent.create(
+        amount=amount,
+        currency=currency,
+        payment_method_types=["card"],
         metadata={
             "assessment_id": str(assessment.id),
             "user_id": str(request.user.id),
         },
+        receipt_email=request.user.email or None,
+        description="Ascent Assessment Final Report",
     )
 
-    # 303 redirect is Stripe's recommendation
-    return redirect(session.url, code=303)
+    # Return URL that Stripe will hit after on-page confirmation completes
+    return_url = request.build_absolute_uri(reverse("payments:payment_return"))
 
+    context = {
+        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        "client_secret":          pi.client_secret,
+        "assessment_id":          assessment.id,
+        "return_url":             return_url,
+        "amount_display":         amount_display,
+    }
+    return render(request, "payments/checkout.html", {
+    "client_secret": pi.client_secret,
+    "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+    "success_url": request.build_absolute_uri(
+        reverse("payments:payment_return") + f"?assessment={assessment.id}"
+    ),
+    # optional: display price/amount to the user
+})
 
 @login_required
-def checkout_success(request):
+def payment_return(request):
     """
-    Handles the return from Stripe after a successful payment.
-    We fetch the session to confirm it's paid and grab assessment_id
-    from metadata, then hand off to our existing DocRaptor starter view.
+    After Stripe confirmation. If paid, go to success page where we kick off
+    DocRaptor and poll for report generation completion.
     """
-    session_id = request.GET.get("session_id")
-    if not session_id:
-        return HttpResponseBadRequest("Missing session_id")
+    pi_id = (
+        request.GET.get("payment_intent")
+        or request.GET.get("pi")
+    )
+    client_secret = request.GET.get("payment_intent_client_secret")
 
-    session = stripe.checkout.Session.retrieve(session_id)
-
-    # Sanity check: only proceed on paid sessions
-    if session.get("payment_status") != "paid":
-        messages.error(request, "Payment not completed.")
+    if not pi_id and not client_secret:
+        messages.error(request, "Missing payment confirmation info.")
         return redirect("assessments:assessments_overview")
 
-    assessment_id = (session.get("metadata") or {}).get("assessment_id")
+    try:
+        pi = stripe.PaymentIntent.retrieve(pi_id) if pi_id else stripe.PaymentIntent.retrieve(client_secret)
+    except Exception:
+        messages.error(request, "Could not verify your payment.")
+        return redirect("assessments:assessments_overview")
+
+    status = pi.get("status")
+    meta = pi.get("metadata") or {}
+    assessment_id = meta.get("assessment_id")
+
     if not assessment_id:
         messages.error(request, "Missing assessment reference.")
         return redirect("assessments:assessments_overview")
 
-    # If the report is already present (user reloaded), skip straight back
-    if FinalReport.objects.filter(assessment_id=assessment_id, s3_key__isnull=False).exists():
-        messages.success(request, "Payment received. Your report is ready to download.")
+    if status == "succeeded":
+        # Send them to our success view (that page will start the generation and poll)
+        return redirect("payments:success", assessment_id=assessment_id)
+
+    elif status in ("requires_payment_method", "canceled"):
+        messages.error(request, "Payment was not completed. Please try again.")
+        return redirect("payments:checkout", assessment_id=assessment_id)
+
+    else:
+        messages.info(request, "Your payment is processing. Please check back shortly.")
         return redirect(f"{reverse('assessments:assessments_overview')}?assessment={assessment_id}")
 
-    # Hand off to DocRaptor async starter (it returns the polling page)
-    return redirect("final_report_docraptor_start", assessment_id=assessment_id)
+
+@login_required
+def success(request, assessment_id: int):
+    """
+    Show a 'payment successful' page. On load:
+      1) POST (via htmx) to start DocRaptor generation
+      2) Poll a tiny status endpoint until the report is ready
+    """
+    assessment = get_object_or_404(
+        Assessment, id=assessment_id, team__admin=request.user
+    )
+
+    # If a finished report is *already* present (e.g., user refreshed),
+    # we can show the download button immediately.
+    fr = FinalReport.objects.filter(assessment=assessment, s3_key__isnull=False).first()
+
+    return render(request, "payments/success.html", {
+        "assessment": assessment,
+        "final_report": fr,
+    })
+
+
+@login_required
+def report_status(request, assessment_id: int):
+    """
+    Small fragment endpoint the success page polls.
+    Returns HTML that either shows 'Generating…' or a 'Download' button.
+    If the returned root element has no hx-trigger, polling will stop.
+    """
+    assessment = get_object_or_404(
+        Assessment, id=assessment_id, team__admin=request.user
+    )
+    fr = FinalReport.objects.filter(assessment=assessment).first()
+
+    # Ready when there is a record with a file key.
+    ready = bool(fr and fr.s3_key)
+
+    html = render_to_string(
+        "payments/_report_status.html",
+        {
+            "assessment": assessment,
+            "final_report": fr,
+            "ready": ready,
+        },
+        request=request,
+    )
+
+    return HttpResponse(html)
 
 
 @csrf_exempt
