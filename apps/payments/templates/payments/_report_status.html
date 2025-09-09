@@ -3,18 +3,18 @@ If not ready, include hx-* to continue polling.
 If ready, render a simple block without hx attributes (polling stops).
 {% endcomment %}
 
-{% if ready %}
-<div id="report-status">
-  <p>Your report is ready.</p>
-  <a class="button button--secondary"
-     href="{% url 'reports:download_report' final_report.id %}"
-     target="_blank" rel="noopener">Download Final Report</a>
-</div>
+{% if ready and final_report and final_report.s3_key %}
+  <div id="report-status">
+    <p>Your report is ready.</p>
+    <a class="button--primary"
+       href="{% url 'reports:download_report' final_report.id %}"
+       target="_blank" rel="noopener">Download PDF Report</a>
+  </div>
 {% else %}
-<div id="report-status"
-     hx-get="{% url 'payments:report_status' assessment.id %}"
-     hx-trigger="every 3s"
-     hx-swap="outerHTML">
-  <p>Generating your report…</p>
-</div>
+  <div id="report-status"
+       hx-get="{% url 'payments:report_status' assessment.id %}"
+       hx-trigger="every 3s"
+       hx-swap="outerHTML">
+    <p>Generating your report…</p>
+  </div>
 {% endif %}

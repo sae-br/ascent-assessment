@@ -10,9 +10,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 import stripe
+import requests
+import docraptor
+from docraptor.rest import ApiException
 
 from apps.assessments.models import Assessment
 from apps.pdfexport.models import FinalReport
+from apps.pdfexport.views import build_report_filenames
+from apps.pdfexport.utils.storage import S3Uploader
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -61,21 +66,17 @@ def checkout(request, assessment_id: int):
     # Return URL that Stripe will hit after on-page confirmation completes
     return_url = request.build_absolute_uri(reverse("payments:payment_return"))
 
-    context = {
-        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
-        "client_secret":          pi.client_secret,
-        "assessment_id":          assessment.id,
-        "return_url":             return_url,
-        "amount_display":         amount_display,
-    }
     return render(request, "payments/checkout.html", {
-    "client_secret": pi.client_secret,
-    "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
-    "success_url": request.build_absolute_uri(
-        reverse("payments:payment_return") + f"?assessment={assessment.id}"
-    ),
-    # optional: display price/amount to the user
-})
+        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
+        "client_secret": pi.client_secret,
+        "assessment_id": assessment.id,
+        "return_url": return_url,
+        "amount_display": amount_display,
+        "success_url": request.build_absolute_uri(
+            reverse("payments:payment_return") + f"?assessment={assessment.id}"
+        ),
+    })
+
 
 @login_required
 def payment_return(request):
@@ -143,30 +144,88 @@ def success(request, assessment_id: int):
 
 @login_required
 def report_status(request, assessment_id: int):
-    """
-    Small fragment endpoint the success page polls.
-    Returns HTML that either shows 'Generating…' or a 'Download' button.
-    If the returned root element has no hx-trigger, polling will stop.
-    """
+    # Ensure ownership and fetch related FinalReport
     assessment = get_object_or_404(
-        Assessment, id=assessment_id, team__admin=request.user
+        Assessment, pk=assessment_id, team__admin=request.user
     )
     fr = FinalReport.objects.filter(assessment=assessment).first()
 
-    # Ready when there is a record with a file key.
-    ready = bool(fr and fr.s3_key)
+    job_id = None
+    if fr:
+        job_id = getattr(fr, "docraptor_status_id", None) or getattr(fr, "status_id", None)
 
-    html = render_to_string(
-        "payments/_report_status.html",
-        {
+    # Nothing queued yet
+    if not fr or (not job_id and not fr.s3_key):
+        return render(request, "payments/_report_status.html", {
             "assessment": assessment,
+            "ready": False,
             "final_report": fr,
-            "ready": ready,
-        },
-        request=request,
-    )
+        })
 
-    return HttpResponse(html)
+    # If already finalized to S3, return ready
+    if fr.s3_key:
+        return render(request, "payments/_report_status.html", {
+            "assessment": assessment,
+            "ready": True,
+            "final_report": fr,
+        })
+
+    # Otherwise, try to finalize: check DocRaptor, and if completed, upload to S3
+    if job_id and not fr.s3_key:
+        client = docraptor.DocApi()
+        client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
+        try:
+            status = client.get_async_doc_status(job_id)
+        except ApiException:
+            # Status check failed; keep polling
+            return render(request, "payments/_report_status.html", {
+                "assessment": assessment,
+                "ready": False,
+                "final_report": fr,
+            })
+
+        if getattr(status, "status", None) == "completed":
+            download_url = getattr(status, "download_url", None)
+            if download_url:
+                try:
+                    r = requests.get(download_url, stream=True, timeout=30)
+                    r.raise_for_status()
+                    pdf_bytes = r.content
+
+                    # Build a stable S3 key and nice filename
+                    pretty_name, slug_name = build_report_filenames(assessment)
+                    s3_key = f"reports/assessments/{assessment.id}/{slug_name}"
+
+                    uploader = S3Uploader(
+                        bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                        region=settings.AWS_S3_REGION_NAME,
+                        access_key=getattr(settings, "AWS_ACCESS_KEY_ID", None),
+                        secret_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
+                    )
+                    uploaded_key, size_bytes = uploader.upload_bytes(
+                        pdf_bytes, s3_key, content_type="application/pdf"
+                    )
+
+                    fr.s3_key = uploaded_key
+                    fr.size_bytes = size_bytes
+                    fr.save(update_fields=["s3_key", "size_bytes"])
+
+                    return render(request, "payments/_report_status.html", {
+                        "assessment": assessment,
+                        "ready": True,
+                        "final_report": fr,
+                    })
+                except requests.RequestException:
+                    # Fetch failed; keep polling
+                    pass
+
+    # Default: not ready yet
+    return render(request, "payments/_report_status.html", {
+        "assessment": assessment,
+        "ready": False,
+        "final_report": fr,
+    })
 
 
 @csrf_exempt
