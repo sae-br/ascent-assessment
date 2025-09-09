@@ -1,22 +1,22 @@
 @import url('/static/fonts/Metropolis/metropolis.css');
 
-/* Global variables. */
+/* Global variables */
 :root {
   --sans-font: "Metropolis", -apple-system, BlinkMacSystemFont, "Avenir Next",
     Avenir, "Segoe UI", Roboto, "Noto Sans", Helvetica, Arial, sans-serif;
 
-  --bg: oklch(100% 0 0);             --bg: #ffffff;
-  --bg-accent: oklch(98.5% 0.01 250); --bg-accent: #f0f8ff;
-  --text: oklch(29.5% 0.01 260);      --text: #373d48;
-  --text-light: oklch(47% 0.01 260);  --text-light: #6C7581;
-  --text-xlight: oklch(63% 0.01 260); --text-xlight: #9ba3af;
-  --border: oklch(86% 0.01 250);      --border: #d3dce8;
-  --primary: oklch(65% 0.18 250);     --primary: #0093ED;
-  --secondary: oklch(90% 0.09 180);   --secondary: #b5eaea;
-  --primary-hover: oklch(59% 0.18 250); --primary-hover: #0b81cb;
-  --accent-text: var(--bg);
-  --alert: oklch(45% 0.25 30);        --alert: #CC0101;
-  --disabled: oklch(63% 0.01 260);    --disabled: #9ba3af;
+  --bg: oklch(100% 0 0);                       --bg: #ffffff;
+  --bg-accent: oklch(0.950 0.026 244.3);       --bg-accent: #f0f8ff;
+  --bg-accent-hover: oklch(0.856 0.077 244.3); --bg-accent-hover: #D3EAFD;
+  --text: oklch(29.5% 0.01 260);               --text: #373d48;
+  --text-light: oklch(47% 0.01 260);           --text-light: #6C7581;
+  --text-xlight: oklch(63% 0.01 260);          --text-xlight: #9ba3af;
+  --border: oklch(86% 0.01 250);               --border: #d3dce8;
+  --primary: oklch(65% 0.18 250);              --primary: #0093ED;
+  --secondary: oklch(90% 0.09 180);            --secondary: #b5eaea;
+  --primary-hover: oklch(59% 0.18 250);        --primary-hover: #0b81cb;
+  --alert: oklch(45% 0.25 30);                 --alert: #CC0101;
+  --disabled: oklch(63% 0.01 260);             --disabled: #9ba3af;
 
   --standard-border-radius: 8px;
   --border-width: 1px;
@@ -27,18 +27,15 @@
   --row-height: 2.5rem;
 }
 
-/* Reset box-sizing */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 html {
-  /* Set the font globally */
   font-family: var(--sans-font);
   scroll-behavior: smooth;
 }
 
-/* Simple body */
 body {
   color: var(--text);
   background-color: var(--bg);
@@ -48,7 +45,7 @@ body {
 }
 
 
-/* Format headers */
+/* Headers and Text */
 h1 {
   font-size: 2rem;
   margin-bottom: 2rem;
@@ -178,9 +175,9 @@ h3 {
 }
 .button--secondary:hover,
 .button--secondary:focus {
-  border-color: var(--primary-hover) !important;
-  background-color: var(--primary-hover) !important;
-  color: var(--bg) !important;
+  border-color: var(--primary-hover);
+  background-color: var(--primary-hover);
+  color: var(--bg);
 }
 
 /* Flex container */
@@ -257,7 +254,7 @@ h3 {
 
 .nav-link:hover,
 .nav-link.active {
-  background-color: #D3EAFD;
+  background-color: var(--bg-accent-hover);
   color: var(--primary);
 }
 
@@ -766,7 +763,7 @@ input[type="reset"] {
   border: var(--form-border);
   border-radius: var(--form-radius);
   background: var(--primary);
-  color: var(--accent-text);
+  color: var(--bg);
   padding: var(--form-padding);
   line-height: normal;
   text-decoration: none;
