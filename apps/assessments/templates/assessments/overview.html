@@ -50,7 +50,7 @@
                         href="{% url 'reports:download_report' fr.id %}"
                         target="_blank" rel="noopener"
                     >Download</a>
-                    {% elif fr %}
+                    {% elif fr and fr.paid_at %}
                     In progress…
                     {% else %}
                     None
@@ -59,7 +59,7 @@
 
                 <div style="margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     {# Only show the Generate button when there is no finished file #}
-                    {% if not fr or not fr.s3_key %}
+                    {% if not fr or not fr.paid_at %}
                     <form method="get" action="{% url 'payments:checkout' selected_assessment.id %}" style="display:inline">
                         <button class="button button--primary">Generate Final Report</button>
                     </form>

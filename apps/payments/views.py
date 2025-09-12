@@ -19,6 +19,9 @@ from apps.pdfexport.models import FinalReport
 from apps.pdfexport.views import build_report_filenames
 from apps.pdfexport.utils.storage import S3Uploader
 
+import logging
+logger = logging.getLogger(__name__)
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
@@ -109,7 +112,11 @@ def payment_return(request):
         return redirect("assessments:assessments_overview")
 
     if status == "succeeded":
-        # Send them to our success view (that page will start the generation and poll)
+        assessment = Assessment.objects.get(id=assessment_id, team__admin=request.user)
+        fr, _ = FinalReport.objects.get_or_create(assessment=assessment)
+        if not fr.paid_at:
+            fr.paid_at = timezone.now()
+            fr.save(update_fields=["paid_at"])
         return redirect("payments:success", assessment_id=assessment_id)
 
     elif status in ("requires_payment_method", "canceled"):
@@ -144,88 +151,128 @@ def success(request, assessment_id: int):
 
 @login_required
 def report_status(request, assessment_id: int):
-    # Ensure ownership and fetch related FinalReport
+    """
+    HTMX polled endpoint:
+    - returns not-ready while queueing/processing
+    - when DocRaptor completes, downloads bytes, uploads to S3, marks FinalReport ready
+    - resilient to transient DocRaptor/S3 errors and double-writes
+    """
     assessment = get_object_or_404(
         Assessment, pk=assessment_id, team__admin=request.user
     )
     fr = FinalReport.objects.filter(assessment=assessment).first()
 
-    job_id = None
-    if fr:
-        job_id = getattr(fr, "docraptor_status_id", None) or getattr(fr, "status_id", None)
-
-    # Nothing queued yet
-    if not fr or (not job_id and not fr.s3_key):
-        return render(request, "payments/_report_status.html", {
-            "assessment": assessment,
-            "ready": False,
-            "final_report": fr,
-        })
-
-    # If already finalized to S3, return ready
-    if fr.s3_key:
-        return render(request, "payments/_report_status.html", {
-            "assessment": assessment,
-            "ready": True,
-            "final_report": fr,
-        })
-
-    # Otherwise, try to finalize: check DocRaptor, and if completed, upload to S3
-    if job_id and not fr.s3_key:
-        client = docraptor.DocApi()
-        client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
-
-        try:
-            status = client.get_async_doc_status(job_id)
-        except ApiException:
-            # Status check failed; keep polling
-            return render(request, "payments/_report_status.html", {
-                "assessment": assessment,
-                "ready": False,
-                "final_report": fr,
-            })
-
-        if getattr(status, "status", None) == "completed":
-            download_url = getattr(status, "download_url", None)
-            if download_url:
-                try:
-                    r = requests.get(download_url, stream=True, timeout=30)
-                    r.raise_for_status()
-                    pdf_bytes = r.content
-
-                    # Build a stable S3 key and nice filename
-                    pretty_name, slug_name = build_report_filenames(assessment)
-                    s3_key = f"reports/assessments/{assessment.id}/{slug_name}"
-
-                    uploader = S3Uploader(
-                        bucket=settings.AWS_STORAGE_BUCKET_NAME,
-                        region=settings.AWS_S3_REGION_NAME,
-                        access_key=getattr(settings, "AWS_ACCESS_KEY_ID", None),
-                        secret_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
-                    )
-                    uploaded_key, size_bytes = uploader.upload_bytes(
-                        pdf_bytes, s3_key, content_type="application/pdf"
-                    )
-
-                    fr.s3_key = uploaded_key
-                    fr.size_bytes = size_bytes
-                    fr.save(update_fields=["s3_key", "size_bytes"])
-
-                    return render(request, "payments/_report_status.html", {
-                        "assessment": assessment,
-                        "ready": True,
-                        "final_report": fr,
-                    })
-                except requests.RequestException:
-                    # Fetch failed; keep polling
-                    pass
-
-    # Default: not ready yet
-    return render(request, "payments/_report_status.html", {
+    # Default context
+    ctx = {
         "assessment": assessment,
-        "ready": False,
         "final_report": fr,
-    })
+        "ready": False,
+        "status_text": None,
+        "error": None,
+    }
+
+    # No FinalReport row yet (e.g., kickoff hasn’t persisted it); keep polling quietly.
+    if not fr:
+        ctx["status_text"] = "Starting…"
+        return render(request, "payments/_report_status.html", ctx)
+
+    # Already finalized
+    if fr.s3_key:
+        ctx["ready"] = True
+        return render(request, "payments/_report_status.html", ctx)
+    
+    # Job id from DocRaptor
+    job_id = fr.docraptor_status_id
+
+    # We have a FinalReport row but no job id yet (kickoff in flight); keep polling.
+    if not job_id:
+        ctx["status_text"] = "Queuing…"
+        return render(request, "payments/_report_status.html", ctx)
+
+    # Ask DocRaptor for job status
+    client = docraptor.DocApi()
+    client.api_client.configuration.username = settings.DOCRAPTOR_API_KEY
+
+    try:
+        status = client.get_async_doc_status(job_id)
+    except ApiException as e:
+        # Hard failures: treat as error (let UI offer retry)
+        if getattr(e, "status", None) in (404, 422):
+            logger.error("DocRaptor status hard error for job %s (assessment %s): %s",
+                         job_id, assessment.id, e, exc_info=True)
+            ctx["error"] = "The PDF job could not be found or failed to initialize. Please try again."
+            return render(request, "payments/_report_status.html", ctx)
+        # Transient failures: keep polling
+        logger.warning("DocRaptor status transient error for job %s: %s", job_id, e)
+        ctx["status_text"] = "Still working…"
+        return render(request, "payments/_report_status.html", ctx)
+
+    st = getattr(status, "status", None)
+    if st in (None, "queued", "processing"):
+        ctx["status_text"] = "Generating your report…"
+        return render(request, "payments/_report_status.html", ctx)
+
+    if st == "failed":
+        # Log as much detail as possible, but don’t leak it to users.
+        detail = getattr(status, "message", None) or getattr(status, "validation_errors", None)
+        logger.error("DocRaptor job failed for assessment %s (job %s): %r", assessment.id, job_id, detail)
+        ctx["error"] = "PDF generation failed. Please try again."
+        return render(request, "payments/_report_status.html", ctx)
+
+    if st == "completed":
+        # Another poller could have just finished the upload
+        if fr.s3_key:
+            ctx["ready"] = True
+            return render(request, "payments/_report_status.html", ctx)
+
+        download_url = getattr(status, "download_url", None)
+        if not download_url:
+            # Rare but harmless; wait for DocRaptor to expose the URL.
+            ctx["status_text"] = "Finalizing…"
+            return render(request, "payments/_report_status.html", ctx)
+
+        # Fetch PDF
+        try:
+            r = requests.get(download_url, stream=True, timeout=60)
+            r.raise_for_status()
+            pdf_bytes = r.content
+        except requests.RequestException as e:
+            logger.warning("DocRaptor download transient error for job %s: %s", job_id, e)
+            ctx["status_text"] = "Finalizing…"
+            return render(request, "payments/_report_status.html", ctx)
+
+        # Upload to S3 (private)
+        try:
+            pretty_name, slug_name = build_report_filenames(assessment)
+            s3_key = f"reports/assessments/{assessment.id}/{slug_name}"
+
+            uploader = S3Uploader(
+                bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                region=settings.AWS_S3_REGION_NAME,
+                access_key=getattr(settings, "AWS_ACCESS_KEY_ID", None),
+                secret_key=getattr(settings, "AWS_SECRET_ACCESS_KEY", None),
+            )
+            uploaded_key, size_bytes = uploader.upload_bytes(
+                pdf_bytes, s3_key, content_type="application/pdf"
+            )
+        except Exception as e:
+            logger.error("S3 upload failed for assessment %s: %s", assessment.id, e, exc_info=True)
+            ctx["error"] = "We generated the PDF but couldn’t store it. Please retry in a moment."
+            return render(request, "payments/_report_status.html", ctx)
+
+        # Persist and return ready
+        fr.s3_key = uploaded_key
+        fr.size_bytes = size_bytes
+        fr.save(update_fields=["s3_key", "size_bytes"])
+
+        ctx["final_report"] = fr
+        ctx["ready"] = True
+        return render(request, "payments/_report_status.html", ctx)
+
+    # Unknown status: keep polling conservatively
+    logger.warning("DocRaptor returned unexpected status %r for job %s", st, job_id)
+    ctx["status_text"] = "Working…"
+    return render(request, "payments/_report_status.html", ctx)
 
 
 @csrf_exempt

@@ -10,6 +10,7 @@ class FinalReport(models.Model):
     file_name = models.CharField(max_length=255, blank=True, default="")
     size_bytes = models.BigIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def s3_url(self):

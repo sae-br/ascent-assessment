@@ -2,40 +2,42 @@
 {% block title %}Final Report Successful Purchase{% endblock %}
 
 {% block content %}
+
 <h1>Purchasing Your Final Report</h1>
+<div class="container--narrow">
 <p>Your payment was successful, thank you! We’re now generating your final report for
-   <strong>{{ assessment.team.name }}</strong>.</p>
+    <strong>{{ assessment.team.name }}</strong>.</p>
+  <p>
+    You can safely navigate away from this page if you wish. Once the report has been prepared, you can find it in
+    <a href="{% url 'assessments:assessments_overview' %}?assessment={{ assessment.id }}">Assessments</a>
+    and in <a href="{% url 'reports:reports_overview' %}">Reports</a>.
+  </p>
 
-<!-- 1) Kick off generation exactly once on load -->
-<form
-  hx-post="{% url 'final_report_docraptor_start' assessment.id %}"
-  hx-trigger="load"
-  hx-swap="none"
->
-  {% csrf_token %}
-</form>
+  <!-- 1) Kick off generation exactly once on load -->
+  <form
+    hx-post="{% url 'final_report_docraptor_start' assessment.id %}"
+    hx-trigger="load"
+    hx-swap="none"
+  >
+    {% csrf_token %}
+  </form>
 
-<!-- 2) Poll for completion -->
-<div id="report-status"
-     hx-get="{% url 'payments:report_status' assessment.id %}"
-     hx-trigger="load, every 3s"
-     hx-swap="outerHTML">
-  {% if final_report %}
-    {# If already ready (edge case), show the final state right away #}
-    <div class="ready">
-      <p>Your report is ready.</p>
-      <a class="button button--secondary"
-         href="{% url 'reports:download_report' final_report.id %}"
-         target="_blank" rel="noopener">Download Final Report</a>
-    </div>
-  {% else %}
-    <p>Generating your report… This usually takes under a minute.</p>
-  {% endif %}
+  <!-- 2) Poll for completion -->
+  <div id="report-status"
+      hx-get="{% url 'payments:report_status' assessment.id %}"
+      hx-trigger="load, every 3s"
+      hx-swap="outerHTML">
+    {% if final_report %}
+      {# If already ready (edge case), show the final state right away #}
+      <div class="ready">
+        <h2>Your report is ready!</h2>
+        <a class="button--primary"
+          href="{% url 'reports:download_report' final_report.id %}"
+          target="_blank" rel="noopener">Download Final Report</a>
+      </div>
+    {% else %}
+      <p>Generating your report… This usually takes under a minute.</p>
+    {% endif %}
+  </div>
 </div>
-
-<p style="margin-top:1rem;">
-  You can navigate away — we’ll keep this available to download in
-  <a class="text-button" href="{% url 'assessments:assessments_overview' %}?assessment={{ assessment.id }}">Assessments</a>
-  and in <a class="text-button" href="{% url 'reports:reports_overview' %}">Reports</a>.
-</p>
 {% endblock %}

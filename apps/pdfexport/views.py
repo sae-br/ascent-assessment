@@ -257,24 +257,29 @@ def final_report_docraptor_start(request, assessment_id):
         }, _request_timeout=(10, 700))
         logger.info("[PDF] DocRaptor job queued in %.2fs", time.monotonic() - t0_docraptor)
 
-        docraptor_status_id = getattr(job, "docraptor_status_id", None)
-        if not docraptor_status_id:
-            logger.error("DocRaptor returned no docraptor_status_id")
-            return JsonResponse({"ok": False, "error": "docraptor_status_id"}, status=502)
+        # status_id is a Docraptor attribute; call for status_id object first
+        status_id = getattr(job, "status_id", None)
+        if not status_id and hasattr(job, "to_dict"):
+            d = job.to_dict()
+            status_id = d.get("status_id")
 
-        # Cache meta so /pdfexport/docraptor/download/<docraptor_status_id>/ knows how to upload/name
+        if not status_id:
+            logger.error("DocRaptor async response missing status_id; resp=%r",
+                        job.to_dict() if hasattr(job, "to_dict") else job)
+            return JsonResponse({"ok": False, "error": "docraptor_missing_status_id"}, status=502)
+
+        # Cache + persist using our model field name (docraptor_status_id)
         cache.set(
-            f"docraptor:{docraptor_status_id}",
+            f"docraptor:{status_id}",
             {"assessment_id": assessment.id, "filename": filename, "pretty_name": pretty_name},
             timeout=60 * 60,
         )
 
-        # Persist state on FinalReport so your polling view can check progress
-        fr.docraptor_status_id = docraptor_status_id
+        fr.docraptor_status_id = status_id
         fr.size_bytes = None
         fr.save(update_fields=["docraptor_status_id", "size_bytes"])
 
-        return JsonResponse({"ok": True, "docraptor_status_id": docraptor_status_id}, status=200)
+        return JsonResponse({"ok": True, "docraptor_status_id": status_id}, status=200)
 
     except ApiException as e:
         logger.exception("DocRaptor API error")

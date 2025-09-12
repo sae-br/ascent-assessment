@@ -1,20 +1,83 @@
 {% comment %}
-If not ready, include hx-* to continue polling.
-If ready, render a simple block without hx attributes (polling stops).
+Smart HTMX polling snippet with dynamic interval and status messages.
+
+Context this view *may* provide (all optional except `assessment`):
+- ready: bool (True when final_report is persisted AND s3_key present)
+- final_report: FinalReport instance (with .s3_key when uploaded)
+- stage: "queued" | "rendering" | "uploading" | None
+- progress: int 0..100 (optional)
+- eta_seconds: int (optional hint)
+- retry_in: int seconds (server can tune polling interval)
+- error: str (error text to show user)
+- assessment: Assessment (needed for URLs)
+This template is backwards-compatible if only `ready`/`final_report` are provided.
 {% endcomment %}
 
-{% if ready and final_report and final_report.s3_key %}
-  <div id="report-status">
-    <p>Your report is ready.</p>
-    <a class="button--primary"
-       href="{% url 'reports:download_report' final_report.id %}"
-       target="_blank" rel="noopener">Download PDF Report</a>
-  </div>
-{% else %}
-  <div id="report-status"
-       hx-get="{% url 'payments:report_status' assessment.id %}"
-       hx-trigger="every 3s"
-       hx-swap="outerHTML">
-    <p>Generating your report…</p>
-  </div>
-{% endif %}
+{% with poll=retry_in|default:3 %}
+  {% if ready and final_report and final_report.s3_key %}
+    <div id="report-status">
+      <p>Your report is ready.</p>
+      <a class="button--primary"
+         href="{% url 'reports:download_report' final_report.id %}"
+         target="_blank" rel="noopener">Download PDF Report</a>
+    </div>
+
+  {% elif error %}
+    <div id="report-status">
+      <p class="text-danger">We hit a snag generating your report.</p>
+      <p class="text-muted"><small>{{ error }}</small></p>
+      <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+        <button
+          class="button button--secondary"
+          hx-get="{% url 'payments:report_status' assessment.id %}"
+          hx-target="#report-status"
+          hx-swap="outerHTML"
+        >
+          Try Again
+        </button>
+        <a class="text-button" href="{% url 'assessments:assessments_overview' %}?assessment={{ assessment.id }}">
+          Back to Assessments
+        </a>
+      </div>
+    </div>
+
+  {% else %}
+    <div id="report-status"
+         hx-get="{% url 'payments:report_status' assessment.id %}"
+         hx-trigger="load, every {{ poll }}s"
+         hx-indicator="#report-spinner"
+         hx-swap="outerHTML">
+
+      {# HTMX will toggle .htmx-indicator visibility during requests #}
+      <div id="report-spinner" class="htmx-indicator" aria-hidden="true" style="display:inline-block; width:16px; height:16px; border-radius:50%; border:2px solid currentColor; border-right-color: transparent; animation: spin 0.8s linear infinite; margin-right:.5rem;"></div>
+
+      <p role="status" aria-live="polite" style="display:inline;">
+        {% if stage == 'queued' %}
+          Your report is in the queue…
+        {% elif stage == 'rendering' %}
+          Rendering the PDF…
+        {% elif stage == 'uploading' %}
+          Uploading to secure storage…
+        {% else %}
+          Generating your report…
+        {% endif %}
+      </p>
+
+      {% if progress %}
+        <div style="margin-top:.5rem; display:flex; align-items:center; gap:.5rem;">
+          <progress value="{{ progress }}" max="100" style="height:8px; width:200px;"></progress>
+          <small class="text-muted">{{ progress }}%</small>
+        </div>
+      {% endif %}
+
+      {% if eta_seconds %}
+        <p class="text-muted" style="margin-top:.25rem;"><small>Typically {{ eta_seconds }}s.</small></p>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{# tiny inline keyframes so the spinner works even if CSS isn't loaded yet #}
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
