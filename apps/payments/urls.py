@@ -8,6 +8,7 @@ urlpatterns = [
     path("reprice/", views.reprice, name="reprice"),
     path("return/", views.payment_return, name="payment_return"),
     path("success/<int:assessment_id>/", views.success, name="success"),
+    path("complete-zero/", views.complete_zero, name="complete_zero"),
     path("status/<int:assessment_id>/", views.report_status, name="report_status"),
     path("webhook/", views.stripe_webhook_success, name="stripe_webhook_success"),
 ]

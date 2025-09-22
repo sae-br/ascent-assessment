@@ -24,27 +24,7 @@
     </div>
     
   </div>
-  <script>lucide.createIcons();</script>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-  <script>
-    // Send Django's CSRF with every HTMX request
-    document.body.addEventListener('htmx:configRequest', function (evt) {
-      const name = 'csrftoken';
-      const value = ('; ' + document.cookie).split('; ' + name + '=').pop()?.split(';').shift();
-      if (value) evt.detail.headers['X-CSRFToken'] = value;
-    });
-
-    // Fade then remove any element marked with data-autofade (ms)
-    document.body.addEventListener('htmx:afterSwap', function () {
-      document.querySelectorAll('[data-autofade]').forEach(function (el) {
-        const delay = parseInt(el.dataset.autofade, 10) || 5000; // default 5s
-        setTimeout(() => {
-          el.style.transition = 'opacity .6s';
-          el.style.opacity = '0';
-          setTimeout(() => el.remove(), 650);
-        }, delay);
-      });
-    });
-  </script>
+  <script src="{% static 'js/base.js' %}" defer></script>
 </body>
 </html>

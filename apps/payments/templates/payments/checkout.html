@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Final Report Checkout{% endblock %}
 
 {% block content %}
@@ -46,12 +47,12 @@
           All amounts in CAD. Tax is calculated at checkout based on your billing address.
         </p>
 
-        <form method="post" action="" hx-post="" hx-swap="outerHTML" hx-target="#promo-area" class="promo-inline">
+        <form class="promo-inline" onsubmit="return false;">
           {% csrf_token %}
           <div id="promo-area" class="promo-code">
             <label for="id_promo" class="visually-hidden">Promo code</label>
             <input type="text" name="promo_code" id="id_promo" value="{{ applied_code|default:'' }}" placeholder="Promo code" />
-            <button type="submit" class="button button--secondary">Apply</button>
+            <button type="button" id="apply-promo" class="button button--secondary">Apply</button>
 
             {% if promo_error %}
               <p class="text-error" role="alert">{{ promo_error }}</p>
@@ -69,196 +70,17 @@
         <p id="error-text" class="text-danger" style="margin-top:.5rem;"></p>
       </div>
     </div>
+    <!-- Runtime config for checkout.js (no inline JS) -->
+    <div id="checkout-config"
+        data-publishable-key="{{ stripe_publishable_key }}"
+        data-client-secret="{{ client_secret }}"
+        data-return-url="{{ success_url }}"
+        data-assessment-id="{{ assessment_id }}">
+    </div>
 
   </div>
 </div>
 
 <script src="https://js.stripe.com/v3/"></script>
-<script nonce="{{ request.csp_nonce }}">
-  // Price summary rendering helper
-  (function(){
-        function formatMoney(minor) {
-          var n = parseInt(minor, 10);
-          if (isNaN(n)) n = 0;
-          return "$" + (n / 100).toFixed(2);
-        }
-        function renderPriceSummary() {
-          var sec = document.getElementById("price-summary");
-          if (!sec) return;
-          var ds = sec.dataset || {};
-          var orig = ds.original, disc = ds.discount, final = ds.final, tax = ds.tax;
-          var elSubtotal = document.getElementById("ps-subtotal");
-          var elDiscount = document.getElementById("ps-discount");
-          var elTax = document.getElementById("ps-tax");
-          var elTotal = document.getElementById("ps-total");
-          // Defaults
-          var showSubtotal = "$750.00", showDiscount = "$0.00", showTax = "$0.00", showTotal = "$750.00";
-            if (orig) {
-              showSubtotal = formatMoney(orig);
-            if (disc && parseInt(disc,10)) {
-              showDiscount = formatMoney("-" + Math.abs(parseInt(disc,10)));
-            } else {
-              showDiscount = "$0.00";
-            }
-            if (tax) {
-              showTax = formatMoney(tax);
-            } else {
-              showTax = "$0.00";
-            }
-            if (final) {
-              showTotal = formatMoney(final);
-            } else {
-              showTotal = showSubtotal;
-            }
-          }
-          if (elSubtotal) elSubtotal.textContent = showSubtotal;
-          if (elDiscount) elDiscount.textContent = showDiscount;
-          if (elTax) elTax.textContent = showTax;
-          if (elTotal) elTotal.textContent = showTotal;
-        }
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", renderPriceSummary);
-        } else {
-          renderPriceSummary();
-        }
-      })();
-    </script>
-<script nonce="{{ request.csp_nonce }}">
-      (function(){
-    const stripe = Stripe("{{ stripe_publishable_key }}");
-    const clientSecret = "{{ client_secret }}"; 
-    const returnUrl = "{{ success_url }}"; 
-
-    // Derive PaymentIntent id from client_secret (format: pi_XXX_secret_YYY)
-    function extractPiId(cs){
-      if (!cs) return "";
-      var m = cs.match(/^(pi_[^_]+)_secret_/);
-      return m ? m[1] : "";
-    }
-    var __PI_ID__ = extractPiId(clientSecret);
-    // Expose it in the DOM dataset for reuse
-    try{
-      var root = document.getElementById('price-summary');
-      if (root) root.dataset.piId = __PI_ID__;
-    }catch(e){}
-
-    const elements = stripe.elements({clientSecret});
-
-    const addressEl = elements.create('address', {
-      mode: 'billing',
-      fields: { phone: 'never' }
-    });
-    addressEl.mount('#billing-address');
-
-    const paymentElement = elements.create('payment', {
-      fields: {
-        billingDetails: {
-          address: 'never',
-          email: 'never',
-          phone: 'never',
-          name: 'auto'
-        }
-      },
-      defaultValues: {
-        billingDetails: {
-          email: "{{ request.user.email }}"
-        }
-      }
-    });
-    paymentElement.mount("#payment-form");
-
-    const btn = document.getElementById("pay-btn");
-    const err = document.getElementById("error-text");
-
-    function setProcessing(isOn){
-      btn.disabled = isOn;
-      btn.textContent = isOn ? "Processing…" : "Pay now";
-    }
-
-    function getCookie(name){
-      const v = `; ${document.cookie}`.match(`;\\s*${name}=([^;]*)`);
-      return v ? decodeURIComponent(v[1]) : null;
-    }
-
-    async function repriceFromAddress(evt){
-      if (!evt || !evt.complete) return; // wait until the address element is complete
-      var root = document.getElementById('price-summary');
-      var piId = (root && root.dataset && root.dataset.piId) ? root.dataset.piId : __PI_ID__;
-      const csrf = getCookie('csrftoken');
-      try {
-        const res = await fetch("{% url 'payments:reprice' %}", {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-          body: JSON.stringify({
-            assessment_id: "{{ assessment_id }}",
-            promo_code: document.getElementById('id_promo') ? document.getElementById('id_promo').value : '',
-            billing_address: evt.value && evt.value.address ? evt.value.address : {},
-            pi_id: piId,
-          })
-        });
-        if (!res.ok) throw new Error('Reprice failed');
-        const data = await res.json();
-        // Update summary UI
-        (function(){
-          var elSubtotal = document.getElementById('ps-subtotal');
-          var elDiscount = document.getElementById('ps-discount');
-          var elTax = document.getElementById('ps-tax');
-          var elTotal = document.getElementById('ps-total');
-          function fmt(n){ return "$" + (parseInt(n||0,10)/100).toFixed(2); }
-          if (elSubtotal) elSubtotal.textContent = fmt(data.original_amount_minor);
-          if (elDiscount) elDiscount.textContent = data.discount_minor ? ("-" + fmt(data.discount_minor)) : "$0.00";
-          if (elTax) elTax.textContent = fmt(data.tax_minor || 0);
-          if (elTotal) elTotal.textContent = fmt(data.final_amount_minor);
-        })();
-      } catch(err){
-        console.error(err);
-      }
-    }
-
-    addressEl.on('change', repriceFromAddress);
-
-
-    btn.addEventListener("click", async function(){
-      err.textContent = "";
-      setProcessing(true);
-
-      try {
-        const result = await stripe.confirmPayment({
-          elements,
-          confirmParams: { return_url: returnUrl },
-          // Keep the user on-page for simple card payments; Stripe will still
-          // redirect for 3DS when necessary:
-          redirect: "if_required",
-        });
-
-        console.debug("confirmPayment result:", result);
-
-        if (result.error) {
-          err.textContent = result.error.message || "Payment failed. Try another card.";
-          return;
-        }
-
-        // If we get here without error, either:
-        //  A) There was no redirect needed and paymentIntent is available:
-        const pi = result.paymentIntent;
-        if (pi && pi.status === "succeeded") {
-          // Navigate to success page (which starts polling for the PDF)
-          window.location.href = returnUrl + (returnUrl.includes("?") ? "&" : "?") + "pi=" + pi.id;
-          return;
-        }
-
-        //  B) If 3DS was required, Stripe redirected; if we’re here after return,
-        //     will land directly on success URL (not this block).
-        //     As a fallback, say something helpful:
-        err.textContent = "Verifying your payment… If nothing happens, please refresh.";
-      } catch (e) {
-        console.error(e);
-        err.textContent = "Unexpected error. Please try again.";
-      } finally {
-        // Always re-enable the button unless we already navigated away
-        setProcessing(false);
-      }
-    });
-  })();
-</script>
+<script src="{% static 'payments/scripts/checkout.js' %}" defer></script>
 {% endblock %}

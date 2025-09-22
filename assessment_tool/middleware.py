@@ -7,7 +7,7 @@ import secrets
 STRICT_CSP_TEMPLATE = (
     "default-src 'self'; "
     # Strict: require a per-request nonce for inline scripts on payment pages
-    "script-src 'self' https://js.stripe.com https://s.stripe.com https://unpkg.com https://cdn.jsdelivr.net https://hcaptcha.com https://*.hcaptcha.com 'nonce-{nonce}'; "
+    "script-src 'self' https://js.stripe.com https://s.stripe.com https://unpkg.com https://cdn.jsdelivr.net https://hcaptcha.com https://*.hcaptcha.com;"
     # Frames (Stripe Elements/3DS and hCaptcha when invoked)
     "frame-src https://js.stripe.com https://hooks.stripe.com https://hcaptcha.com https://*.hcaptcha.com; "
     # XHR/fetch (Stripe + telemetry); same-origin covered by 'self'

@@ -72,9 +72,10 @@ class PromoCode(models.Model):
         return True
 
     # Discount calculation (returns (discount_minor, final_minor))
-    def compute_discount(self, subtotal_minor, currency, stripe_min_charge_minor=50):
+    def compute_discount(self, subtotal_minor, currency):
         """
-        Ensure result respects Stripe min charge. Clamp if discount would go below minimum.
+        Compute discount and final amount. Allows fully discounted (zero) totals.
+        Returns (discount_minor, final_minor).
         """
         if self.amount_off is not None:
             if self.currency.lower() != currency.lower():
@@ -85,10 +86,8 @@ class PromoCode(models.Model):
             pct = float(self.percent_off) / 100.0
             discount = int(round(subtotal_minor * pct))
 
-        final_amount = max(subtotal_minor - discount, stripe_min_charge_minor)
-        # If clamped, reduce the discount accordingly
-        if final_amount == stripe_min_charge_minor:
-            discount = subtotal_minor - final_amount
+        # Allow full discount to zero; never negative.
+        final_amount = max(subtotal_minor - discount, 0)
         return discount, final_amount
 
 

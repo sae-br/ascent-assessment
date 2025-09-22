@@ -180,25 +180,35 @@ def reprice(request):
     ):
         return HttpResponseBadRequest('Invalid PaymentIntent')
 
-    try:
-        stripe.PaymentIntent.modify(
-            pi_id,
-            amount=int(final_amount_minor),
-            metadata={
-                'assessment_id': str(assessment.id),
-                'user_id': str(request.user.id),
-                'promo_code': applied_code or '',
-                'amount_before': str(amount),
-                'discount_applied': str(discount_minor),
-                'tax_applied': str(tax_minor),
-                'amount_after': str(final_amount_minor),
-            },
-            description='Ascent Assessment Final Report',
-            receipt_email=request.user.email or None,
-        )
-    except Exception as e:
-        logger.error('Failed to modify PaymentIntent %s: %s', pi_id, e, exc_info=True)
-        return HttpResponseBadRequest('Failed to update payment amount')
+    zero_due = (final_amount_minor == 0)
+
+    if not zero_due:
+        try:
+            stripe.PaymentIntent.modify(
+                pi_id,
+                amount=int(final_amount_minor),
+                metadata={
+                    'assessment_id': str(assessment.id),
+                    'user_id': str(request.user.id),
+                    'promo_code': applied_code or '',
+                    'amount_before': str(amount),
+                    'discount_applied': str(discount_minor),
+                    'tax_applied': str(tax_minor),
+                    'amount_after': str(final_amount_minor),
+                },
+                description='Ascent Assessment Final Report',
+                receipt_email=request.user.email or None,
+            )
+        except Exception as e:
+            logger.error('Failed to modify PaymentIntent %s: %s', pi_id, e, exc_info=True)
+            return HttpResponseBadRequest('Failed to update payment amount')
+    else:
+        # Optional: cancel the PI if it's still in a modifiable state
+        try:
+            if pi.status in ('requires_payment_method', 'requires_confirmation'):
+                stripe.PaymentIntent.cancel(pi_id)
+        except Exception:
+            pass
 
     return JsonResponse({
         'original_amount_minor': amount,
@@ -206,6 +216,79 @@ def reprice(request):
         'tax_minor': tax_minor,
         'final_amount_minor': final_amount_minor,
         'payment_intent_id': pi_id,
+        'zero_due': zero_due,
+    })
+
+@login_required
+@require_POST
+def complete_zero(request):
+    """
+    Complete a $0 checkout without Stripe. We *recompute* totals server-side,
+    and only proceed if final_amount_minor == 0. Then we mark paid_at and
+    kick off DocRaptor idempotently.
+    """
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        return HttpResponseBadRequest('Invalid JSON')
+
+    assessment_id = payload.get('assessment_id')
+    promo_code_input = (payload.get('promo_code') or '').strip()
+    billing_address = payload.get('billing_address') or {}
+
+    if not assessment_id:
+        return HttpResponseBadRequest('Missing assessment id')
+
+    assessment = get_object_or_404(Assessment, id=assessment_id, team__admin=request.user)
+
+    # 1) Base price from Stripe Price
+    price_id = getattr(settings, 'STRIPE_PRICE_FINAL_REPORT', None)
+    if not price_id:
+        return HttpResponseBadRequest('Price not configured')
+    price_obj = stripe.Price.retrieve(price_id)
+    amount = price_obj['unit_amount']
+    currency = price_obj['currency']
+
+    # 2) Promo
+    final_after_discount = amount
+    if promo_code_input:
+        try:
+            res = validate_and_price(
+                code_str=promo_code_input,
+                user=request.user,
+                assessment=assessment,
+                subtotal_minor=amount,
+                currency=currency,
+            )
+            final_after_discount = res['final_minor']
+        except PromoInvalid:
+            pass
+
+    # 3) Tax
+    tax_minor = compute_tax_minor(final_after_discount, currency, billing_address)
+    final_amount_minor = final_after_discount + tax_minor
+
+    if final_amount_minor != 0:
+        return HttpResponseBadRequest('Amount is not zero; cannot complete as free')
+
+    # 4) Idempotently mark paid & enqueue DocRaptor
+    fr, _ = FinalReport.objects.get_or_create(assessment=assessment)
+    if not fr.paid_at:
+        fr.paid_at = timezone.now()
+        fr.save(update_fields=['paid_at'])
+
+    # Kick off DocRaptor via internal endpoint (idempotent)
+    try:
+        base = getattr(settings, 'BASE_URL', None) or request.build_absolute_uri('/').rstrip('/')
+        internal_url = f"{base}/pdfexport/{assessment.id}/docraptor/start-internal/"
+        headers = {'X-Internal-Token': getattr(settings, 'INTERNAL_WEBHOOK_TOKEN', '')}
+        requests.post(internal_url, headers=headers, timeout=10)
+    except Exception as e:
+        logger.warning('Zero-complete: failed to enqueue DocRaptor for assessment %s: %s', assessment.id, e)
+
+    return JsonResponse({
+        'ok': True,
+        'redirect': request.build_absolute_uri(reverse('payments:success', args=[assessment.id]))
     })
 
 @login_required

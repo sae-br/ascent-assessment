@@ -17,7 +17,7 @@ def validate_and_price(code_str, user, assessment, subtotal_minor, currency, req
         "final_minor": int,
         "reason": "ok" | "...error key..."
       }
-    Raises PromoInvalid for invalid cases (caller can show message).
+    Raises PromoInvalid for invalid cases (caller can show message). 
     """
     code = normalize_code(code_str)
     if not code:
