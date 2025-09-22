@@ -93,40 +93,18 @@ def compute_summary_and_display_rows(peak_sections):
     return peak_score_summary, summary_text, lowest, highest
 
 
-@require_POST
-@login_required
-def final_report_docraptor_start(request, assessment_id):
-    """
-    Kick off an asynchronous DocRaptor job to generate the final report PDF
-    for this assessment. Returns JSON with a docraptor_status_id if a new job is queued,
-    or a simple ok/already_ready/in_progress signal otherwise.
-
-    The HTML/PDF building mirrors the synchronous renderer but we only
-    enqueue an async job here; no bytes are returned.
-    """
-    assessment = get_object_or_404(Assessment, pk=assessment_id, team__admin=request.user)
-
-    # Ensure we have a FinalReport row to hold state
-    fr, _ = FinalReport.objects.get_or_create(assessment=assessment)
-
-    # If a report already finished, nothing to do
-    if fr.s3_key:
-        return JsonResponse({"ok": True, "already_ready": True}, status=200)
-
-    # If a job is already in-flight, don't queue another
-    if fr.docraptor_status_id:
-        return JsonResponse({"ok": True, "in_progress": True, "docraptor_status_id": fr.docraptor_status_id}, status=200)
-
+# Internal helper to enqueue DocRaptor for an assessment
+# Returns a JsonResponse matching the external API
+def _enqueue_docraptor_async(request, assessment, fr, stage=6):
     # -----------------------------
     # Build the HTML payload
     # -----------------------------
-    stage = int(request.GET.get("stage", "6") or 6)
-    stage = max(1, min(stage, 6))
+    stage = max(1, min(int(stage or 6), 6))
 
     t0_total = time.monotonic()
-    logger.info("[PDF] Start async render for assessment_id=%s stage=%s", assessment_id, stage)
+    logger.info("[PDF] Start async render for assessment_id=%s stage=%s", assessment.id, stage)
 
-    base = get_report_context_data(assessment_id)
+    base = get_report_context_data(assessment.id)
     assessment = base["assessment"]
     peaks = base["peaks"]
     STATIC_ABS = request.build_absolute_uri(static(""))
@@ -227,7 +205,7 @@ def final_report_docraptor_start(request, assessment_id):
         "show_question_rows": (stage >= 5),
         "show_question_charts": (stage >= 6),
     }
-    # Keep if some downstream helper expects it; otherwise fine to remove.
+
     request._docraptor_ctx = ctx
 
     html = get_template("pdfexport/finalreport_docraptor.html").render(ctx)
@@ -250,10 +228,7 @@ def final_report_docraptor_start(request, assessment_id):
             "document_type": "pdf",
             "name": filename,
             "document_content": html,
-            "prince_options": {
-                "media": "print",
-                "baseurl": baseurl,
-            },
+            "prince_options": {"media": "print", "baseurl": baseurl},
         }, _request_timeout=(10, 700))
         logger.info("[PDF] DocRaptor job queued in %.2fs", time.monotonic() - t0_docraptor)
 
@@ -265,7 +240,7 @@ def final_report_docraptor_start(request, assessment_id):
 
         if not status_id:
             logger.error("DocRaptor async response missing status_id; resp=%r",
-                        job.to_dict() if hasattr(job, "to_dict") else job)
+                         job.to_dict() if hasattr(job, "to_dict") else job)
             return JsonResponse({"ok": False, "error": "docraptor_missing_status_id"}, status=502)
 
         # Cache + persist using our model field name (docraptor_status_id)
@@ -293,5 +268,56 @@ def final_report_docraptor_start(request, assessment_id):
                 os.remove(p)
             except OSError:
                 pass
-        logger.info("[PDF] final_report_docraptor_start total time %.2fs", time.monotonic() - t0_total)
+        logger.info("[PDF] enqueue total time %.2fs", time.monotonic() - t0_total)
+
+
+@require_POST
+@login_required
+def final_report_docraptor_start(request, assessment_id):
+    """
+    Kick off an asynchronous DocRaptor job to generate the final report PDF
+    for this assessment. Returns JSON with a docraptor_status_id if a new job is queued,
+    or a simple ok/already_ready/in_progress signal otherwise.
+
+    The HTML/PDF building mirrors the synchronous renderer but we only
+    enqueue an async job here; no bytes are returned.
+    """
+    assessment = get_object_or_404(Assessment, pk=assessment_id, team__admin=request.user)
+
+    # Ensure we have a FinalReport row to hold state
+    fr, _ = FinalReport.objects.get_or_create(assessment=assessment)
+
+    # If a report already finished, nothing to do
+    if fr.s3_key:
+        return JsonResponse({"ok": True, "already_ready": True}, status=200)
+
+    # If a job is already in-flight, don't queue another
+    if fr.docraptor_status_id:
+        return JsonResponse({"ok": True, "in_progress": True, "docraptor_status_id": fr.docraptor_status_id}, status=200)
+
+    stage = int(request.GET.get("stage", "6") or 6)
+    return _enqueue_docraptor_async(request, assessment, fr, stage=stage)
+
+
+# Internal endpoint for server-to-server DocRaptor enqueue
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def final_report_docraptor_start_internal(request, assessment_id):
+    token = request.headers.get("X-Internal-Token") or request.META.get("HTTP_X_INTERNAL_TOKEN")
+    expected = getattr(settings, "INTERNAL_WEBHOOK_TOKEN", None)
+    if not expected or token != expected:
+        return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
+
+    assessment = get_object_or_404(Assessment, pk=assessment_id)
+    fr, _ = FinalReport.objects.get_or_create(assessment=assessment)
+
+    # If already finished or in progress, mirror the public endpoint behavior
+    if fr.s3_key:
+        return JsonResponse({"ok": True, "already_ready": True}, status=200)
+    if fr.docraptor_status_id:
+        return JsonResponse({"ok": True, "in_progress": True, "docraptor_status_id": fr.docraptor_status_id}, status=200)
+
+    stage = int(request.GET.get("stage", "6") or 6)
+    return _enqueue_docraptor_async(request, assessment, fr, stage=stage)
 

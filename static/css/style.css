@@ -365,7 +365,7 @@ h3 {
 }
 
 /* Dashboard layout */
-.dashboard-grid {
+.grid {
   display: flex;
   flex-direction: column;
   gap: 4rem;
@@ -1204,14 +1204,64 @@ sub {
 }
 
 
-/* --- Stripe and Payments --- */
+/* --- Stripe and Checkout Page Payment --- */
 
-.payment-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.grid--payment {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 4rem;
 }
 
-#pay-btn {
-  align-self: flex-start; 
+.column--payments {
+  display: grid; 
+  grid-template-columns: 1fr;    
+  row-gap: 1.5rem; 
+  width: 100%;
+}
+
+.card h2 {
+  margin-top: 0;       /* override global h2 margin-top: 3rem */
+  margin-bottom: 1rem;
+}
+
+.summary-sticky {   
+  position: sticky;
+  top: 1rem;
+}
+
+.summary-card .price-lines p {  
+  display: flex;
+  justify-content: space-between;
+  margin: .25rem 0;
+}
+
+.summary-card .total-line {
+  border-top: 1px solid var(--border);
+  margin-top: .5rem;
+  padding-top: .5rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.summary-card .promo-inline {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.summary-card .promo-inline input[type="text"] {
+  flex: 1;
+}
+
+/* Make the Pay button span the card width */
+#pay-btn.full-width {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Mobile: collapse to single column and remove sticky */
+@media (max-width: 900px) {
+  .grid--payment { grid-template-columns: 1fr; }
+  .summary-sticky { position: static; }
 }

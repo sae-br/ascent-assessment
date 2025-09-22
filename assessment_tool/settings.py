@@ -43,16 +43,18 @@ BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 # behind a proxy (Render):
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = IS_PRODUCTION
-SECURE_HSTS_SECONDS = 300 if IS_PRODUCTION else 0
+SECURE_HSTS_SECONDS = 31536000 if IS_PRODUCTION else 0
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 CSRF_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
 
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False   # set True later only if *all* subdomains are HTTPS
-SECURE_HSTS_PRELOAD = False              # enable later after you’re confident
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 # (Nice-to-have headers)
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = "same-origin"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 X_FRAME_OPTIONS = "DENY"  # or "SAMEORIGIN" if you truly need framing
 
 
@@ -60,7 +62,7 @@ X_FRAME_OPTIONS = "DENY"  # or "SAMEORIGIN" if you truly need framing
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [ BASE_DIR / "static" ]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -99,6 +101,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'assessment_tool.middleware.CSPMiddleware',
 ]
 
 ROOT_URLCONF = 'assessment_tool.urls'
@@ -216,6 +219,8 @@ if _admins_env:
 # --- DocRaptor ---
 DOCRAPTOR_API_KEY = os.getenv("DOCRAPTOR_API_KEY", "")
 DOCRAPTOR_TEST = env_bool("DOCRAPTOR_TEST", True)
+INTERNAL_WEBHOOK_TOKEN = os.getenv("INTERNAL_WEBHOOK_TOKEN", "") # assigned to secure internal DocRaptor enqueue URL
+
 
 # --- AWS / S3 (Reports storage) ---
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
@@ -239,8 +244,9 @@ AWS_S3_SIGNATURE_VERSION = os.getenv("AWS_S3_SIGNATURE_VERSION", "s3v4")
 # --- Stripe ---
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
-STRIPE_PRICE_FINAL_REPORT = os.getenv("STRIPE_PRICE_FINAL_REPORT")   # e.g. price_123
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")           # from Stripe CLI/dashboard
+STRIPE_PRICE_FINAL_REPORT = os.getenv("STRIPE_PRICE_FINAL_REPORT") 
+STRIPE_TAX_CODE_FINAL_REPORT = os.getenv("STRIPE_TAX_CODE_FINAL_REPORT")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET") 
 STRIPE_CHECKOUT_SUCCESS_PATH = "/payments/success/"
 STRIPE_CHECKOUT_CANCEL_PATH = "/assessments/overview/"
 

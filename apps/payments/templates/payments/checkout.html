@@ -2,28 +2,169 @@
 {% block title %}Final Report Checkout{% endblock %}
 
 {% block content %}
-<h1>Purchasing Your Final Report</h1>
+<section class="section">
+  <h1>Purchasing Your Final Report</h1>
+  <p>Have you ensured all participants have submitted their answers?</p>
+  <p><strong>Once you purchase the report, this assessment will be closed.
+    This action cannot be reversed.</strong></p>
+  <p>After payment, we’ll generate your final PDF report.</p>
+</section>
 
-<p>Have you ensured all participants have submitted their answers?
-  Once you purchase the report, this assessment will be closed.
-  This action cannot be reversed.</p>
-<p>Confirm you’re ready. After payment, we’ll generate your final report.</p>
+<div class="grid">
+  <div class="grid--payment">
 
-<div class="payment-container">
-  <div id="payment-form"><!-- Stripe injects here --></div>
-  <button id="pay-btn" class="button--primary">Pay now</button>
-  <p id="error-text" class="text-danger" style="margin-top:.5rem;"></p>
+    <!-- LEFT COLUMN -->
+    <div class="column--payments">
+      <div class="card">
+        <h2>Billing Details</h2>
+        <div id="billing-address"><!-- Stripe Address Element here --></div>
+      </div>
+
+      <div class="card">
+        <h2>Payment Method</h2>
+        <div id="payment-form"><!-- Stripe card element here --></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN (Sticky)-->
+    <div class="column--payments">
+      <div class="card summary-card summary-sticky" id="price-summary"
+          data-original="{{ original_amount_minor|default:'' }}"
+          data-discount="{{ discount_minor|default:'' }}"
+          data-final="{{ final_amount_minor|default:'' }}"
+          data-tax="{{ tax_minor|default:'0' }}"
+          data-currency="CAD">
+        <h2>Order Summary</h2>
+
+        <div class="price-lines" aria-live="polite" aria-atomic="true">
+          <p><span>Subtotal</span><span id="ps-subtotal">$750.00</span></p>
+          <p><span>Discount</span><span id="ps-discount">$0.00</span></p>
+          <p><span>Tax</span><span id="ps-tax">$0.00</span></p>
+          <p class="total-line"><span>Total</span><span id="ps-total">$750.00</span></p>
+        </div>
+        <p class="helptext">
+          All amounts in CAD. Tax is calculated at checkout based on your billing address.
+        </p>
+
+        <form method="post" action="" hx-post="" hx-swap="outerHTML" hx-target="#promo-area" class="promo-inline">
+          {% csrf_token %}
+          <div id="promo-area" class="promo-code">
+            <label for="id_promo" class="visually-hidden">Promo code</label>
+            <input type="text" name="promo_code" id="id_promo" value="{{ applied_code|default:'' }}" placeholder="Promo code" />
+            <button type="submit" class="button button--secondary">Apply</button>
+
+            {% if promo_error %}
+              <p class="text-error" role="alert">{{ promo_error }}</p>
+            {% elif applied_code %}
+              <p class="text-success">Applied <strong>{{ applied_code }}</strong></p>
+            {% endif %}
+          </div>
+        </form>
+
+        <p class="helptext">By clicking Pay, you agree to our Terms and Privacy Policy. Taxes are 
+          calculated based on your billing address. A receipt will be emailed 
+          to {{ request.user.email }}.
+        </p>
+        <button id="pay-btn" class="button--primary full-width">Pay now</button>
+        <p id="error-text" class="text-danger" style="margin-top:.5rem;"></p>
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script src="https://js.stripe.com/v3/"></script>
-<script>
+<script nonce="{{ request.csp_nonce }}">
+  // Price summary rendering helper
   (function(){
+        function formatMoney(minor) {
+          var n = parseInt(minor, 10);
+          if (isNaN(n)) n = 0;
+          return "$" + (n / 100).toFixed(2);
+        }
+        function renderPriceSummary() {
+          var sec = document.getElementById("price-summary");
+          if (!sec) return;
+          var ds = sec.dataset || {};
+          var orig = ds.original, disc = ds.discount, final = ds.final, tax = ds.tax;
+          var elSubtotal = document.getElementById("ps-subtotal");
+          var elDiscount = document.getElementById("ps-discount");
+          var elTax = document.getElementById("ps-tax");
+          var elTotal = document.getElementById("ps-total");
+          // Defaults
+          var showSubtotal = "$750.00", showDiscount = "$0.00", showTax = "$0.00", showTotal = "$750.00";
+            if (orig) {
+              showSubtotal = formatMoney(orig);
+            if (disc && parseInt(disc,10)) {
+              showDiscount = formatMoney("-" + Math.abs(parseInt(disc,10)));
+            } else {
+              showDiscount = "$0.00";
+            }
+            if (tax) {
+              showTax = formatMoney(tax);
+            } else {
+              showTax = "$0.00";
+            }
+            if (final) {
+              showTotal = formatMoney(final);
+            } else {
+              showTotal = showSubtotal;
+            }
+          }
+          if (elSubtotal) elSubtotal.textContent = showSubtotal;
+          if (elDiscount) elDiscount.textContent = showDiscount;
+          if (elTax) elTax.textContent = showTax;
+          if (elTotal) elTotal.textContent = showTotal;
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", renderPriceSummary);
+        } else {
+          renderPriceSummary();
+        }
+      })();
+    </script>
+<script nonce="{{ request.csp_nonce }}">
+      (function(){
     const stripe = Stripe("{{ stripe_publishable_key }}");
     const clientSecret = "{{ client_secret }}"; 
     const returnUrl = "{{ success_url }}"; 
 
+    // Derive PaymentIntent id from client_secret (format: pi_XXX_secret_YYY)
+    function extractPiId(cs){
+      if (!cs) return "";
+      var m = cs.match(/^(pi_[^_]+)_secret_/);
+      return m ? m[1] : "";
+    }
+    var __PI_ID__ = extractPiId(clientSecret);
+    // Expose it in the DOM dataset for reuse
+    try{
+      var root = document.getElementById('price-summary');
+      if (root) root.dataset.piId = __PI_ID__;
+    }catch(e){}
+
     const elements = stripe.elements({clientSecret});
-    const paymentElement = elements.create("payment");
+
+    const addressEl = elements.create('address', {
+      mode: 'billing',
+      fields: { phone: 'never' }
+    });
+    addressEl.mount('#billing-address');
+
+    const paymentElement = elements.create('payment', {
+      fields: {
+        billingDetails: {
+          address: 'never',
+          email: 'never',
+          phone: 'never',
+          name: 'auto'
+        }
+      },
+      defaultValues: {
+        billingDetails: {
+          email: "{{ request.user.email }}"
+        }
+      }
+    });
     paymentElement.mount("#payment-form");
 
     const btn = document.getElementById("pay-btn");
@@ -33,6 +174,49 @@
       btn.disabled = isOn;
       btn.textContent = isOn ? "Processing…" : "Pay now";
     }
+
+    function getCookie(name){
+      const v = `; ${document.cookie}`.match(`;\\s*${name}=([^;]*)`);
+      return v ? decodeURIComponent(v[1]) : null;
+    }
+
+    async function repriceFromAddress(evt){
+      if (!evt || !evt.complete) return; // wait until the address element is complete
+      var root = document.getElementById('price-summary');
+      var piId = (root && root.dataset && root.dataset.piId) ? root.dataset.piId : __PI_ID__;
+      const csrf = getCookie('csrftoken');
+      try {
+        const res = await fetch("{% url 'payments:reprice' %}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+          body: JSON.stringify({
+            assessment_id: "{{ assessment_id }}",
+            promo_code: document.getElementById('id_promo') ? document.getElementById('id_promo').value : '',
+            billing_address: evt.value && evt.value.address ? evt.value.address : {},
+            pi_id: piId,
+          })
+        });
+        if (!res.ok) throw new Error('Reprice failed');
+        const data = await res.json();
+        // Update summary UI
+        (function(){
+          var elSubtotal = document.getElementById('ps-subtotal');
+          var elDiscount = document.getElementById('ps-discount');
+          var elTax = document.getElementById('ps-tax');
+          var elTotal = document.getElementById('ps-total');
+          function fmt(n){ return "$" + (parseInt(n||0,10)/100).toFixed(2); }
+          if (elSubtotal) elSubtotal.textContent = fmt(data.original_amount_minor);
+          if (elDiscount) elDiscount.textContent = data.discount_minor ? ("-" + fmt(data.discount_minor)) : "$0.00";
+          if (elTax) elTax.textContent = fmt(data.tax_minor || 0);
+          if (elTotal) elTotal.textContent = fmt(data.final_amount_minor);
+        })();
+      } catch(err){
+        console.error(err);
+      }
+    }
+
+    addressEl.on('change', repriceFromAddress);
+
 
     btn.addEventListener("click", async function(){
       err.textContent = "";

@@ -14,4 +14,8 @@ urlpatterns = [
         views.final_report_docraptor_start,
         name="final_report_docraptor_start",
     ),
+    path(
+        "<int:assessment_id>/docraptor/start-internal/", 
+        views.final_report_docraptor_start_internal, 
+        name="final_report_docraptor_start_internal"),
 ]
