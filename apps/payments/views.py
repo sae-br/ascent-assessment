@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -22,7 +21,6 @@ from apps.pdfexport.views import build_report_filenames
 from apps.pdfexport.utils.storage import S3Uploader
 from apps.payments.models import PromoCode, Redemption
 from apps.payments.utils.promos import validate_and_price, PromoInvalid, normalize_code, record_redemption_if_needed
-from apps.payments.utils.tax import compute_tax_minor
 
 import logging
 logger = logging.getLogger(__name__)
@@ -85,6 +83,7 @@ def checkout(request, assessment_id: int):
         amount=final_amount,
         currency=currency,
         payment_method_types=["card"],
+        automatic_tax={'enabled': True},
         metadata={
             "assessment_id": str(assessment.id),
             "user_id": str(request.user.id),
@@ -163,9 +162,9 @@ def reprice(request):
             final_after_discount = amount
             applied_code = None
 
-    # 3) Compute tax with Stripe Tax
-    tax_minor = compute_tax_minor(final_after_discount, currency, billing_address)
-    final_amount_minor = final_after_discount + tax_minor
+    # 3) Automatic Tax (Stripe computes at confirmation): no server tax preview
+    tax_minor = 0
+    final_amount_minor = final_after_discount  # subtotal after discounts; Stripe will add tax at confirm
 
     # 4) Verify and update existing PaymentIntent
     try:
@@ -187,15 +186,15 @@ def reprice(request):
         try:
             stripe.PaymentIntent.modify(
                 pi_id,
-                amount=int(final_amount_minor),
+                amount=int(final_after_discount),  # subtotal; Stripe adds tax automatically at confirm
+                automatic_tax={'enabled': True},
                 metadata={
                     'assessment_id': str(assessment.id),
                     'user_id': str(request.user.id),
                     'promo_code': applied_code or '',
                     'amount_before': str(amount),
                     'discount_applied': str(discount_minor),
-                    'tax_applied': str(tax_minor),
-                    'amount_after': str(final_amount_minor),
+                    'amount_after': str(final_after_discount),
                 },
                 description='Ascent Assessment Final Report',
                 receipt_email=request.user.email or None,
@@ -211,10 +210,11 @@ def reprice(request):
     return JsonResponse({
         'original_amount_minor': amount,
         'discount_minor': discount_minor,
-        'tax_minor': tax_minor,
-        'final_amount_minor': final_amount_minor,
+        'tax_minor': 0,
+        'final_amount_minor': final_after_discount,
         'payment_intent_id': pi_id,
         'zero_due': zero_due,
+        'tax_mode': 'automatic'
     })
 
 @login_required
@@ -262,11 +262,8 @@ def complete_zero(request):
         except PromoInvalid:
             pass
 
-    # 3) Tax
-    tax_minor = compute_tax_minor(final_after_discount, currency, billing_address)
-    final_amount_minor = final_after_discount + tax_minor
-
-    if final_amount_minor != 0:
+    # 3) Automatic Tax: not applicable for zero-due (subtotal==0 implies tax==0)
+    if final_after_discount != 0:
         return HttpResponseBadRequest('Amount is not zero; cannot complete as free')
 
     # 4) Idempotently mark paid & enqueue DocRaptor

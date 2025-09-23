@@ -73,10 +73,22 @@
     const elDiscount = $("#ps-discount");
     const elTax      = $("#ps-tax");
     const elTotal    = $("#ps-total");
+
     const showSubtotal = ds.original ? fmt(ds.original) : "$750.00";
-    const showDiscount = (ds.discount && cents(ds.discount)) ? ("-" + fmt(Math.abs(cents(ds.discount)))) : "$0.00";
-    const showTax      = ds.tax ? fmt(ds.tax) : "$0.00";
-    const showTotal    = ds.final ? fmt(ds.final) : showSubtotal;
+    const showDiscount = (ds.discount && cents(ds.discount))
+      ? ("-" + fmt(Math.abs(cents(ds.discount))))
+      : "$0.00";
+
+    // Automatic Tax: show placeholder text rather than $0.00
+    let showTax = "$0.00";
+    if (ds.taxMode === 'automatic') {
+      showTax = "Calculated at payment";
+    } else if (ds.tax) {
+      showTax = fmt(ds.tax);
+    }
+
+    const showTotal = ds.final ? fmt(ds.final) : showSubtotal;
+
     if (elSubtotal) elSubtotal.textContent = showSubtotal;
     if (elDiscount) elDiscount.textContent = showDiscount;
     if (elTax)      elTax.textContent      = showTax;
@@ -177,6 +189,7 @@
         root.dataset.tax      = String(data.tax_minor || 0);
         root.dataset.final    = String(data.final_amount_minor);
         root.dataset.zeroDue  = data.zero_due ? '1' : '0';
+        root.dataset.taxMode  = data.tax_mode || '';
       }
 
       // refresh UI
