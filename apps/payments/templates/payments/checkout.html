@@ -89,7 +89,8 @@
         data-publishable-key="{{ stripe_publishable_key }}"
         data-client-secret="{{ client_secret }}"
         data-return-url="{{ success_url }}"
-        data-assessment-id="{{ assessment_id }}">
+        data-assessment-id="{{ assessment_id }}"
+        data-user-email="{{ request.user.email }}">
     </div>
 
   </div>

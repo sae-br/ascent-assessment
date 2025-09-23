@@ -18,6 +18,7 @@
   const CLIENT_SECRET   = cfgNode.dataset.clientSecret;
   const RETURN_URL      = cfgNode.dataset.returnUrl;
   const ASSESSMENT_ID   = cfgNode.dataset.assessmentId;
+  const USER_EMAIL    = (cfgNode.dataset.userEmail || '').trim();
 
   const root = $("#price-summary");
   const btn  = "#pay-btn" ? $("#pay-btn") : null;
@@ -80,6 +81,17 @@
     if (elDiscount) elDiscount.textContent = showDiscount;
     if (elTax)      elTax.textContent      = showTax;
     if (elTotal)    elTotal.textContent    = showTotal;
+  }
+
+  function mapBillingDetails(addr){
+    addr = addr || {};
+    const address = {};
+    if (addr.line1)       address.line1 = addr.line1;
+    if (addr.city)        address.city = addr.city;
+    if (addr.state)       address.state = String(addr.state).toUpperCase();
+    if (addr.postal_code) address.postal_code = addr.postal_code;
+    if (addr.country)     address.country = String(addr.country).toUpperCase();
+    return { address };
   }
 
   // --- Stripe setup ---
@@ -246,10 +258,14 @@
       }
 
       try{
+        const billingDetails = mapBillingDetails(lastAddress);
+        if (USER_EMAIL) billingDetails.email = USER_EMAIL;
+
         const result = await stripe.confirmPayment({
           elements,
           confirmParams: { return_url: RETURN_URL },
           redirect: 'if_required',
+          payment_method_data: { billing_details: billingDetails },
         });
 
         if (result.error){
