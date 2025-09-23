@@ -26,7 +26,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+# Force a modern version for this app's requests (safe baseline for Automatic Tax)
+stripe.api_version = getattr(settings, "STRIPE_API_VERSION", "2022-11-15")
 
+# Temporary diagnostics
+try:
+    import logging
+    logger = logging.getLogger(__name__)
+    acct = stripe.Account.retrieve()
+    logger.info(
+        "Stripe diagnostics: lib=%s, request_api=%s, acct_default_api=%s",
+        getattr(stripe, "__version__", "?"),
+        stripe.api_version,
+        (acct.get("settings", {}) or {}).get("api_version"),
+    )
+except Exception as _e:
+    pass
 
 @login_required
 def checkout(request, assessment_id: int):
