@@ -24,6 +24,9 @@
       <div class="card">
         <h2>Payment Method</h2>
         <div id="payment-form"><!-- Stripe card element here --></div>
+        <div id="no-payment-note" class="helptext" style="display:none; margin-top:.75rem;">
+          <strong>No payment needed.</strong> Your promo covers the full amount. Click <em>Get report</em> to finalize your order.
+        </div>
       </div>
     </div>
 
@@ -51,13 +54,17 @@
           {% csrf_token %}
           <div id="promo-area" class="promo-code">
             <label for="id_promo" class="visually-hidden">Promo code</label>
-            <input type="text" name="promo_code" id="id_promo" value="{{ applied_code|default:'' }}" placeholder="Promo code" />
-            <button type="button" id="apply-promo" class="button button--secondary">Apply</button>
+            <input type="text" name="promo_code" id="id_promo" value="{{ applied_code|default:'' }}" placeholder="Promo code" {% if applied_code %}disabled{% endif %} />
+            <button type="button" id="apply-promo" class="button button--secondary" {% if applied_code %}disabled{% endif %}>Apply</button>
+
+            <!-- Applied badge (hidden by default unless code is present) -->
+            <div id="promo-badge" class="badge badge--success" style="display:{% if applied_code %}inline-flex{% else %}none{% endif %}; margin-left:.5rem;">
+              <span class="badge-label">{% if applied_code %}{{ applied_code }}{% else %}&nbsp;{% endif %}</span>
+              <button type="button" id="remove-promo" class="badge-remove" aria-label="Remove promo" title="Remove promo">Remove</button>
+            </div>
 
             {% if promo_error %}
               <p class="text-error" role="alert">{{ promo_error }}</p>
-            {% elif applied_code %}
-              <p class="text-success">Applied <strong>{{ applied_code }}</strong></p>
             {% endif %}
           </div>
         </form>
@@ -67,6 +74,13 @@
           to {{ request.user.email }}.
         </p>
         <button id="pay-btn" class="button--primary full-width">Pay now</button>
+        <div class="secure-note" aria-hidden="true" style="display:flex; align-items:center; gap:.4rem; margin-top:.5rem; opacity:.85;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          <small>Secure checkout by Stripe</small>
+        </div>
         <p id="error-text" class="text-danger" style="margin-top:.5rem;"></p>
       </div>
     </div>

@@ -1,4 +1,5 @@
 from django.db.models import Count
+from django.db import transaction
 from django.utils import timezone
 from apps.payments.models import PromoCode, Redemption
 
@@ -56,3 +57,24 @@ def validate_and_price(code_str, user, assessment, subtotal_minor, currency, req
         "final_minor": final_amount,
         "reason": "ok",
     }
+
+def record_redemption_if_needed(*, user, assessment, code_str: str) -> None:
+    """
+    Idempotently record that a promo code was used for this assessment by this user.
+    Safe to call multiple times.
+    """
+    if not code_str:
+        return
+    try:
+        pc = PromoCode.objects.get(code=code_str.strip().upper())
+    except PromoCode.DoesNotExist:
+        return  # Code vanished/renamed; don't block completion.
+
+    # If your model has a uniqueness constraint across (user, assessment, promocode),
+    # this get_or_create is fully idempotent.
+    with transaction.atomic():
+        Redemption.objects.get_or_create(
+            user=user,
+            assessment=assessment,
+            promocode=pc,
+        )

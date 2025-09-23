@@ -1254,6 +1254,28 @@ sub {
   flex: 1;
 }
 
+.badge { 
+  display:inline-flex; 
+  align-items:center; 
+  gap:.5rem; 
+  padding:.25rem .5rem; 
+  border-radius:999px; 
+  font-size:.85rem; 
+}
+.badge--success { 
+  background:#e6f6ee; 
+  color:#137a41; 
+}
+.badge-remove { 
+  background:none; 
+  border:none; 
+  color:inherit; 
+  text-decoration:underline; 
+  cursor:pointer; 
+  font-size:.85rem; 
+  padding:0; 
+}
+
 /* Make the Pay button span the card width */
 #pay-btn.full-width {
   width: 100%;

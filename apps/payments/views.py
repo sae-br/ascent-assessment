@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -20,7 +21,7 @@ from apps.pdfexport.models import FinalReport
 from apps.pdfexport.views import build_report_filenames
 from apps.pdfexport.utils.storage import S3Uploader
 from apps.payments.models import PromoCode, Redemption
-from apps.payments.utils.promos import validate_and_price, PromoInvalid, normalize_code
+from apps.payments.utils.promos import validate_and_price, PromoInvalid, normalize_code, record_redemption_if_needed
 from apps.payments.utils.tax import compute_tax_minor
 
 import logging
@@ -203,12 +204,9 @@ def reprice(request):
             logger.error('Failed to modify PaymentIntent %s: %s', pi_id, e, exc_info=True)
             return HttpResponseBadRequest('Failed to update payment amount')
     else:
-        # Optional: cancel the PI if it's still in a modifiable state
-        try:
-            if pi.status in ('requires_payment_method', 'requires_confirmation'):
-                stripe.PaymentIntent.cancel(pi_id)
-        except Exception:
-            pass
+        # Zero due: do not modify or cancel the PI. Keeping it in a modifiable state allows
+        # the user to remove the promo and resume payment without reinitializing Elements.
+        pass
 
     return JsonResponse({
         'original_amount_minor': amount,
@@ -276,6 +274,9 @@ def complete_zero(request):
     if not fr.paid_at:
         fr.paid_at = timezone.now()
         fr.save(update_fields=['paid_at'])
+    
+    # Record redemption using the promo code the user submitted
+    record_redemption_if_needed(user=request.user, assessment=assessment, code_str=promo_code_input)
 
     # Kick off DocRaptor via internal endpoint (idempotent)
     try:
@@ -531,6 +532,7 @@ def stripe_webhook_success(request):
         pi = event["data"]["object"]
         meta = (pi.get("metadata") or {}) if isinstance(pi, dict) else (getattr(pi, "metadata", {}) or {})
         assessment_id = str(meta.get("assessment_id") or "")
+        promo_code = (meta.get("promo_code") or "").strip().upper()
         user_id = str(meta.get("user_id") or "")
 
         if not assessment_id:
@@ -554,6 +556,21 @@ def stripe_webhook_success(request):
             requests.post(internal_url, headers=headers, timeout=10)
         except Exception as e:
             logger.warning("Failed to trigger internal DocRaptor enqueue for assessment %s: %s", assessment_id, e)
+
+        # Resolve user for redemption (metadata user_id preferred; fallback to assessment owner)
+        User = get_user_model()
+        user_obj = None
+        if user_id:
+            try:
+                user_obj = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                user_obj = None
+        if user_obj is None:
+            user_obj = getattr(assessment.team, 'admin', None)
+
+        if user_obj and promo_code:
+            # Mark promo as used (idempotent; won’t double-create)
+            record_redemption_if_needed(user=user_obj, assessment=assessment, code_str=promo_code)
 
     elif etype == "payment_intent.payment_failed":
         pi = event["data"]["object"]

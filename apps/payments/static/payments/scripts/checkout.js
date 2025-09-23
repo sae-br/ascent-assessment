@@ -1,4 +1,3 @@
-
 (function(){
   "use strict";
 
@@ -23,6 +22,48 @@
   const root = $("#price-summary");
   const btn  = "#pay-btn" ? $("#pay-btn") : null;
   const err  = $("#error-text");
+
+  const promoInput = $('#id_promo');
+  const applyBtn = $('#apply-promo');
+  const promoBadge = $('#promo-badge');
+  const removeBtn = $('#remove-promo');
+
+  function initPromoUI(){
+    const badgeVisible = promoBadge && getComputedStyle(promoBadge).display !== 'none';
+    if (badgeVisible){
+      if (promoInput){ promoInput.style.display = 'none'; }
+      if (applyBtn){ applyBtn.style.display = 'none'; }
+    }
+  }
+  initPromoUI();
+
+  function showPromoBadge(code){
+    if (promoBadge){
+      const label = promoBadge.querySelector('.badge-label');
+      if (label) label.textContent = code || '';
+      promoBadge.style.display = 'inline-flex';
+    }
+    if (promoInput) {
+      promoInput.disabled = true;
+      promoInput.style.display = 'none';
+    }
+    if (applyBtn) {
+      applyBtn.disabled = true;
+      applyBtn.style.display = 'none';
+    }
+  }
+  function hidePromoBadge(){
+    if (promoBadge){ promoBadge.style.display = 'none'; }
+    if (promoInput){ 
+      promoInput.disabled = false; 
+      promoInput.value = ''; 
+      promoInput.style.display = '';
+    }
+    if (applyBtn) {
+      applyBtn.disabled = false;
+      applyBtn.style.display = '';
+    }
+  }
 
   function renderPriceSummaryFromDataset(){
     if (!root) return;
@@ -60,6 +101,7 @@
   addressEl.mount('#billing-address');
 
   let lastAddress = {};
+  let isRepricing = false;
 
   const paymentElement = elements.create('payment', {
     fields: {
@@ -74,6 +116,8 @@
     if (root.dataset.zeroDue === '1'){
       const payInit = $('#payment-form');
       if (payInit) payInit.style.display = 'none';
+      const noteInit = $('#no-payment-note');
+      if (noteInit) noteInit.style.display = '';
       if (btn) btn.textContent = 'Get report';
     }
   })();
@@ -85,6 +129,9 @@
   }
 
   async function repriceNow(promoCode){
+    if (isRepricing) return; // debounce overlapping calls
+    isRepricing = true;
+    if (err) err.textContent = '';
     const csrf = getCookie('csrftoken');
     const piId = (root && root.dataset && root.dataset.piId) ? root.dataset.piId : __PI_ID__;
     try{
@@ -101,6 +148,16 @@
       if (!res.ok) throw new Error('Reprice failed');
       const data = await res.json();
 
+      // Promo badge/UI: if discount applied (>0), lock the input and show badge
+      const discountApplied = (data && data.discount_minor && cents(data.discount_minor) > 0);
+      if (discountApplied){
+        const codeVal = (promoInput && promoInput.value) ? promoInput.value.trim().toUpperCase() : '';
+        showPromoBadge(codeVal);
+      } else {
+        // invalid or removed
+        hidePromoBadge();
+      }
+
       // update datasets
       if (root && root.dataset){
         root.dataset.original = String(data.original_amount_minor);
@@ -114,14 +171,16 @@
       renderPriceSummaryFromDataset();
       if (btn) btn.textContent = (data.zero_due ? 'Get report' : 'Pay now');
 
-      // hide/show payment element
+      // hide/show payment element and note
       const pay = $('#payment-form');
-      if (pay){
-        pay.style.display = data.zero_due ? 'none' : '';
-      }
+      const note = $('#no-payment-note');
+      if (pay)  pay.style.display  = data.zero_due ? 'none' : '';
+      if (note) note.style.display = data.zero_due ? '' : 'none';
     } catch(e){
       console.error(e);
       if (err) err.textContent = 'Could not update price. Please try again.';
+    } finally {
+      isRepricing = false;
     }
   }
 
@@ -136,9 +195,17 @@
   });
 
   // Apply promo click
-  const applyBtn = $('#apply-promo');
   if (applyBtn){
     applyBtn.addEventListener('click', function(){ repriceNow(); });
+  }
+
+  if (removeBtn){
+    removeBtn.addEventListener('click', function(){
+      hidePromoBadge();
+      if (err) err.textContent = '';
+      // Trigger reprice with no code
+      repriceNow('');
+    });
   }
 
   async function completeZeroFlow(){
