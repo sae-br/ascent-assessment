@@ -19,9 +19,41 @@ class AnswerAdmin(admin.ModelAdmin):
 
 @admin.register(Assessment)
 class AssessmentAdmin(admin.ModelAdmin):
-    list_display = ('team', 'deadline', 'created_at', 'id',)
+    list_display = (
+        'team', 'deadline', 'created_at',
+        'created_by__user', 'responses', 'has_report',
+        'id',
+    )
     list_filter = ('team',)
     search_fields = ('team__name',)
+
+    list_select_related = (
+        "team",
+        "team__admin",
+    )
+
+    @admin.display(description="Created by (email)", ordering="team__admin__email")
+    def created_by__user(self, obj):
+        team_admin = getattr(obj.team, "admin", None)
+        return getattr(team_admin, "email", "—")
+
+    @admin.display(description="Responses")
+    def responses(self, obj):
+        qs = obj.participants.all()
+        total = qs.count()
+        submitted = qs.filter(has_submitted=True).count()
+        return f"{submitted} / {total}"
+
+    @admin.display(boolean=True, description="Report")
+    def has_report(self, obj):
+        """True if a FinalReport exists for this assessment."""
+        try:
+            from apps.pdfexport.models import FinalReport
+            return FinalReport.objects.filter(assessment=obj).exists()
+        except Exception:
+            # Fallback if related name is available but import path changes
+            rel = getattr(obj, "final_reports", None) or getattr(obj, "finalreport_set", None)
+            return bool(rel and rel.exists())
 
 @admin.register(AssessmentParticipant)
 class AssessmentParticipantAdmin(admin.ModelAdmin):
