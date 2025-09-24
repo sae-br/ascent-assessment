@@ -21,7 +21,7 @@
             <tbody>
             {% for report in reports %}
             <tr>
-                <td>{{ report.file_name|default:"Final Report" }}</td>
+                <td>{{ report.assessment.pretty_name }}</td>
                 <td>{{ report.created_at|date:"M j, Y" }}</td>
                 <td>
                     {% if report.id %}

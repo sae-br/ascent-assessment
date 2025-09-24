@@ -36,6 +36,7 @@
 
         {% if selected_assessment %}
             <div class="assessment-meta">
+                <h2>{{ selected_assessment.pretty_name }}</h2>
                 <p><strong>Target Date:</strong> {{ selected_assessment.deadline|date:"F d, Y" }}</p>
                 <p><strong>Assessment Launched:</strong> {{ selected_assessment.created_at|date:"F d, Y" }}</p>
 

@@ -9,7 +9,7 @@
                 {% for report in reports %}
                     <li class="table-row">
                     <span class="row-left">
-                        {{ report.file_name|default:report.assessment.team.name }}
+                        {{ report.assessment.pretty_name }}
                     </span>
                     <span class="row-right">
                         <a

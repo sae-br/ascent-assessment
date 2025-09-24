@@ -32,8 +32,18 @@ class Assessment(models.Model):
     deadline = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def pretty_name(self) -> str:
+        """Human‑friendly label like "Team – September 2025" with a safe fallback.
+        Uses an en dash and omits the date if it's missing.
+        """
+        team_name = getattr(self.team, "name", "Team") or "Team"
+        if getattr(self, "deadline", None):
+            return f"{team_name} – {self.deadline:%B %Y}"
+        return team_name
+
     def __str__(self):
-        return f"{self.team.name} - {self.deadline.strftime('%B %Y')}"
+        return self.pretty_name
 
 
 class AssessmentParticipant(models.Model):
