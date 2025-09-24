@@ -202,7 +202,6 @@ SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 ANYMAIL = {
     "MAILGUN_API_KEY": os.getenv("MAILGUN_API_KEY", ""),
     "MAILGUN_SENDER_DOMAIN": os.getenv("MAILGUN_DOMAIN", "orghealthascent.com"),
-    "MAILGUN_API_URL": os.getenv("MAILGUN_API_URL", "https://api.mailgun.net"),
 }
 
 ANYMAIL["DEBUG_API_REQUESTS"] = True
