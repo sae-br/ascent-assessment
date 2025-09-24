@@ -11,6 +11,7 @@ cssselect2==0.8.0
 cycler==0.12.1
 dj-database-url==3.0.1
 Django==5.2.4
+django-anymail==13.1
 django-markdownx==4.0.9
 django-storages==1.14.6
 docraptor==3.1.0

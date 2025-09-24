@@ -185,19 +185,27 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# --- Email backend selection (console for dev, SMTP for prod) ---
+INSTALLED_APPS += ["anymail"]
+
+# Email backend selection
 if DEBUG:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
-    EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
-    EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.mailgun.org")
-    EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
-    EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", True)
-    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+    # Deliver through Mailgun via Anymail
+    EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 
+# Identify your default from address (same for dev+prod is fine)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@orghealthascent.com")
 SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
+
+# Anymail / Mailgun config
+ANYMAIL = {
+    "MAILGUN_API_KEY": os.getenv("MAILGUN_API_KEY", ""),
+    # Use the exact Mailgun *sending* domain you verified (not sandbox unless you intend to)
+    "MAILGUN_SENDER_DOMAIN": os.getenv("MAILGUN_DOMAIN", "orghealthascent.com"),
+    # Region: US is https://api.mailgun.net, EU is https://api.eu.mailgun.net
+    "MAILGUN_API_URL": os.getenv("MAILGUN_API_URL", "https://api.mailgun.net"),
+}
 
 
 # --- Admins / email identities ---
