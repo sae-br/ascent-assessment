@@ -1,101 +1,40 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}Final Report Checkout{% endblock %}
+{% block title %}Get Your Final Report{% endblock %}
 
 {% block content %}
-<section class="section">
+<div class="container--narrow">
+
   <h1>Purchasing Your Final Report</h1>
-  <p>Have you ensured all participants have submitted their answers?</p>
-  <p><strong>Once you purchase the report, this assessment will be closed.
-    This action cannot be reversed.</strong></p>
-  <p>After payment, we’ll generate your final PDF report.</p>
-</section>
-
-<div class="grid">
-  <div class="grid--payment">
-
-    <!-- LEFT COLUMN -->
-    <div class="column--payments">
-      <div class="card">
-        <h2>Billing Details</h2>
-        <div id="billing-address"><!-- Stripe Address Element here --></div>
-      </div>
-
-      <div class="card">
-        <h2>Payment Method</h2>
-        <div id="payment-form"><!-- Stripe card element here --></div>
-        <div id="no-payment-note" class="helptext" style="display:none; margin-top:.75rem;">
-          <strong>No payment needed.</strong> Your promo covers the full amount. Click <em>Get report</em> to finalize your order.
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT COLUMN (Sticky)-->
-    <div class="column--payments">
-      <div class="card summary-card summary-sticky" id="price-summary"
-          data-original="{{ original_amount_minor|default:'' }}"
-          data-discount="{{ discount_minor|default:'' }}"
-          data-final="{{ final_amount_minor|default:'' }}"
-          data-tax="{{ tax_minor|default:'0' }}"
-          data-currency="CAD">
-        <h2>Order Summary</h2>
-
-        <div class="price-lines" aria-live="polite" aria-atomic="true">
-          <p><span>Subtotal</span><span id="ps-subtotal">$750.00</span></p>
-          <p><span>Discount</span><span id="ps-discount">$0.00</span></p>
-          <p><span>Tax</span><span id="ps-tax">$0.00</span></p>
-          <p class="total-line"><span>Total</span><span id="ps-total">$750.00</span></p>
-        </div>
-        <p class="helptext">
-          All amounts in CAD. Tax is calculated at payment based on your billing address.
-        </p>
-
-        <form class="promo-inline" onsubmit="return false;">
-          {% csrf_token %}
-          <div id="promo-area" class="promo-code">
-            <label for="id_promo" class="visually-hidden">Promo code</label>
-            <input type="text" name="promo_code" id="id_promo" value="{{ applied_code|default:'' }}" placeholder="Promo code" {% if applied_code %}disabled{% endif %} />
-            <button type="button" id="apply-promo" class="button button--secondary" {% if applied_code %}disabled{% endif %}>Apply</button>
-
-            <!-- Applied badge (hidden by default unless code is present) -->
-            <div id="promo-badge" class="badge badge--success" style="display:{% if applied_code %}inline-flex{% else %}none{% endif %}; margin-left:.5rem;">
-              <span class="badge-label">{% if applied_code %}{{ applied_code }}{% else %}&nbsp;{% endif %}</span>
-              <button type="button" id="remove-promo" class="badge-remove" aria-label="Remove promo" title="Remove promo">Remove</button>
-            </div>
-
-            {% if promo_error %}
-              <p class="text-error" role="alert">{{ promo_error }}</p>
-            {% endif %}
-          </div>
-        </form>
-
-        <p class="helptext">By clicking Pay, you agree to our Terms and Privacy Policy. Taxes are 
-          calculated based on your billing address. A receipt will be emailed 
-          to {{ request.user.email }}.
-        </p>
-        <button id="pay-btn" class="button--primary full-width">Pay now</button>
-        <div class="secure-note" aria-hidden="true" style="display:flex; align-items:center; gap:.4rem; margin-top:.5rem; opacity:.85;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          <small>Secure checkout by Stripe</small>
-        </div>
-        <p id="error-text" class="text-danger" style="margin-top:.5rem;"></p>
-      </div>
-    </div>
-    <!-- Runtime config for checkout.js (no inline JS) -->
-    <div id="checkout-config"
-        data-publishable-key="{{ stripe_publishable_key }}"
-        data-client-secret="{{ client_secret }}"
-        data-return-url="{{ success_url }}"
-        data-assessment-id="{{ assessment_id }}"
-        data-user-email="{{ request.user.email }}">
-    </div>
-
+  <p><strong>Before you continue:</strong></p>
+  <ul>
+    <li>Confirm all participants have submitted their answers.</li>
+    <li>After payment, your final PDF report will be generated.</li>
+  </ul>
+  <div class="notice">
+    <p>NOTE: Purchasing will close this assessment and cannot be reversed.</strong></p>
   </div>
-</div>
 
-<script src="https://js.stripe.com/v3/"></script>
-<script src="{% static 'payments/scripts/checkout.js' %}" defer></script>
+  <div class="card payment-summary">
+    <div class="summary-line">
+      <h2><strong>Ascent Assessment Final Team Report</strong></h2>
+      <p><em>{% firstof assessment.pretty_name assessment.display_name assessment.title assessment.label assessment.name %}</em></p>
+      <p class="amount">{{ amount_display }} {{ currency }}</p>
+    </div>
+    <p class="helptext">Taxes calculated at checkout. Promo codes accepted on the next screen.</p>
+  </div>
+
+  <div class="go-to-checkout">
+    <form id="start-checkout" action="{% url 'payments:create_checkout_session' assessment.id %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="button button--primary">Go to secure checkout</button>
+      <div class="secure-note">
+        <i data-lucide="lock" aria-hidden="true"></i>
+        <span>Secure checkout by Stripe</span>
+      </div>
+    </form>
+  </div>
+
+  <script src="{% static 'payments/scripts/checkout.js' %}" defer></script>
+</div>
 {% endblock %}

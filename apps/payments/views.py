@@ -9,7 +9,6 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
-import json
 import stripe
 import requests
 import docraptor
@@ -19,290 +18,97 @@ from apps.assessments.models import Assessment
 from apps.pdfexport.models import FinalReport
 from apps.pdfexport.views import build_report_filenames
 from apps.pdfexport.utils.storage import S3Uploader
-from apps.payments.models import PromoCode, Redemption
-from apps.payments.utils.promos import validate_and_price, PromoInvalid, normalize_code, record_redemption_if_needed
 
 import logging
 logger = logging.getLogger(__name__)
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-# Force a modern version for this app's requests (safe baseline for Automatic Tax)
-stripe.api_version = getattr(settings, "STRIPE_API_VERSION", "2022-11-15")
 
-# Temporary diagnostics
-try:
-    import logging
-    logger = logging.getLogger(__name__)
-    acct = stripe.Account.retrieve()
-    logger.info(
-        "Stripe diagnostics: lib=%s, request_api=%s, acct_default_api=%s",
-        getattr(stripe, "__version__", "?"),
-        stripe.api_version,
-        (acct.get("settings", {}) or {}).get("api_version"),
-    )
-except Exception as _e:
-    pass
 
 @login_required
 def checkout(request, assessment_id: int):
-    """
-    Render the on-page checkout with Stripe Payment Element.
-    Creates or reuses a PaymentIntent and passes its client_secret to the template.
-    """
-    assessment = get_object_or_404(
-        Assessment,
-        id=assessment_id,
-        team__admin=request.user
-    )
+    assessment = get_object_or_404(Assessment, id=assessment_id, team__admin=request.user)
 
-    # If a report file already exists, don't let them pay again.
     if FinalReport.objects.filter(assessment=assessment, s3_key__isnull=False).exists():
         messages.info(request, "A final report already exists for this assessment.")
         return redirect(f"{reverse('assessments:assessments_overview')}?assessment={assessment.id}")
 
-    # Prices set in Stripe
     price_id = getattr(settings, "STRIPE_PRICE_FINAL_REPORT", None)
-    if not price_id:
-        return HttpResponseBadRequest("Price not configured. Please contact support.")
-
-    # Retrieve the Price to get amount + currency
-    price_obj = stripe.Price.retrieve(price_id)
-    amount = price_obj["unit_amount"]          # integer, in the currency’s minor unit
-    currency = price_obj["currency"]           # e.g. "cad"
-    amount_display = f"${amount / 100:,.2f}"
-
-    # Optional: apply promo
-    promo_code_input = request.POST.get("promo_code") or request.GET.get("promo_code")
-    discount_minor = 0
-    final_amount = amount
-    applied_code = None
-    error_msg = None
-
-    if promo_code_input:
-        try:
-            result = validate_and_price(
-                code_str=promo_code_input,
-                user=request.user,
-                assessment=assessment,
-                subtotal_minor=amount,
-                currency=currency,
-            )
-            discount_minor = result["discount_minor"]
-            final_amount = result["final_minor"]
-            applied_code = result["promocode"].code
-        except PromoInvalid as e:
-            error_msg = str(e)
-
-    # Create the PaymentIntent for the Payment Element, using the FINAL amount
-    pi = stripe.PaymentIntent.create(
-        amount=final_amount,
-        currency=currency,
-        payment_method_types=["card"],
-        automatic_tax={'enabled': True},
-        metadata={
-            "assessment_id": str(assessment.id),
-            "user_id": str(request.user.id),
-            "promo_code": applied_code or "",
-            "amount_before": str(amount),
-            "discount_applied": str(discount_minor),
-            "amount_after": str(final_amount),
-        },
-        receipt_email=request.user.email or None,
-        description="Ascent Assessment Final Report",
-    )
-
-    # Return URL that Stripe will hit after on-page confirmation completes
-    return_url = request.build_absolute_uri(reverse("payments:payment_return"))
+    price = stripe.Price.retrieve(price_id)
+    amount_minor = price["unit_amount"]
+    currency = price["currency"]
 
     return render(request, "payments/checkout.html", {
-        "stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY,
-        "client_secret": pi.client_secret,
-        "assessment_id": assessment.id,
-        "return_url": return_url,
-        "amount_display": amount_display,
-        "original_amount_minor": amount,
-        "final_amount_minor": final_amount,
-        "discount_minor": discount_minor,
-        "applied_code": applied_code,
-        "promo_error": error_msg,
-        "success_url": request.build_absolute_uri(
-            reverse("payments:payment_return") + f"?assessment={assessment.id}"
-        ),
+        "assessment": assessment,
+        "amount_display": f"${amount_minor/100:,.2f}",
+        "currency": currency.upper(),
     })
+
 
 @login_required
 @require_POST
-def reprice(request):
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return HttpResponseBadRequest('Invalid JSON')
+def create_checkout_session(request, assessment_id: int):
+    assessment = get_object_or_404(
+        Assessment, id=assessment_id, team__admin=request.user
+    )
 
-    assessment_id = payload.get('assessment_id')
-    promo_code_input = (payload.get('promo_code') or '').strip()
-    billing_address = payload.get('billing_address') or {}
-    pi_id = (payload.get('pi_id') or '').strip()
+    # If already has a report, don’t sell twice
+    if FinalReport.objects.filter(assessment=assessment, s3_key__isnull=False).exists():
+        return JsonResponse({"redirect": f"{reverse('assessments:assessments_overview')}?assessment={assessment.id}"})
 
-    if not assessment_id or not pi_id:
-        return HttpResponseBadRequest('Missing assessment or PI id')
-
-    assessment = get_object_or_404(Assessment, id=assessment_id, team__admin=request.user)
-
-    # 1) Base price from Stripe Price (controls subtotal)
-    price_id = getattr(settings, 'STRIPE_PRICE_FINAL_REPORT', None)
+    price_id = getattr(settings, "STRIPE_PRICE_FINAL_REPORT", None)
     if not price_id:
-        return HttpResponseBadRequest('Price not configured')
-    price_obj = stripe.Price.retrieve(price_id)
-    amount = price_obj['unit_amount']
-    currency = price_obj['currency']
+        return JsonResponse({"error": "Price not configured."}, status=400)
 
-    # 2) Apply promo (server-side only)
-    discount_minor = 0
-    final_after_discount = amount
-    applied_code = None
-    if promo_code_input:
-        try:
-            res = validate_and_price(
-                code_str=promo_code_input,
-                user=request.user,
-                assessment=assessment,
-                subtotal_minor=amount,
-                currency=currency,
-            )
-            discount_minor = res['discount_minor']
-            final_after_discount = res['final_minor']
-            applied_code = res['promocode'].code
-        except PromoInvalid:
-            discount_minor = 0
-            final_after_discount = amount
-            applied_code = None
+    success_url = request.build_absolute_uri(
+        reverse("payments:checkout_success")
+    ) + "?session_id={CHECKOUT_SESSION_ID}&assessment=" + str(assessment.id)
 
-    # 3) Automatic Tax (Stripe computes at confirmation): no server tax preview
-    tax_minor = 0
-    final_amount_minor = final_after_discount  # subtotal after discounts; Stripe will add tax at confirm
+    cancel_url = request.build_absolute_uri(
+        reverse("assessments:assessments_overview")
+    ) + f"?assessment={assessment.id}"
 
-    # 4) Verify and update existing PaymentIntent
     try:
-        pi = stripe.PaymentIntent.retrieve(pi_id)
-    except Exception:
-        return HttpResponseBadRequest('Invalid PaymentIntent')
-
-    meta = pi.metadata or {}
-    if (
-        str(meta.get('user_id')) != str(request.user.id)
-        or str(meta.get('assessment_id')) != str(assessment.id)
-        or pi.status not in ('requires_payment_method', 'requires_confirmation')
-    ):
-        return HttpResponseBadRequest('Invalid PaymentIntent')
-
-    zero_due = (final_amount_minor == 0)
-
-    if not zero_due:
-        try:
-            stripe.PaymentIntent.modify(
-                pi_id,
-                amount=int(final_after_discount),  # subtotal; Stripe adds tax automatically at confirm
-                automatic_tax={'enabled': True},
-                metadata={
-                    'assessment_id': str(assessment.id),
-                    'user_id': str(request.user.id),
-                    'promo_code': applied_code or '',
-                    'amount_before': str(amount),
-                    'discount_applied': str(discount_minor),
-                    'amount_after': str(final_after_discount),
-                },
-                description='Ascent Assessment Final Report',
-                receipt_email=request.user.email or None,
-            )
-        except Exception as e:
-            logger.error('Failed to modify PaymentIntent %s: %s', pi_id, e, exc_info=True)
-            return HttpResponseBadRequest('Failed to update payment amount')
-    else:
-        # Zero due: do not modify or cancel the PI. Keeping it in a modifiable state allows
-        # the user to remove the promo and resume payment without reinitializing Elements.
-        pass
-
-    return JsonResponse({
-        'original_amount_minor': amount,
-        'discount_minor': discount_minor,
-        'tax_minor': 0,
-        'final_amount_minor': final_after_discount,
-        'payment_intent_id': pi_id,
-        'zero_due': zero_due,
-        'tax_mode': 'automatic'
-    })
-
-@login_required
-@require_POST
-def complete_zero(request):
-    """
-    Complete a $0 checkout without Stripe. We *recompute* totals server-side,
-    and only proceed if final_amount_minor == 0. Then we mark paid_at and
-    kick off DocRaptor idempotently.
-    """
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
-    except Exception:
-        return HttpResponseBadRequest('Invalid JSON')
-
-    assessment_id = payload.get('assessment_id')
-    promo_code_input = (payload.get('promo_code') or '').strip()
-    billing_address = payload.get('billing_address') or {}
-
-    if not assessment_id:
-        return HttpResponseBadRequest('Missing assessment id')
-
-    assessment = get_object_or_404(Assessment, id=assessment_id, team__admin=request.user)
-
-    # 1) Base price from Stripe Price
-    price_id = getattr(settings, 'STRIPE_PRICE_FINAL_REPORT', None)
-    if not price_id:
-        return HttpResponseBadRequest('Price not configured')
-    price_obj = stripe.Price.retrieve(price_id)
-    amount = price_obj['unit_amount']
-    currency = price_obj['currency']
-
-    # 2) Promo
-    final_after_discount = amount
-    if promo_code_input:
-        try:
-            res = validate_and_price(
-                code_str=promo_code_input,
-                user=request.user,
-                assessment=assessment,
-                subtotal_minor=amount,
-                currency=currency,
-            )
-            final_after_discount = res['final_minor']
-        except PromoInvalid:
-            pass
-
-    # 3) Automatic Tax: not applicable for zero-due (subtotal==0 implies tax==0)
-    if final_after_discount != 0:
-        return HttpResponseBadRequest('Amount is not zero; cannot complete as free')
-
-    # 4) Idempotently mark paid & enqueue DocRaptor
-    fr, _ = FinalReport.objects.get_or_create(assessment=assessment)
-    if not fr.paid_at:
-        fr.paid_at = timezone.now()
-        fr.save(update_fields=['paid_at'])
-    
-    # Record redemption using the promo code the user submitted
-    record_redemption_if_needed(user=request.user, assessment=assessment, code_str=promo_code_input)
-
-    # Kick off DocRaptor via internal endpoint (idempotent)
-    try:
-        base = getattr(settings, 'BASE_URL', None) or request.build_absolute_uri('/').rstrip('/')
-        internal_url = f"{base}/pdfexport/{assessment.id}/docraptor/start-internal/"
-        headers = {'X-Internal-Token': getattr(settings, 'INTERNAL_WEBHOOK_TOKEN', '')}
-        requests.post(internal_url, headers=headers, timeout=10)
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            line_items=[{"price": price_id, "quantity": 1}],
+            allow_promotion_codes=True,
+            automatic_tax={"enabled": True},
+            billing_address_collection="required",
+            customer_email=request.user.email or None,
+            metadata={
+                "assessment_id": str(assessment.id),
+                "user_id": str(request.user.id),
+            },
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+        return JsonResponse({"id": session.id, "url": session.url})
     except Exception as e:
-        logger.warning('Zero-complete: failed to enqueue DocRaptor for assessment %s: %s', assessment.id, e)
+        logger.error("Failed to create Checkout Session: %s", e, exc_info=True)
+        return JsonResponse({"error": "Could not start checkout"}, status=400)
 
-    return JsonResponse({
-        'ok': True,
-        'redirect': request.build_absolute_uri(reverse('payments:success', args=[assessment.id]))
-    })
+@login_required
+def checkout_success(request):
+    session_id = request.GET.get("session_id")
+    assessment_id = request.GET.get("assessment")
+
+    if not session_id or not assessment_id:
+        messages.error(request, "Missing checkout confirmation.")
+        return redirect("assessments:assessments_overview")
+
+    # Optional: verify the session (not strictly required if webhook is authoritative)
+    try:
+        sess = stripe.checkout.Session.retrieve(session_id, expand=["payment_intent"])
+    except Exception:
+        sess = None
+
+    # If Stripe already shows paid here, feel free to redirect to your existing success page.
+    if sess and getattr(sess, "payment_status", "") == "paid":
+        return redirect("payments:success", assessment_id=int(assessment_id))
+
+    # Otherwise show your existing "processing" experience:
+    return redirect(f"{reverse('assessments:assessments_overview')}?assessment={assessment_id}")
 
 @login_required
 def payment_return(request):
@@ -340,32 +146,6 @@ def payment_return(request):
         if not fr.paid_at:
             fr.paid_at = timezone.now()
             fr.save(update_fields=["paid_at"])
-
-        # Record redemption if a promo code was used
-        promo_code = (pi.metadata or {}).get("promo_code") or ""
-        amount_before = int((pi.metadata or {}).get("amount_before") or 0)
-        discount_applied = int((pi.metadata or {}).get("discount_applied") or 0)
-        amount_after = int((pi.metadata or {}).get("amount_after") or pi.amount or 0)
-
-        if promo_code and discount_applied > 0:
-            try:
-                pc = PromoCode.objects.get(code=promo_code)
-                # Guard against duplicates (e.g., refresh)
-                Redemption.objects.get_or_create(
-                    promocode=pc,
-                    user=request.user,
-                    assessment=assessment,
-                    defaults={
-                        "payment_intent_id": pi.id,
-                        "amount_before": amount_before,
-                        "discount_applied": discount_applied,
-                        "amount_after": amount_after,
-                    }
-                )
-            except PromoCode.DoesNotExist:
-                logger.warning("PI %s had promo_code=%s but PromoCode not found", pi.id, promo_code)
-
-        return redirect("payments:success", assessment_id=assessment_id)
 
     elif status in ("requires_payment_method", "canceled"):
         messages.error(request, "Payment was not completed. Please try again.")
@@ -579,10 +359,6 @@ def stripe_webhook_success(request):
                 user_obj = None
         if user_obj is None:
             user_obj = getattr(assessment.team, 'admin', None)
-
-        if user_obj and promo_code:
-            # Mark promo as used (idempotent; won’t double-create)
-            record_redemption_if_needed(user=user_obj, assessment=assessment, code_str=promo_code)
 
     elif etype == "payment_intent.payment_failed":
         pi = event["data"]["object"]

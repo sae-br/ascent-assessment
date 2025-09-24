@@ -5,10 +5,9 @@ app_name = "payments"
 
 urlpatterns = [
     path("checkout/<int:assessment_id>/", views.checkout, name="checkout"),
-    path("reprice/", views.reprice, name="reprice"),
-    path("return/", views.payment_return, name="payment_return"),
-    path("success/<int:assessment_id>/", views.success, name="success"),
-    path("complete-zero/", views.complete_zero, name="complete_zero"),
-    path("status/<int:assessment_id>/", views.report_status, name="report_status"),
-    path("webhook/", views.stripe_webhook_success, name="stripe_webhook_success"),
+    path("create-session/<int:assessment_id>/", views.create_checkout_session, name="create_session"),
+    path("success/", views.checkout_success, name="checkout_success"),  # returns redirect to payments:success/<id> if paid
+    path("success/<int:assessment_id>/", views.success, name="success"),  # the page that polls + kicks off DocRaptor
+    path("report-status/<int:assessment_id>/", views.report_status, name="report_status"),  # HTMX polled partial
+    path("webhook/", views.stripe_webhook_success, name="stripe_webhook"), 
 ]
