@@ -201,11 +201,11 @@ SERVER_EMAIL = os.getenv("SERVER_EMAIL", DEFAULT_FROM_EMAIL)
 # Anymail / Mailgun config
 ANYMAIL = {
     "MAILGUN_API_KEY": os.getenv("MAILGUN_API_KEY", ""),
-    # Use the exact Mailgun *sending* domain you verified (not sandbox unless you intend to)
     "MAILGUN_SENDER_DOMAIN": os.getenv("MAILGUN_DOMAIN", "orghealthascent.com"),
-    # Region: US is https://api.mailgun.net, EU is https://api.eu.mailgun.net
     "MAILGUN_API_URL": os.getenv("MAILGUN_API_URL", "https://api.mailgun.net"),
 }
+
+ANYMAIL["DEBUG_API_REQUESTS"] = True
 
 
 # --- Admins / email identities ---
