@@ -3,6 +3,9 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, Pass
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseBadRequest
+
+
 from django.contrib import messages
 from django.conf import settings
 from .forms import CustomUserCreationForm
@@ -12,6 +15,12 @@ import datetime
 
 import logging
 logger = logging.getLogger(__name__)
+
+from django.views.decorators.http import require_POST
+from django.db import transaction
+from django.views.generic import TemplateView
+from django.urls import reverse
+
 
 def signup_view(request):
     if request.user.is_authenticated:
@@ -123,6 +132,7 @@ def account_settings(request):
         {
             "update_form": update_form,
             "password_form": password_form,
+            "confirm_delete": request.GET.get("confirm_delete") == "1",
         },
     )
 
@@ -141,3 +151,56 @@ def send_password_change_confirmation(user):
     }
     # Let Anymail raise if there's an API error; caller will catch/log
     msg.send()
+
+@login_required
+@require_POST
+def delete_account(request):
+    """
+    Permanently delete the signed-in user's account.
+
+    Notes on cascades:
+    - Team.admin -> User uses on_delete=CASCADE
+    - Assessment.team -> Team uses on_delete=CASCADE
+    - FinalReport.assessment -> Assessment uses on_delete=CASCADE
+    - TeamMember.team -> Team uses on_delete=CASCADE
+    - AssessmentParticipant.assessment -> Assessment uses on_delete=CASCADE
+
+    Therefore deleting the User will cascade to Teams, Assessments, FinalReports,
+    TeamMembers, and AssessmentParticipants automatically.
+    """
+    user = request.user
+
+    # Require explicit confirmation via checkbox
+    if request.method != "POST" or "acknowledge" not in request.POST:
+        messages.error(request, "You must confirm the deletion before continuing.")
+        return redirect(f"{reverse('accounts:account_settings')}?confirm_delete=1")
+
+    # Stash some info to log/audit
+    user_pk = user.pk
+    user_repr = f"{user.username} <{user.email}>"
+
+    # Delete the user and rely on database cascades defined in models
+    with transaction.atomic():
+        user.delete()
+
+    # Log out after deletion to clear any cached auth in the session
+    logout(request)
+    logger.info("Deleted user %s (pk=%s) via self-service; cascades applied.", user_repr, user_pk)
+
+    return redirect("accounts:account_deleted")
+
+@login_required
+def delete_confirm_partial(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("GET only")
+    return render(request, "accounts/_delete_confirm.html")
+
+@login_required
+def delete_confirm_cancel(request):
+    if request.method != "GET":
+        return HttpResponseBadRequest("GET only")
+    return render(request, "accounts/account_settings_delete_button.html")
+
+
+class AccountDeletedView(TemplateView):
+    template_name = "accounts/account_deleted.html"

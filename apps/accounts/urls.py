@@ -11,6 +11,9 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('settings/', views.account_settings, name='account_settings'),
     path('delete/', views.delete_account, name='delete_account'),
+    path("delete/confirm/", views.delete_confirm_partial, name="delete_confirm_partial"),
+    path("delete/cancel/", views.delete_confirm_cancel, name="delete_confirm_cancel"),
+    path("deleted/", views.AccountDeletedView.as_view(), name="account_deleted"),
 
     # Password reset views
     path(

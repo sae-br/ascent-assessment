@@ -1,0 +1,9 @@
+<p>Deleting your account will permanently remove your teams, assessments, participants, answers, and any generated reports. This cannot be undone.</p>
+<button
+  class="button button--danger"
+  hx-get="{% url 'accounts:delete_confirm_partial' %}"
+  hx-target="#delete-area"
+  hx-swap="innerHTML"
+>
+  Delete My Account
+</button>

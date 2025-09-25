@@ -16,6 +16,7 @@
   --secondary: oklch(90% 0.09 180);            --secondary: #b5eaea;
   --primary-hover: oklch(59% 0.18 250);        --primary-hover: #0b81cb;
   --alert: oklch(45% 0.25 30);                 --alert: #CC0101;
+  --alert-hover: oklch(45% 0.18 28);           --alert-hover: #a20808;
   --disabled: oklch(63% 0.01 260);             --disabled: #9ba3af;
 
   --standard-border-radius: 8px;
@@ -177,6 +178,18 @@ h3 {
 .button--secondary:focus {
   border-color: var(--primary-hover);
   background-color: var(--primary-hover);
+  color: var(--bg);
+}
+
+.button--danger {
+  border-color: var(--alert);
+  background-color: var(--alert);
+  color: var(--bg);
+}
+.button.button--danger:hover,
+.button.button--danger:focus {
+  background-color: var(--alert-hover);
+  border-color: var(--alert-hover);
   color: var(--bg);
 }
 
@@ -669,6 +682,37 @@ h3 {
 input[type="range"] {
   padding: 0;
 }
+
+
+/* Message boxes */
+
+.box--msg {
+  margin-bottom: 2rem;
+  display: block;
+  gap: 0.5rem;
+  padding: 0.5rem 1.5rem;
+  border: var(--border-width) solid var(--primary);
+  border-left-width: 4px; 
+  border-radius: var(--standard-border-radius);
+  background: var(--bg-accent);
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+.box--msg a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.box--msg a:hover {
+  color: var(--primary-hover);
+}
+
+.box--msg-danger {
+  border: var(--border-width) solid var(--alert);
+  background: var(--bg);
+}
+
+
+
 
 
 /* Set the cursor to '?' on an abbreviation and style the 

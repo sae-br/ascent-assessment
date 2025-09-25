@@ -1,0 +1,28 @@
+<div class="box--msg box--msg-danger">
+  <p><strong>Permanent action:</strong> This will delete your account and <em>all</em> related data:</p>
+  <ul>
+    <li>All teams where you are the admin</li>
+    <li>All assessments in those teams</li>
+    <li>All participants and their responses</li>
+    <li>All generated final reports</li>
+  </ul>
+  <p>This cannot be undone.</p>
+</div>
+
+<form method="post" hx-post="{% url 'accounts:delete_account' %}" hx-swap="none" style="margin-top:1.5rem;">
+  {% csrf_token %}
+  <!-- The input must be immediately followed by the styled label -->
+  <input id="ack" type="checkbox" name="acknowledge" required>
+  <label for="ack" class="custom-control">I understand that this action is permanent and will delete all my data.</label>
+
+  <div style="display:flex; gap:0.75rem; align-items:center; margin-top:1.5rem;">
+    <button type="submit" class="button button--danger">Confirm permanent deletion</button>
+    <button type="button"
+            class="button button--secondary"
+            hx-get="{% url 'accounts:delete_confirm_cancel' %}"
+            hx-target="#delete-area"
+            hx-swap="innerHTML">
+      Cancel
+    </button>
+  </div>
+</form>
