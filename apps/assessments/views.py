@@ -254,7 +254,7 @@ def confirm_launch(request):
                 )
                 try:
                     msg = AnymailMessage(
-                        # You can omit subject if you set it in your Mailgun template
+                        # Subject is set in MailGun
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         to=[m.email],
                     )
@@ -264,9 +264,9 @@ def confirm_launch(request):
                         "team_name": team.name,
                         "invite_url": invite_url,
                         "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
+                        "currentyear": datetime.datetime.now().year,
                     }
                     msg.tags = ["assessment-invite"]
-                    # Optional custom metadata visible in Mailgun logs
                     msg.metadata = {
                         "assessment_id": str(assessment.id),
                         "team_id": str(team.id),
@@ -327,6 +327,7 @@ def start_assessment(request, token):
             msg_thanks.merge_global_data = {
                 "member_name": member.name,
                 "team_name": member.team.name,
+                "currentyear": datetime.datetime.now().year,
             }
             msg_thanks.tags = ["assessment-thanks"]
             msg_thanks.metadata = {
@@ -358,7 +359,8 @@ def start_assessment(request, token):
                 "team_name": team.name,
                 "submitted_count": str(submitted_count),
                 "total_count": str(total_count),
-                "deadline_long": assessment.deadline.strftime("%B %d, %Y"),
+                "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
+                "currentyear": datetime.datetime.now().year,
             }
             msg_admin.tags = ["assessment-admin-submitted"]
             msg_admin.metadata = {

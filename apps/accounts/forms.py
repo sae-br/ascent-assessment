@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.urls import reverse
 from anymail.message import AnymailMessage
+import datetime
 
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -21,7 +22,6 @@ class CustomUserCreationForm(UserCreationForm):
         return email
 
 class MailgunPasswordResetForm(PasswordResetForm):
-    """Use a Mailgun template for the password reset email."""
 
     def send_mail(self, subject_template_name, email_template_name,
                   context, from_email, to_email, html_email_template_name=None):
@@ -43,5 +43,6 @@ class MailgunPasswordResetForm(PasswordResetForm):
             "reset_url": reset_url,
             "site_name": context.get("site_name", "Ascent Assessment"),
             "valid_days": 1,  # purely for template copy; adjust as desired
+            "currentyear": datetime.datetime.now().year,
         }
         msg.send()

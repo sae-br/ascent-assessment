@@ -8,6 +8,7 @@ from django.conf import settings
 from .forms import CustomUserCreationForm
 from django import forms
 from anymail.message import AnymailMessage
+import datetime
 
 
 def signup_view(request):
@@ -18,17 +19,18 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "Signup successful. Welcome!")
+            messages.success(request, "New user created account.")
             # --- Mailgun via Anymail: notify superadmin ---
             admin_msg = AnymailMessage(
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[settings.SUPERADMIN_EMAIL],
+                to=[settings.SUPERADMIN_EMAIL], # Change this if new user sign ups should be monitored by someone else
             )
-            admin_msg.template_id = "admin-new-user"  # Mailgun template name
+            admin_msg.template_id = "new-user-alert"  # Mailgun template name
             admin_msg.merge_global_data = {
                 "username": user.username,
                 "email": user.email,
                 "created_at": user.date_joined.strftime("%B %d, %Y %H:%M %Z"),
+                "currentyear": datetime.datetime.now().year,
             }
             admin_msg.send()
 
@@ -38,9 +40,10 @@ def signup_view(request):
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[user.email],
             )
-            welcome.template_id = "welcome-user"  # Mailgun template name
+            welcome.template_id = "new-user-welcome"  # Mailgun template name
             welcome.merge_global_data = {
                 "username": user.username,
+                "currentyear": datetime.datetime.now().year,
             }
             welcome.send()
             return redirect("dashboard:home")
@@ -88,7 +91,9 @@ def account_settings(request):
 
         elif "change_password" in request.POST and password_form.is_valid():
             user = password_form.save()
-            update_session_auth_hash(request, user)
+            update_session_auth_hash(request, user)  # keep the user logged in
+            # Send confirmation email
+            send_password_change_confirmation(user)
             messages.success(request, "Password changed.")
             return redirect("accounts:account_settings")
 
