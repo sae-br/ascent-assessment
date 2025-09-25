@@ -11,7 +11,12 @@
     <form method="post">
         {% csrf_token %}
         <p><strong>Assign the team</strong> that will be participating in this assessment. 
-            The team name will be assigned to the title of your assessment and report.</p>
+        <p><em>Note: The team name will be used in the title of your assessment and 
+            will appear in your invitation emails and final report. This cannot be 
+            changed after launching the assessment.</em></p>
+        <input type="text" name="new_team_name" placeholder="Enter a new team name">
+        <p class="helptext">i.e. Executive Team or MyCompany Senior Leaders</p>
+        <p>OR</p>
         <select name="team" id="team">
             {% for t in teams %}
                 <option value="{{ t.id }}" {% if initial_team_id == t.id %}selected{% endif %}>
@@ -19,9 +24,7 @@
                 </option>
             {% endfor %}
         </select>
-
-        <p>OR</p>
-        <input type="text" name="new_team_name" placeholder="Enter a new team name">
+        <p class="helptext">Choose a team you've previously created.</p>
 
         <br><br>
         <hr>
@@ -29,8 +32,10 @@
 
         <p><strong>Select the target date</strong> by which all responses should be submitted. 
             The month and year of this date will be assigned to the title of your assessment 
-            and report.
-        </p>
+            and report.</p>
+        <p><em>Note: The month and year will be used in the title of your assessment, and 
+            the full date will be listed in your invitation emails. This cannot be changed 
+            after launching the assessment.</em></p>
         <input
             type="date"
             name="deadline"

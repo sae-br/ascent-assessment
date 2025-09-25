@@ -8,11 +8,10 @@
 
 <section class="container--narrow">
 
-    <p>You are launching the assessment:</p>
-    <p><strong>{{ assessment.team.name }} - {{ assessment.deadline|date:"F Y" }}</strong></p>
+    <h3>{{ assessment.team.name }} - {{ assessment.deadline|date:"F Y" }}</h3>
     <br>
 
-    <p>The participating team members will be:</p>
+    <p>Participating team members:</p>
     <ul>
         {% for member in members %}
             <li>{{ member.name }} ({{ member.email }})</li>

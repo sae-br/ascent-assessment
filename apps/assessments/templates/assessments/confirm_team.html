@@ -8,15 +8,15 @@
 
 <section class="container--narrow">
 
-  <p>You are launching the assessment:<br><strong>{{ team.name }} - {{ deadline|date:"F Y" }}</strong></p>
+  <h3>{{ team.name }} - {{ deadline|date:"F Y" }}</h3>
 
   <hr>
   <br>
 
   <!-- Includes table + add/delete forms -->
-  <p><strong>Confirm team member names and emails.</strong> You can add or delete team members 
-    as needed, then hit Continue below to confirm all information before launching the assessment.
-  </p>
+  <p><strong>Enter or update all team member names and emails.</strong> You can add or delete team members 
+    as needed, then hit Continue below to confirm all information before launching the assessment.</p>
+  <p>Team members will not be notified until you launch the assessment.</p>
 </section>
 
   {% include "teams/_member_table.html" with team=team use_htmx=True %}
