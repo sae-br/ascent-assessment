@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from .models import TeamMember, Question, Answer, Assessment, AssessmentParticipant
 from apps.teams.models import Team
 from datetime import datetime
+from anymail.message import AnymailMessage
 
 import logging
 logger = logging.getLogger(__name__)
@@ -253,18 +254,27 @@ def confirm_launch(request):
                     reverse("assessments:start_assessment", args=[participant.token])
                 )
                 try:
-                    send_mail(
-                        subject="You're invited to complete a team assessment",
-                        message=(
-                            f"Hello {m.name},\n\n"
-                            f"Please complete your team assessment by visiting this link:\n\n"
-                            f"{invite_url}\n\n"
-                            f"Deadline: {assessment.deadline.strftime('%B %Y')}"
-                        ),
+                    msg = AnymailMessage(
+                        # You can omit subject if you set it in your Mailgun template
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[m.email],
-                        fail_silently=False,
+                        to=[m.email],
                     )
+                    msg.template_id = "assessment-invite"  # Mailgun template name or ID
+                    msg.merge_global_data = {
+                        "member_name": m.name,
+                        "team_name": team.name,
+                        "invite_url": invite_url,
+                        "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
+                    }
+                    msg.tags = ["assessment-invite"]
+                    # Optional custom metadata visible in Mailgun logs
+                    msg.metadata = {
+                        "assessment_id": str(assessment.id),
+                        "team_id": str(team.id),
+                        "participant_id": str(participant.id),
+                        "template": "assessment-invite",
+                    }
+                    msg.send()
                     sent += 1
                     participant.last_invited_at = timezone.now()
                     participant.save(update_fields=["last_invited_at"])
@@ -310,13 +320,23 @@ def start_assessment(request, token):
         
         # Email confirmation to the team member respondent
         try:
-            send_mail(
-                subject="Thanks for submitting your assessment",
-                message=f"Hi {member.name},\n\nThanks for completing your assessment. Your input has been recorded.",
+            msg_thanks = AnymailMessage(
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[member.email],
-                fail_silently=False,
+                to=[member.email],
             )
+            msg_thanks.template_id = "assessment-thanks"  # Mailgun template name/ID
+            msg_thanks.merge_global_data = {
+                "member_name": member.name,
+                "team_name": member.team.name,
+            }
+            msg_thanks.tags = ["assessment-thanks"]
+            msg_thanks.metadata = {
+                "assessment_id": str(assessment.id),
+                "team_id": str(member.team.id),
+                "participant_id": str(participant.id),
+                "template": "assessment-thanks",
+            }
+            msg_thanks.send()
         except Exception:
             logger.exception("start_assessment: member_thanks_failed", 
                              extra={"participant_id": participant.id, 
@@ -328,18 +348,26 @@ def start_assessment(request, token):
         submitted_count = assessment.participants.filter(has_submitted=True).count()
         total_count = assessment.participants.count()
         try:
-            send_mail(
-                subject=f"{member.name} submitted their assessment",
-                message=(
-                    f"{member.name} has submitted their responses for team '{team.name}'.\n\n"
-                    f"Progress: {submitted_count} out of {total_count} team members have submitted.\n"
-                    f"Deadline: {assessment.deadline.strftime('%B %d, %Y')}\n\n"
-                    f"You can check the progress or review the report in your dashboard."
-                ),
+            msg_admin = AnymailMessage(
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[admin_user.email],
-                fail_silently=False,
+                to=[admin_user.email],
             )
+            msg_admin.template_id = "assessment-admin-submitted"  # Mailgun template name/ID
+            msg_admin.merge_global_data = {
+                "admin_name": getattr(admin_user, "first_name", "") or admin_user.email,
+                "member_name": member.name,
+                "team_name": team.name,
+                "submitted_count": str(submitted_count),
+                "total_count": str(total_count),
+                "deadline_long": assessment.deadline.strftime("%B %d, %Y"),
+            }
+            msg_admin.tags = ["assessment-admin-submitted"]
+            msg_admin.metadata = {
+                "assessment_id": str(assessment.id),
+                "team_id": str(team.id),
+                "template": "assessment-admin-submitted",
+            }
+            msg_admin.send()
         except Exception:
             logger.exception("start_assessment: admin_notify_failed", 
                              extra={"participant_id": participant.id, 
@@ -376,18 +404,26 @@ def resend_invite(request, participant_id):
     )
 
     try:
-        send_mail(
-            subject="You're invited to complete a team assessment",
-            message=(
-                f"Hello {member.name},\n\n"
-                f"Please complete your team assessment by visiting this link:\n\n"
-                f"{invite_url}\n\n"
-                f"Deadline: {assessment.deadline.strftime('%B %Y')}"
-            ),
+        msg = AnymailMessage(
             from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[member.email],
-            fail_silently=False,
+            to=[member.email],
         )
+        msg.template_id = "assessment-invite"
+        msg.merge_global_data = {
+            "member_name": member.name,
+            "team_name": member.team.name,
+            "invite_url": invite_url,
+            "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
+        }
+        msg.tags = ["assessment-invite", "resend"]
+        msg.metadata = {
+            "assessment_id": str(assessment.id),
+            "team_id": str(member.team.id),
+            "participant_id": str(participant.id),
+            "template": "assessment-invite",
+            "resend": "true",
+        }
+        msg.send()
         # Stamp the participant to show on the table
         now = timezone.now()
         participant.last_invited_at = now
