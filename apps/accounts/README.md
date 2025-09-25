@@ -5,8 +5,7 @@ The Teams app plays closely with Accounts, so here are the specifics for Account
 The primary responsibilities here are:
 - Registration (signup)
 - Login/logout
-- Password reset (eventually)
+- User Account changes and deletion
+- Password reset 
 
-Future: user settings, email notifications, etc.
-
-Accounts uses Django's built-in User model for now.
+Accounts uses Django's built-in User model.

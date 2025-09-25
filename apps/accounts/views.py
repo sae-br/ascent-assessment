@@ -10,6 +10,8 @@ from django import forms
 from anymail.message import AnymailMessage
 import datetime
 
+import logging
+logger = logging.getLogger(__name__)
 
 def signup_view(request):
     if request.user.is_authenticated:
@@ -96,9 +98,19 @@ def account_settings(request):
         elif "change_password" in request.POST and password_form.is_valid():
             user = password_form.save()
             update_session_auth_hash(request, user)  # keep the user logged in
-            # Send confirmation email
-            send_password_change_confirmation(user)
-            messages.success(request, "Password changed.")
+            # Try to send the confirmation email; log (but don't break UX) on failure
+            try:
+                send_password_change_confirmation(user)
+                messages.success(
+                    request,
+                    "Password changed. We've emailed you a confirmation."
+                )
+            except Exception as e:
+                logger.warning("Password change email failed for %s: %s", user.pk, e)
+                messages.success(
+                    request,
+                    "Password changed."
+                )
             return redirect("accounts:account_settings")
 
     else:
@@ -114,22 +126,18 @@ def account_settings(request):
         },
     )
 
-@login_required
-def delete_account(request):
-    if request.method == "POST":
-        user = request.user
-        user.delete()
-        messages.success(request, "Your account has been deleted.")
-        return redirect("accounts:login")
-    
 def send_password_change_confirmation(user):
     msg = AnymailMessage(
-        subject="Your Ascent Assessment password was changed",
+        # Subject set in MailGun
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[user.email],
     )
-    msg.template_id = "password-change-confirm" 
+    msg.template_id = "password-change-confirm"  # Mailgun template name
     msg.merge_global_data = {
         "username": user.username,
+        "first_name": getattr(user, "first_name", "") or "",
+        "last_name": getattr(user, "last_name", "") or "",
+        "currentyear": datetime.datetime.now().year,
     }
+    # Let Anymail raise if there's an API error; caller will catch/log
     msg.send()

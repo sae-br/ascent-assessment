@@ -4,6 +4,14 @@
 
 <h1>Account Settings</h1>
 
+{% if messages %}
+  <div class="flash-messages">
+    {% for message in messages %}
+      <div class="flash {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
 <h2>Update Username or Email</h2>
 <form method="post">
   {% csrf_token %}
