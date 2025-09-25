@@ -29,6 +29,16 @@
       {% endfor %}
     </div>
   {% else %}
-    <p>No assessments yet. <a href="{% url 'assessments:new_assessment' %}">Start a new one</a>.</p>
+    <h3>Welcome!</h3>
+    <p><strong>To get started, click the "New Assessment" button above.</strong> It will 
+      guide you through the three steps to launch your first assessment.</p>
+    <ol>
+      <li>Choose the name of the team that will be participating and the date by which you
+        need their responses submitted.</li>
+      <li>Add the names and email addresses of the team members.</li>
+      <li>Confirm the information is correct, and hit Launch!</li>
+      </ol>
+    <p>An overview of the assessments you've launched will appear here afterwards.</p>
+    <p>When your responses are all in, you'll be able to purchase the final report on the Assessments page.</p>
   {% endif %}
 </div>

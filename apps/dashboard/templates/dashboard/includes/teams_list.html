@@ -21,7 +21,12 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p>No teams yet. <a href="{% url 'teams:teams_overview' %}">Create one</a>.</p>
+      <p>Teams you've created will show up here.</p>
+      <p class="helptext">If you'd prefer, you can create a team now and assign it to a New Assessment 
+        later. Emails don't get sent until an assessment is launched, so you can do 
+        some prep here.</p>
+      <p>
+        <a href="{% url 'teams:teams_overview' %}" class="text-button">Create a Team</a></p>
     {% endif %}
   </div>
 </div>

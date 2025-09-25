@@ -16,7 +16,9 @@
 <div class="section">
     <!-- If there are no assessments yet, show an empty state -->
     {% if not assessments %}
-    <p>No assessments have been created yet.</p>
+    <h3>No assessments have been created yet.</h3>
+    <p>Are you ready to get started?</p></br>
+    <a href="{% url 'assessments:new_assessment' %}" class="button--primary">New Assessment</a>
     {% else %}
 
         <!-- Filter/select control -->

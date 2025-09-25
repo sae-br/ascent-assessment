@@ -47,8 +47,7 @@ class MailgunPasswordResetForm(PasswordResetForm):
              html_email_template_name=None,
              extra_email_context=None):
         """
-        Send a Mailgun-templated reset email that uses the *namespaced* URL:
-        'accounts:password_reset_confirm'.
+        Send a Mailgun-templated reset email 
         """
         assert request is not None, "request is required to build absolute URL"
 
@@ -66,7 +65,7 @@ class MailgunPasswordResetForm(PasswordResetForm):
                 from_email=from_email or settings.DEFAULT_FROM_EMAIL,
                 to=[user.email],
             )
-            msg.template_id = "password-reset"  # your Mailgun template name
+            msg.template_id = "password-reset"  # Mailgun template name
             msg.merge_global_data = {
                 "username": user.get_username(),
                 "first_name": user.first_name,
