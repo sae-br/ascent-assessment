@@ -29,6 +29,8 @@ def signup_view(request):
             admin_msg.merge_global_data = {
                 "username": user.username,
                 "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
                 "created_at": user.date_joined.strftime("%B %d, %Y %H:%M %Z"),
                 "currentyear": datetime.datetime.now().year,
             }
@@ -43,6 +45,8 @@ def signup_view(request):
             welcome.template_id = "new-user-welcome"  # Mailgun template name
             welcome.merge_global_data = {
                 "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
                 "currentyear": datetime.datetime.now().year,
             }
             welcome.send()

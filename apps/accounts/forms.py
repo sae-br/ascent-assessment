@@ -2,18 +2,24 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.urls import reverse
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from anymail.message import AnymailMessage
 import datetime
 
+
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
 
     class Meta:
         model = User
-        fields = ("username", "email", "password1", "password2")
+        fields = ("username", "email", "first_name", "last_name", "password1", "password2")
 
     def clean_email(self):
         email = self.cleaned_data["email"]
@@ -21,28 +27,51 @@ class CustomUserCreationForm(UserCreationForm):
             raise ValidationError("A user with that email already exists.")
         return email
 
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        if commit:
+            user.save()
+        return user
+
 class MailgunPasswordResetForm(PasswordResetForm):
+    def save(self, domain_override=None,
+             subject_template_name=None,
+             email_template_name=None,
+             use_https=False,
+             token_generator=default_token_generator,
+             from_email=None,
+             request=None,
+             html_email_template_name=None,
+             extra_email_context=None):
+        """
+        Send a Mailgun-templated reset email that uses the *namespaced* URL:
+        'accounts:password_reset_confirm'.
+        """
+        assert request is not None, "request is required to build absolute URL"
 
-    def send_mail(self, subject_template_name, email_template_name,
-                  context, from_email, to_email, html_email_template_name=None):
-        # Build the absolute reset URL from the provided context
-        reset_path = reverse(
-            "password_reset_confirm",
-            args=[context["uid"], context["token"]],
-        )
-        reset_url = f"{context['protocol']}://{context['domain']}{reset_path}"
+        for user in self.get_users(self.cleaned_data["email"]):
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = token_generator.make_token(user)
 
-        msg = AnymailMessage(
-            subject="Reset your Ascent Assessment password",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[to_email],
-        )
-        msg.template_id = "password-reset"  # Mailgun template
-        msg.merge_global_data = {
-            "username": context.get("user").get_username() if context.get("user") else "",
-            "reset_url": reset_url,
-            "site_name": context.get("site_name", "Ascent Assessment"),
-            "valid_days": 1,  # purely for template copy; adjust as desired
-            "currentyear": datetime.datetime.now().year,
-        }
-        msg.send()
+            path = reverse(
+                "accounts:password_reset_confirm",
+                kwargs={"uidb64": uid, "token": token},
+            )
+            reset_url = request.build_absolute_uri(path)
+
+            msg = AnymailMessage(
+                from_email=from_email or settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+            )
+            msg.template_id = "password-reset"  # your Mailgun template name
+            msg.merge_global_data = {
+                "username": user.get_username(),
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "reset_url": reset_url,
+                "currentyear": datetime.datetime.now().year,
+            }
+            msg.send()
