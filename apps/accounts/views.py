@@ -4,10 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.mail import send_mail
 from django.conf import settings
 from .forms import CustomUserCreationForm
 from django import forms
+from anymail.message import AnymailMessage
 
 
 def signup_view(request):
@@ -19,13 +19,30 @@ def signup_view(request):
             user = form.save()
             login(request, user)
             messages.success(request, "Signup successful. Welcome!")
-            send_mail(
-                subject="New user signed up",
-                message=f"A new user just signed up: {user.username} ({user.email})",
+            # --- Mailgun via Anymail: notify superadmin ---
+            admin_msg = AnymailMessage(
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[settings.SUPERADMIN_EMAIL],
-                fail_silently=True
+                to=[settings.SUPERADMIN_EMAIL],
             )
+            admin_msg.template_id = "admin-new-user"  # Mailgun template name
+            admin_msg.merge_global_data = {
+                "username": user.username,
+                "email": user.email,
+                "created_at": user.date_joined.strftime("%B %d, %Y %H:%M %Z"),
+            }
+            admin_msg.send()
+
+            # --- Mailgun via Anymail: welcome email to the user ---
+            welcome = AnymailMessage(
+                subject="Welcome to Ascent Assessment",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
+            )
+            welcome.template_id = "welcome-user"  # Mailgun template name
+            welcome.merge_global_data = {
+                "username": user.username,
+            }
+            welcome.send()
             return redirect("dashboard:home")
     else:
         form = CustomUserCreationForm()
@@ -95,3 +112,15 @@ def delete_account(request):
         user.delete()
         messages.success(request, "Your account has been deleted.")
         return redirect("accounts:login")
+    
+def send_password_change_confirmation(user):
+    msg = AnymailMessage(
+        subject="Your Ascent Assessment password was changed",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[user.email],
+    )
+    msg.template_id = "password-change-confirm" 
+    msg.merge_global_data = {
+        "username": user.username,
+    }
+    msg.send()

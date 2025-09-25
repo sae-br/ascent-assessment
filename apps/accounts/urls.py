@@ -1,5 +1,6 @@
 from django.urls import path, reverse_lazy
 from django.contrib.auth import views as auth_views
+from .forms import MailgunPasswordResetForm
 from . import views
 
 app_name = "accounts"
@@ -13,27 +14,37 @@ urlpatterns = [
 
     # Password reset views
     path(
-        'password_reset/',
+        "password-reset/",
         auth_views.PasswordResetView.as_view(
-            success_url=reverse_lazy('accounts:password_reset_done')
+            form_class=MailgunPasswordResetForm,
+            template_name="accounts/password_reset_form.html",  # your page with the email field
+            email_template_name=None,            # not used (Mailgun template instead)
+            subject_template_name=None,          # not used
+            html_email_template_name=None,       # not used
+            success_url="/accounts/password-reset/done/",
         ),
-        name='password_reset'
+        name="password_reset",
     ),
     path(
-        'password_reset/done/',
-        auth_views.PasswordResetDoneView.as_view(),
-        name='password_reset_done'
+        "password-reset/done/",
+        auth_views.PasswordResetDoneView.as_view(
+            template_name="accounts/password_reset_done.html",
+        ),
+        name="password_reset_done",
     ),
     path(
-        'reset/<uidb64>/<token>/',
+        "reset/<uidb64>/<token>/",
         auth_views.PasswordResetConfirmView.as_view(
-            success_url=reverse_lazy('accounts:password_reset_complete')
+            template_name="accounts/password_reset_confirm.html",
+            success_url="/accounts/reset/done/",
         ),
-        name='password_reset_confirm'
+        name="password_reset_confirm",
     ),
     path(
-        'reset/done/',
-        auth_views.PasswordResetCompleteView.as_view(),
-        name='password_reset_complete'
+        "reset/done/",
+        auth_views.PasswordResetCompleteView.as_view(
+            template_name="accounts/password_reset_complete.html",
+        ),
+        name="password_reset_complete",
     ),
 ]
