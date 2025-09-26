@@ -524,12 +524,13 @@ h3 {
   margin-top: 2rem;
 }
 
-/* table with headers i.e. Assessment management */
+/* table with headers i.e. Assessment management, teams */
 .table { 
   width: 100%;
   margin: 0rem;
   border-color: var(--bg);
   background: var(--bg);
+  table-layout: fixed; 
 }
 
 .table thead th {
@@ -543,6 +544,10 @@ h3 {
   text-align: left;
   background: var(--bg);
 }
+.table thead th.rightmost-column {
+  text-align: right;
+}
+
 
 .table tbody tr {
   background: transparent;
@@ -575,7 +580,16 @@ h3 {
   vertical-align: middle;
 }
 
-.table td.actions-cell { white-space: nowrap; }
+.table td.actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table td input[type="text"],
+.table td input[type="email"] {
+  width: 100%;
+  max-width: none;
+}
 
 .message-slot {
   display: inline-block;
@@ -1359,7 +1373,6 @@ sub {
   font-size: .8rem;
 }
 
-
 .card h2 {
   margin-top: 0;       /* override global h2 margin-top: 3rem */
   margin-bottom: 1rem;
@@ -1374,4 +1387,60 @@ sub {
   .payment-summary .summary-line .amount {
     font-size: 1.1rem;
   }
+}
+
+
+/* --- Responsive interactive tables (stack rows on small screens) --- */
+@media (max-width: 720px) {
+  /* Hide header on small screens; data labels will be shown by cells */
+  .table thead { display: none; }
+
+  .table { border-collapse: separate; border-spacing: 0; }
+
+  .table tbody tr {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--standard-border-radius);
+    padding: .25rem 0; 
+    margin: 0 0 .75rem;
+    background: #fff;
+  }
+
+  .table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    border-bottom: 1px solid var(--border);
+    padding: .6rem 1rem;
+  }
+  .table tbody tr:last-child td { border-bottom: none; }
+
+  /* Prepend the header label using the attribute set in the template */
+  .table tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 40%;
+    min-width: 8rem;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  /* Make inputs fill the remaining width neatly */
+  .table td input[type="text"],
+  .table td input[type="email"] {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Actions: stack nicely and align right */
+  .table td.actions-cell { text-align: right; }
+  .table td.actions-cell .actions-stack {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 100%;
+  }
+  .table td.actions-cell .actions-sep { display: none; }
 }
