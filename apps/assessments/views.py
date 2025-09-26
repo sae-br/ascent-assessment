@@ -319,7 +319,7 @@ def start_assessment(request, token):
             msg_thanks.merge_global_data = {
                 "member_name": member.name,
                 "team_name": member.team.name,
-                "currentyear": datetime.datetime.now().year,
+                "currentyear": timezone.now().year,
             }
             msg_thanks.tags = ["assessment-thanks"]
             msg_thanks.metadata = {
@@ -352,7 +352,7 @@ def start_assessment(request, token):
                 "submitted_count": str(submitted_count),
                 "total_count": str(total_count),
                 "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
-                "currentyear": datetime.datetime.now().year,
+                "currentyear": timezone.now().year,
             }
             msg_admin.tags = ["assessment-admin-submitted"]
             msg_admin.metadata = {

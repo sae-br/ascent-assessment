@@ -8,6 +8,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.utils import timezone
 from anymail.message import AnymailMessage
 import datetime
 
@@ -71,6 +72,6 @@ class MailgunPasswordResetForm(PasswordResetForm):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "reset_url": reset_url,
-                "currentyear": datetime.datetime.now().year,
+                "currentyear": timezone.now().year,
             }
             msg.send()

@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, Pass
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from django.utils import timezone
 from django.http import HttpResponse, HttpResponseBadRequest
 
 
@@ -43,7 +44,7 @@ def signup_view(request):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "created_at": user.date_joined.strftime("%B %d, %Y %H:%M %Z"),
-                "currentyear": datetime.datetime.now().year,
+                "currentyear": timezone.now().year,
             }
             admin_msg.send()
 
@@ -58,7 +59,7 @@ def signup_view(request):
                 "username": user.username,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "currentyear": datetime.datetime.now().year,
+                "currentyear": timezone.now().year,
             }
             welcome.send()
             return redirect("dashboard:home")
@@ -147,7 +148,7 @@ def send_password_change_confirmation(user):
         "username": user.username,
         "first_name": getattr(user, "first_name", "") or "",
         "last_name": getattr(user, "last_name", "") or "",
-        "currentyear": datetime.datetime.now().year,
+        "currentyear": timezone.now().year,
     }
     # Let Anymail raise if there's an API error; caller will catch/log
     msg.send()
