@@ -204,7 +204,7 @@ ANYMAIL = {
     "MAILGUN_SENDER_DOMAIN": os.getenv("MAILGUN_DOMAIN", "orghealthascent.com"),
 }
 
-ANYMAIL["DEBUG_API_REQUESTS"] = True
+ANYMAIL["DEBUG_API_REQUESTS"] = False
 
 
 # --- Admins / email identities ---

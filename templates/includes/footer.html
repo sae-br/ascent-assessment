@@ -1,0 +1,20 @@
+{% load static %}
+
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+    <!-- Monochrome, theme-tinted logo using CSS mask -->
+    <span class="footer-logo"
+          aria-label="OrgHealth"
+          style="--logo-url: url('{% static "images/orghealth-logo.svg" %}')"></span>
+
+    <small class="copyright">
+      The Ascent Assessment is a product of OrgHealth, © {% now "Y" %}. All rights reserved.
+    </small>
+
+    <nav class="footer-links" aria-label="Footer">
+      <a href="/privacy/">Privacy</a>
+      <span aria-hidden="true">·</span>
+      <a href="/terms/">Terms</a>
+    </nav>
+  </div>
+</footer>

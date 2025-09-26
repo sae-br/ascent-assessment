@@ -7,14 +7,17 @@
     <title>{% block title %}Account Sign In | Ascent Assessment{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-<body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <div class="auth-logo">
-                <img src="{% static 'images/logo-square.png' %}" alt="Ascent Assessment Logo">
+<body class="public-page">
+    <div class="page-wrapper">
+        <main class="auth-container">
+            <div class="auth-box">
+                <div class="auth-logo">
+                    <img src="{% static 'images/logo-square.png' %}" alt="Ascent Assessment Logo">
+                </div>
+                {% block content %}{% endblock %}
             </div>
-            {% block content %}{% endblock %}
-        </div>
+        </main>
+        {% include "includes/footer.html" %}
     </div>
 </body>
 </html>
