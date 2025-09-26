@@ -400,6 +400,8 @@ h3 {
   flex-wrap: wrap;
   width: 100%;
   gap: 1rem;
+  justify-content: flex-start;
+  align-items: stretch;
 }
 
 .card {
@@ -409,14 +411,21 @@ h3 {
 }
 
 .assessment-cards .card {
-  flex: 1 1 calc(32% - 1.30rem);
-  min-width: 200px;
-  max-width: 100%;
+  /* Target three columns: 3 cards per row when space allows.
+     Never narrower than 320px, never wider than 520px. */
+  width: clamp(320px, calc((100% - 2rem) / 3), 520px);
+  flex: 0 1 auto; 
+}
+
+@media (max-width: 1100px) {
+  .assessment-cards .card {
+    width: clamp(320px, calc((100% - 1rem) / 2), 520px);
+  }
 }
 
 @media (max-width: 720px) {
   .assessment-cards .card {
-    flex: 1 1 100%;
+    width: 100%; 
   }
 }
 

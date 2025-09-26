@@ -24,7 +24,7 @@ def assessments_overview(request):
 
     assessments = (
         Assessment.objects
-        .filter(team__in=teams)
+        .filter(team__in=teams, launched_at__isnull=False)
         .select_related("team", "final_report")
         .order_by("-deadline")
     )
@@ -209,43 +209,37 @@ def confirm_team(request):
 @login_required
 def confirm_launch(request):
     user = request.user
-    logger.debug("confirm_launch: entered", extra={"user_id": user.id})
     session_data = request.session.get("new_assessment")
-
     if not session_data:
-        logger.warning("confirm_launch: missing session data", extra={"user_id": user.id})
         messages.error(request, "Missing assessment setup data.")
         return redirect("assessments:new_assessment")
 
-    team = get_object_or_404(Team, id=session_data["team_id"])
+    team = get_object_or_404(Team, id=session_data["team_id"], admin=user)
     deadline = datetime.strptime(session_data["deadline"], "%Y-%m-%d").date()
 
-    assessment, created = Assessment.objects.get_or_create(team=team, deadline=deadline)
-    if created:
-        logger.info("assessment.created", 
-                    extra={"user_id": user.id, 
-                           "assessment_id": assessment.id, 
-                           "team_id": team.id, 
-                           "deadline": str(deadline)})
-
-    for m in team.members.all():
-        AssessmentParticipant.objects.get_or_create(
-            assessment=assessment,
-            team_member=m,
-        )
-
+    # IMPORTANT: no database writes here on GET — just show a preview card
     if request.method == "POST":
-        # Let users jump back without losing session
         if "edit_basics" in request.POST:
             messages.info(request, "You can adjust the basics and continue.")
-            return redirect(f"{reverse('assessments:new_assessment')}?assessment={assessment.id}")
+            return redirect("assessments:new_assessment")
 
         if "edit_team_members" in request.POST:
             messages.info(request, "You can update team members and continue.")
-            return redirect(f"{reverse('assessments:confirm_team')}?assessment={assessment.id}")
+            return redirect("assessments:confirm_team")
 
-        # Only launch when the explicit button is pressed
         if "launch_assessment" in request.POST:
+            # Create the real Assessment now
+            assessment = Assessment.objects.create(
+                team=team,
+                deadline=deadline,
+                launched_at=timezone.now(),
+            )
+
+            # Seed participants from current team members
+            for m in team.members.all():
+                AssessmentParticipant.objects.create(assessment=assessment, team_member=m)
+
+            # Send invites (unchanged from your code, just swap in the new `assessment`)
             sent = failed = 0
             for m in team.members.all():
                 participant = AssessmentParticipant.objects.get(team_member=m, assessment=assessment)
@@ -253,24 +247,19 @@ def confirm_launch(request):
                     reverse("assessments:start_assessment", args=[participant.token])
                 )
                 try:
-                    msg = AnymailMessage(
-                        # Subject is set in MailGun
-                        from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[m.email],
-                    )
-                    msg.template_id = "assessment-invite"  # Mailgun template name or ID
+                    msg = AnymailMessage(from_email=settings.DEFAULT_FROM_EMAIL, to=[m.email])
+                    msg.template_id = "assessment-invite"
                     msg.merge_global_data = {
                         "member_name": m.name,
                         "team_name": team.name,
                         "invite_url": invite_url,
-                        "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
-                        "currentyear": datetime.datetime.now().year,
+                        "deadline_month_day_year": deadline.strftime("%B %d, %Y"),
+                        "currentyear": timezone.now().year,
                     }
                     msg.tags = ["assessment-invite"]
                     msg.metadata = {
                         "assessment_id": str(assessment.id),
                         "team_id": str(team.id),
-                        "participant_id": str(participant.id),
                         "template": "assessment-invite",
                     }
                     msg.send()
@@ -279,18 +268,21 @@ def confirm_launch(request):
                     participant.save(update_fields=["last_invited_at"])
                 except Exception:
                     failed += 1
-                    logger.exception("invite.send_failed",
-                                    extra={"user_id": user.id, "assessment_id": assessment.id, "member_id": m.id})
+                    logger.exception("invite.send_failed", extra={
+                        "user_id": user.id, "assessment_id": assessment.id, "member_id": m.id
+                    })
 
-            logger.info("invite.batch_complete",
-                        extra={"user_id": user.id, "assessment_id": assessment.id, "sent": sent, "failed": failed})
+            logger.info("invite.batch_complete", extra={
+                "user_id": user.id, "assessment_id": assessment.id, "sent": sent, "failed": failed
+            })
             request.session.pop("new_assessment", None)
             messages.success(request, f"Assessment for {team.name} launched!")
             return redirect("dashboard:home")
 
+    # GET render — preview only
     return render(request, "assessments/confirm_launch.html", {
-        "assessment": assessment,
-        "members": team.members.all()
+        "assessment_preview": {"team_name": team.name, "deadline": deadline},
+        "members": team.members.all(),
     })
 
 # respondent submission

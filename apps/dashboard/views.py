@@ -10,10 +10,13 @@ from apps.pdfexport.models import FinalReport
 def dashboard_home(request):
     user = request.user
 
+    # Teams (sorted by most recently created)
+    teams = Team.objects.filter(admin=user).order_by("-created_at")
+
     # Recent Assessments (limit 3, sorted by -created_at)
     recent_assessments = (
         Assessment.objects
-        .filter(team__admin=user)
+        .filter(team__admin=user, launched_at__isnull=False)
         .select_related("team")
         .order_by("-created_at")[:3]
     )
@@ -33,13 +36,10 @@ def dashboard_home(request):
             "complete": participants.filter(has_submitted=True).count(),
         })
 
-    # Teams (sorted by most recently created)
-    teams = Team.objects.filter(admin=user).order_by("-created_at")
-
     # Reports 
     reports = (
         FinalReport.objects
-        .filter(assessment__team__admin=user)
+        .filter(assessment__team__admin=user, assessment__launched_at__isnull=False)
         .select_related("assessment__team")
         .order_by("-created_at")[:5]
     )

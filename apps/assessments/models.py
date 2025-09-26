@@ -28,13 +28,14 @@ class Question(models.Model):
 
 
 class Assessment(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="assessments")
+    team = models.ForeignKey('teams.Team', on_delete=models.CASCADE, related_name='assessments')
     deadline = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
+    launched_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def pretty_name(self) -> str:
-        """Human‑friendly label like "Team – September 2025" with a safe fallback.
+        """Human‑friendly label like "Leadership Team – September 2025" with a safe fallback.
         Uses an en dash and omits the date if it's missing.
         """
         team_name = getattr(self.team, "name", "Team") or "Team"
@@ -44,6 +45,13 @@ class Assessment(models.Model):
 
     def __str__(self):
         return self.pretty_name
+    
+    @property
+    def is_launched(self) -> bool:
+        """Ensures assessments being created only get added to the model on launch.
+        Keeps the db clean and avoids unusable assessment drafts being created.
+        """
+        return self.launched_at is not None
 
 
 class AssessmentParticipant(models.Model):

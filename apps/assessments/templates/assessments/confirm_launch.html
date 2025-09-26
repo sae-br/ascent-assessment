@@ -8,7 +8,7 @@
 
 <section class="container--narrow">
 
-    <h3>{{ assessment.team.name }} - {{ assessment.deadline|date:"F Y" }}</h3>
+    <h3>{{ assessment_preview.team_name }} - {{ assessment_preview.deadline|date:"F Y" }}</h3>
     <br>
 
     <p>Participating team members:</p>
@@ -20,12 +20,16 @@
     <br>
 
     <p>The target date you’ll request team members submit by is:</p>
-    <p><strong>{{ assessment.deadline|date:"F j, Y" }}</strong></p>
+    <p><strong>{{ assessment_preview.deadline|date:"F j, Y" }}</strong></p>
     <br>
 
     <p>Once you click Launch below, each team member will receive an email with a unique 
-        link to complete their assessment. As team members submit their responses, you 
-        will receive an update email.</p>
+        link to complete their assessment and some basic instructions. </p>
+    <p>You can preview this invitation email if you'd like, but it is not editable. We
+        recommend communicating with your team separately to introduce the assessment
+        and provide other details if that hasn't yet been discussed.</p>
+    </p>
+    <p>As team members submit their responses, you will receive an update email.</p>
     <br>
 
     <form method="post" class="element--actions-row">
