@@ -281,7 +281,7 @@ LOGGING = {
 
     "handlers": {
         "console": {
-            "class": "django.utils.log.StreamHandler",
+            "class": "logging.StreamHandler",
             "formatter": "simple",
         },
         "mail_admins": {
