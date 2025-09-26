@@ -198,11 +198,17 @@ h3 {
   display: flex;
   min-height: 100vh;
 }
+@supports (min-height: 100dvh) {
+  .page-wrapper { min-height: 100dvh; } 
+}
 
 .public-page .page-wrapper {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+@supports (min-height: 100dvh) {
+  .public-page .page-wrapper { min-height: 100dvh; }
 }
 
 .container--narrow {
@@ -285,14 +291,16 @@ h3 {
 }
 
 .main-area {
-  flex-grow: 1;
-  display: flex;
   flex-direction: column;
+  display: flex;
   background-color: var(--bg);
+  min-height: 0;             /* prevents overflow in flex children */
+  flex: 1 1 auto;  
 }
 
 .main-content {
   padding: 2rem;
+  flex: 1 1 auto; 
 }
 
 .main-heading {
@@ -381,6 +389,7 @@ h3 {
 .site-footer {
   color: var(--text-xlight);
   padding: 1rem 2rem;
+  margin-top: auto;          /* stick to bottom when space remains */
 }
 
 .footer-inner {
@@ -1022,7 +1031,7 @@ input[type="radio"]:checked + label.custom-control.radio::after {
 
 /* Simplified containers for views with no sidebar */
 .auth-container {
-  flex: 1 0 auto; 
+  flex: 1 1 auto;
   display: flex;
   justify-content: center;
   align-items: center;
