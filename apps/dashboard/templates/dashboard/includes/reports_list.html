@@ -4,7 +4,7 @@
         <a href="{% url 'reports:reports_overview' %}" class="unstyled-link">See All</a>
     </div>
     <div class="card">
-        {% if reports %}
+                {% for report in reports|slice:":6" %}
             <ul class="table-list">
                 {% for report in reports %}
                     <li class="table-row">
@@ -22,6 +22,9 @@
                     </li>
                 {% endfor %}
             </ul>
+            {% if reports|length > 6 %}
+                <div class="list-gradient" aria-hidden="true"></div>
+            {% endif %}
         {% else %}
             <p>Reports you've purchased will show up here.</p>
             <p>For a preview of what to expect, download this <a href="">partial sample report</a>.</p>

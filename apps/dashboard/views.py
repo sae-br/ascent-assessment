@@ -27,6 +27,7 @@ def dashboard_home(request):
             assessment.participants
             .select_related("team_member")
             .order_by("has_submitted")  # False (incomplete) first
+            
         )
         assessments_data.append({
             "assessment": assessment,

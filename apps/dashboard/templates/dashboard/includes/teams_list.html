@@ -7,7 +7,7 @@
   <div class="card">
     {% if teams %}
       <ul class="table-list">
-        {% for team in teams %}
+        {% for team in teams|slice:":6" %}
           <li class="table-row">
             <span class="row-left">{{ team.name }}</span>
             <span class="row-right">
@@ -20,6 +20,9 @@
           </li>
         {% endfor %}
       </ul>
+      {% if teams|length > 6 %}
+        <div class="list-gradient" aria-hidden="true"></div>
+      {% endif %}
     {% else %}
       <p>Teams you've created will show up here.</p>
       <p class="helptext">If you'd prefer, you can create a team now and assign it to a New Assessment 

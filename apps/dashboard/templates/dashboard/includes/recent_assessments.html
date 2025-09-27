@@ -12,19 +12,28 @@
             <h3>{{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}</h3>
             <p class="para-small">{{ item.complete }} of {{ item.total }} submitted</p>
           </div>
-          <ul class="table-list">
-            {% for p in item.participants %}
+
+          <div class="table-list-wrap">
+            <ul class="table-list">
+              {# show max 6 #}
+              {% for p in item.participants|slice:":6" %}
                 <li class="table-row {% if not p.has_submitted %}incomplete{% endif %}">
-                <span class="row-left">{{ p.team_member.name }}</span>
-                <span class="row-right">
+                  <span class="row-left">{{ p.team_member.name }}</span>
+                  <span class="row-right">
                     <i 
-                        data-lucide="{% if p.has_submitted %}circle-check{% else %}circle-x{% endif %}" 
-                        class="status-icon {% if not p.has_submitted %}incomplete{% endif %}">
+                      data-lucide="{% if p.has_submitted %}circle-check{% else %}circle-x{% endif %}" 
+                      class="status-icon {% if not p.has_submitted %}incomplete{% endif %}">
                     </i>
-                </span>
+                  </span>
                 </li>
-            {% endfor %}
+              {% endfor %}
             </ul>
+
+            {# soft fade if there are more than 6 #}
+            {% if item.total > 6 %}
+              <div class="list-gradient" aria-hidden="true"></div>
+            {% endif %}
+          </div>
         </div>
       {% endfor %}
     </div>
