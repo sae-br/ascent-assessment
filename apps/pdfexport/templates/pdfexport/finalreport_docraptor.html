@@ -33,6 +33,10 @@
 </head>
 
 <body style='string-set: team_meta "{{ team_name }} – {{ deadline|date:"F Y" }}";'>
+    <!-- Running element used in footer; NOTE: causes page break -->
+    <div class="footer-left running">
+        <img src="{{ STATIC_ABS }}images/logo.png" alt="Ascent Assessment" />
+    </div>
 
     <!-- Title Page -->
     <div class="title-page avoid-break" style="page: cover;">
@@ -47,8 +51,8 @@
 
         <div class="title-bottom">
             <div class="title-company-info">
-                <p>The Ascent Assessment is a product of OrgHealth.</br>www.orghealthteam.com</p>
-                <p class="">Copyright {{ now|date:"Y" }}</p>
+                <p>The Ascent Assessment is a product of OrgHealth. </br>www.orghealthteam.com</p>
+                <p class="">OrgHealth © {% now "Y" %}</p>
             </div>
         </div>
     </div>
@@ -67,15 +71,11 @@
             </li>
             {% endfor %}
 
+            <li data-target="#high-low"><a href="#high-low">Highest and Lowest</a></li>
             <li data-target="#action-ideas"><a href="#action-ideas">My Action Ideas</a></li>
             <li data-target="#commitments"><a href="#commitments">Team Commitments</a></li>
         </ol>
     </section>
-
-    <!-- Running element used in footer; NOTE: causes page break -->
-    <div class="footer-left running">
-        <img src="{{ STATIC_ABS }}images/logo.svg" alt="Ascent Assessment" />
-    </div>
 
     <!-- Introduction -->
     <section id="intro" class="intro-section">
@@ -278,6 +278,54 @@
 
         <div class="page-break"></div>
     {% endfor %}
+
+
+    <!-- Highest and Lowest Questions -->
+    <section id="high-low" class="high-low">
+        <h1>Highest and Lowest</h1>
+        <p>
+            Below are the three questions your team rated the highest and the three rated the lowest
+            across all responses. Use these as a prompt for reflection and discussion: what is working
+            well that you want to protect or amplify, and where might focused action be warranted?
+        </p>
+
+        <h2>Highest</h2>
+        {% if highest_questions %}
+            <ul>
+                {% for q in highest_questions %}
+                    <li>
+                        <strong>{{ q.text }}</strong>
+                        <br/>
+                        <span class="label">Score:</span> <strong>{{ q.health_percentage }}%</strong>
+                        &nbsp;|&nbsp;
+                        <span class="label">Peak:</span> {{ q.peak_name }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No question scores are available yet.</p>
+        {% endif %}
+
+        <h2>Lowest</h2>
+        {% if lowest_questions %}
+            <ul>
+                {% for q in lowest_questions %}
+                    <li>
+                        <strong>{{ q.text }}</strong>
+                        <br/>
+                        <span class="label">Score:</span> <strong>{{ q.health_percentage }}%</strong>
+                        &nbsp;|&nbsp;
+                        <span class="label">Peak:</span> {{ q.peak_name }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No question scores are available yet.</p>
+        {% endif %}
+    </section>
+
+    <div class="page-break"></div>
+
 
     <!-- Action Ideas -->
     <section id="action-ideas" class="action-ideas">

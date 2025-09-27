@@ -17,11 +17,15 @@
 
 /* Page numbering and footer */
 .footer-left.running {
-  position: running(footer-left);  /* exposes this node to margin boxes */
+  position: running(footer-left);
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; 
   line-height: 0 !important;
 }
 .footer-left img {
-  height: 20pt; 
+  height: 20pt;
   width: auto;
   display: inline-block;
   vertical-align: middle;
@@ -100,7 +104,7 @@ h3 {
 h4 {
     font-size: 10pt;
     text-transform: uppercase;
-    color: #666;
+    color: var(--text-light);
     margin-bottom: 2px;
 }
 
@@ -123,7 +127,7 @@ tfoot { display: table-footer-group; }
 
 tr, th, td {
   page-break-inside: avoid;
-  break-inside: avoid;                   /* modern alias */
+  break-inside: avoid;
 }
 
 .avoid-break {
@@ -498,10 +502,14 @@ tr, th, td {
 .action-prompt-box {
     background-color: var(--bg-accent);
     border-left: 4px solid var(--primary);
-    padding: 30px;
+    padding: 0px 30px;
     margin-top: 30px;
     font-size: 10.5pt;
     color: var(--text-light);
+}
+
+.action-prompt-box p {
+    margin: 0;
 }
 
 /* Action Ideas Section */
@@ -520,7 +528,7 @@ tr, th, td {
 
 .action-table thead th {
   background-color: var(--bg-accent);
-  font-size: 9pt;
+  font-size: 8pt;
   text-transform: uppercase;
   color: var(--text-light);
   font-weight: normal;
@@ -561,7 +569,7 @@ tr, th, td {
 
 .commitment-table thead th {
   background-color: var(--bg-accent);
-  font-size: 9pt;
+  font-size: 8pt;
   text-transform: uppercase;
   color: var(--text-light);
   font-weight: normal;

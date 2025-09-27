@@ -179,6 +179,31 @@ def _enqueue_docraptor_async(request, assessment, fr, stage=6):
 
         peak_sections.append(section)
 
+    # Compute highest/lowest rated questions across all peaks (if questions present)
+    highest_questions = []
+    lowest_questions = []
+    try:
+        all_q = []
+        for sec in peak_sections:
+            for q in (sec.get("questions") or []):
+                hp = q.get("health_percentage")
+                if hp is None:
+                    continue
+                all_q.append({
+                    "text": q.get("text"),
+                    "health_percentage": hp,
+                    "peak_name": sec.get("name"),
+                })
+        if all_q:
+            # Highest three (ties resolved by original order)
+            highest_questions = sorted(all_q, key=lambda d: (-d["health_percentage"]))[:3]
+            # Lowest three
+            lowest_questions = sorted(all_q, key=lambda d: (d["health_percentage"]))[:3]
+    except Exception:
+        # keep empty on any unexpected structure
+        highest_questions = []
+        lowest_questions = []
+
     # Summary (when scores exist)
     summary_text = ""
     if stage >= 1 and peak_sections:
@@ -204,6 +229,8 @@ def _enqueue_docraptor_async(request, assessment, fr, stage=6):
         "show_peak_charts": (stage >= 4),
         "show_question_rows": (stage >= 5),
         "show_question_charts": (stage >= 6),
+        "highest_questions": highest_questions,
+        "lowest_questions": lowest_questions,
     }
 
     request._docraptor_ctx = ctx
