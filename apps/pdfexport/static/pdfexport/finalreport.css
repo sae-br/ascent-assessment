@@ -502,7 +502,7 @@ tr, th, td {
 .action-prompt-box {
     background-color: var(--bg-accent);
     border-left: 4px solid var(--primary);
-    padding: 0px 30px;
+    padding: 30px;
     margin-top: 30px;
     font-size: 10.5pt;
     color: var(--text-light);

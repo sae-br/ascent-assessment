@@ -33,13 +33,15 @@
 </head>
 
 <body style='string-set: team_meta "{{ team_name }} – {{ deadline|date:"F Y" }}";'>
-    <!-- Running element used in footer; NOTE: causes page break -->
-    <div class="footer-left running">
-        <img src="{{ STATIC_ABS }}images/logo.png" alt="Ascent Assessment" />
-    </div>
 
     <!-- Title Page -->
     <div class="title-page avoid-break" style="page: cover;">
+
+        <!-- Running element used in footer; NOTE: causes page break -->
+        <div class="footer-left running">
+            <img src="{{ STATIC_ABS }}images/logo.jpg" alt="Ascent Assessment" />
+        </div>
+        
         <div class="title-top">
             <div class="title-logo">
                 <img src="{{ STATIC_ABS }}images/logo-square.png" alt="Ascent Assessment for Teams"/>
