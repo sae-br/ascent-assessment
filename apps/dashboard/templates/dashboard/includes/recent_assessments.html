@@ -9,7 +9,11 @@
       {% for item in assessments_data %}
         <div class="card">
           <div class="card-header">
-            <h3>{{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}</h3>
+            <h3>
+              <a class="unstyled-link" href="{% url 'assessments:assessments_overview' %}?assessment={{ item.assessment.id }}">
+                {{ item.team.name }} – {{ item.assessment.deadline|date:"F Y" }}
+              </a>
+            </h3>
             <p class="para-small">{{ item.complete }} of {{ item.total }} submitted</p>
           </div>
 
