@@ -18,18 +18,8 @@
 /* Page numbering and footer */
 .footer-left.running {
   position: running(footer-left);
-  height: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden; 
-  line-height: 0 !important;
 }
-.footer-left img {
-  height: 20pt;
-  width: auto;
-  display: block;
-}
-
+.footer-left img,
 .footer-left svg {
   height: 20pt;
   width: auto;
