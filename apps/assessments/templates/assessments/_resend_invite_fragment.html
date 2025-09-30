@@ -10,7 +10,6 @@
   style="display:inline"
 >
   {% csrf_token %}
-  <button type="submit" class="text-button">Resend Invite</button>
   <span class="message-slot" aria-live="polite" aria-atomic="true">
     <span
       class="sent-message"
@@ -18,6 +17,7 @@
       style="--dur: 5s;"
       role="status"
     >Sent!</span>
+    <button type="submit" class="text-button">Resend Invite</button>
   </span>
 </form>
 

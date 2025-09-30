@@ -55,14 +55,36 @@ class Assessment(models.Model):
 
 
 class AssessmentParticipant(models.Model):
-    assessment = models.ForeignKey(Assessment, on_delete=models.CASCADE, related_name="participants")
-    team_member = models.ForeignKey(TeamMember, on_delete=models.CASCADE, related_name="assessment_links")
+    assessment = models.ForeignKey(
+        Assessment, on_delete=models.CASCADE, related_name="participants"
+    )
+    # Nullable so deleting a TeamMember won’t break running assessments
+    team_member = models.ForeignKey(
+        TeamMember, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="assessment_links"
+    )
+
+    # Snapshots captured at launch (used for emails, labels, etc.)
+    member_name = models.CharField(max_length=200, blank=True, default="")
+    member_email = models.EmailField(blank=True, default="")
+
     has_submitted = models.BooleanField(default=False)
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     last_invited_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
+    def display_name(self):
+        # Prefer the snapshot; fall back to FK if present
+        if self.member_name:
+            return self.member_name
+        return getattr(self.team_member, "name", "")
+
+    def display_email(self):
+        if self.member_email:
+            return self.member_email
+        return getattr(self.team_member, "email", "")
+
     def __str__(self):
-        return f"{self.team_member.name} for {self.assessment}"
+        return f"{self.display_name() or 'Member'} for {self.assessment}"
 
 
 class Answer(models.Model):

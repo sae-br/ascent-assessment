@@ -49,19 +49,46 @@
         <button type="submit" class="button">Rename</button>
       </form>
       
-      <!-- Delete Team -->
+      <!-- Delete Team (HTMX double-confirm) -->
       <hr>
-
-      <div class="section" style="margin-top:1rem;">
-        <form
-          method="post"
-          action="{% url 'teams:delete_team' selected_team.id %}"
-          style="display:inline;"
-          onsubmit="return confirm('Delete team & all its members?')"
-        >
-          {% csrf_token %}
-          <button type="submit" class="text-button text-danger">Delete Team</button>
-        </form>
+      <div id="delete-team-block" class="section" style="margin-top:1rem;">
+        {% if request.GET.confirm_team and request.GET.confirm_team|stringformat:"s" == selected_team.id|stringformat:"s" %}
+          <div class="actions-stack">
+            <span class="text-button" style="color: var(--alert);">
+              Delete the team <strong>{{ selected_team.name }}</strong> and remove all of its members from your account?
+              <small class="para-small" style="color: var(--text-light); display:block; margin-top:.15rem;">
+                The team record and its member records will be permanently deleted.<br>
+                <strong>Launched assessments and existing reports related to this team will not be deleted</strong>; their invitations and results use participant snapshots and will continue to work.<br>
+              </small>
+            </span>
+            <form method="post" action="{% url 'teams:delete_team' selected_team.id %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="text-button" style="color: var(--alert);">Yes, delete</button>
+            </form>
+            <span class="actions-sep" aria-hidden="true">|</span>
+            <a href="#"
+               class="text-button"
+               hx-get="{% url 'teams:teams_overview' %}?selected_team={{ selected_team.id }}"
+               hx-target="#delete-team-block"
+               hx-select="#delete-team-block"
+               hx-swap="outerHTML">
+              Cancel
+            </a>
+          </div>
+        {% else %}
+          <form method="post" action="{% url 'teams:delete_team' selected_team.id %}" style="display:inline;">
+            {% csrf_token %}
+            <a href="#"
+               class="text-button"
+               style="color: var(--alert);"
+               hx-get="{% url 'teams:teams_overview' %}?confirm_team={{ selected_team.id }}&selected_team={{ selected_team.id }}"
+               hx-target="#delete-team-block"
+               hx-select="#delete-team-block"
+               hx-swap="outerHTML">
+              Delete Team
+            </a>
+          </form>
+        {% endif %}
       </div>
     {% endif %}
   </section>

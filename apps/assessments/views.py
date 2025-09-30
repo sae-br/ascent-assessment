@@ -237,7 +237,12 @@ def confirm_launch(request):
 
             # Seed participants from current team members
             for m in team.members.all():
-                AssessmentParticipant.objects.create(assessment=assessment, team_member=m)
+                AssessmentParticipant.objects.create(
+                    assessment=assessment,
+                    team_member=m,
+                    member_name=m.name,
+                    member_email=m.email,
+                )
 
             # Send invites (unchanged from your code, just swap in the new `assessment`)
             sent = failed = 0
@@ -290,9 +295,13 @@ def start_assessment(request, token):
     participant = get_object_or_404(AssessmentParticipant, token=token)
     member = participant.team_member
     assessment = participant.assessment
+    # Snapshot fallbacks in case the TeamMember is deleted 
+    member_name = participant.member_name or (member.name if member else "Participant")
+    member_email = participant.member_email or (member.email if member else None)
+    team = assessment.team  # use assessment's team to avoid None if member is deleted
 
     if participant.has_submitted:
-        return render(request, "assessments/submit.html", {"member": member})
+        return render(request, "assessments/submit.html", {"member": member, "member_name": member_name})
 
     questions = Question.objects.all()
 
@@ -313,18 +322,18 @@ def start_assessment(request, token):
         try:
             msg_thanks = AnymailMessage(
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                to=[member.email],
+                to=[member_email] if member_email else [],
             )
             msg_thanks.template_id = "assessment-thanks"  # Mailgun template name/ID
             msg_thanks.merge_global_data = {
-                "member_name": member.name,
-                "team_name": member.team.name,
+                "member_name": member_name,
+                "team_name": team.name,
                 "currentyear": timezone.now().year,
             }
             msg_thanks.tags = ["assessment-thanks"]
             msg_thanks.metadata = {
                 "assessment_id": str(assessment.id),
-                "team_id": str(member.team.id),
+                "team_id": str(team.id),
                 "participant_id": str(participant.id),
                 "template": "assessment-thanks",
             }
@@ -335,7 +344,6 @@ def start_assessment(request, token):
                                     "assessment_id": assessment.id})
         
         # Email notification to the user administrating assessment
-        team = member.team
         admin_user = team.admin
         submitted_count = assessment.participants.filter(has_submitted=True).count()
         total_count = assessment.participants.count()
@@ -347,7 +355,7 @@ def start_assessment(request, token):
             msg_admin.template_id = "assessment-admin-submitted"  # Mailgun template name/ID
             msg_admin.merge_global_data = {
                 "admin_name": getattr(admin_user, "first_name", "") or admin_user.email,
-                "member_name": member.name,
+                "member_name": member_name,
                 "team_name": team.name,
                 "submitted_count": str(submitted_count),
                 "total_count": str(total_count),
@@ -366,7 +374,7 @@ def start_assessment(request, token):
                              extra={"participant_id": participant.id, 
                                     "assessment_id": assessment.id, 
                                     "admin_id": admin_user.id})
-        return render(request, "assessments/submit.html", {"member": member})
+        return render(request, "assessments/submit.html", {"member": member, "member_name": member_name})
 
     return render(request, "assessments/start.html", {
         "member": member,
@@ -384,9 +392,13 @@ def resend_invite(request, participant_id):
     )
     member = participant.team_member
     assessment = participant.assessment
+    # Snapshot fallbacks if team member was deleted from team
+    member_name = participant.member_name or (member.name if member else "Participant")
+    member_email = participant.member_email or (member.email if member else None)
+    team = assessment.team
 
     # Permission check (defense in depth)
-    if member.team.admin != request.user:
+    if team.admin != request.user:
         if request.headers.get("HX-Request"):
             return HttpResponse("Permission denied.", status=403)
         messages.error(request, "You don't have permission to do that.")
@@ -399,19 +411,19 @@ def resend_invite(request, participant_id):
     try:
         msg = AnymailMessage(
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[member.email],
+            to=[member_email] if member_email else [],
         )
         msg.template_id = "assessment-invite"
         msg.merge_global_data = {
-            "member_name": member.name,
-            "team_name": member.team.name,
+            "member_name": member_name,
+            "team_name": team.name,
             "invite_url": invite_url,
             "deadline_month_day_year": assessment.deadline.strftime("%B %d, %Y"),
         }
         msg.tags = ["assessment-invite", "resend"]
         msg.metadata = {
             "assessment_id": str(assessment.id),
-            "team_id": str(member.team.id),
+            "team_id": str(team.id),
             "participant_id": str(participant.id),
             "template": "assessment-invite",
             "resend": "true",
@@ -431,7 +443,7 @@ def resend_invite(request, participant_id):
             )
             return HttpResponse(html)
 
-        messages.success(request, f"Resent invite to {member.name}.")
+        messages.success(request, f"Resent invite to {member_name}.")
 
     except Exception:
         logger.exception(

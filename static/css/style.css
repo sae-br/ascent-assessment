@@ -570,8 +570,7 @@ h3 {
 }
 
 .table td.status-cell {
-  text-align: center;
-  width: 4rem;                  /* fixed width keeps columns aligned */
+  text-align: left;
 }
 
 .status-icon {
@@ -582,34 +581,42 @@ h3 {
 
 .table td.actions-cell {
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .table td input[type="text"],
 .table td input[type="email"] {
   width: 100%;
   max-width: none;
+  margin-bottom: 0; 
 }
 
+/* Lay out the resend button + transient message neatly */
+.resend-form {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  max-width: 100%;
+}
+
+/* The message shouldn't push the column wider */
 .message-slot {
-  display: inline-block;
-  width: 64px; 
   position: relative;
-  vertical-align: middle;
+  display: inline-block;
+  min-width: 0;     /* don't reserve space */
+  width: auto;
 }
 
 .sent-message {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
+  position: static; 
   font-size: 0.875rem;
   font-weight: 500;
-  opacity: 0; 
+  padding-right: 10px;
+  opacity: 0;
 }
 
 .sent-message[data-autofade] {
-  opacity: 1;                 /* become visible when flagged */
+  opacity: 1;
   animation: msgFade var(--dur, 5s) forwards;
 }
 
@@ -886,6 +893,13 @@ textarea {
   height: var(--row-height);
 }
 
+/* Compact inputs inside the Teams member table rows (override global input spacing) */
+#member-table input[type="text"],
+#member-table input[type="email"] {
+  margin-bottom: 0;
+  height: var(--row-height);
+}
+
 select {
   font: inherit;
   font-size: 16px;
@@ -1158,9 +1172,21 @@ input[type="radio"]:checked + label.custom-control.radio::after {
   cursor: pointer;
   text-decoration: none;
 }
-.text-button:hover {
+a.text-button:hover,
+button.text-button:hover,
+input.text-button:hover {
   color: var(--primary-hover);
   text-decoration: underline;
+  background: transparent;
+}
+
+/* Don’t style non-clickable confirm copy like a link */
+.actions-stack span.text-button {
+  cursor: default;
+}
+.actions-stack span.text-button:hover {
+  color: var(--alert);
+  text-decoration: none;
   background: transparent;
 }
 
@@ -1454,6 +1480,13 @@ sub {
     width: 100%;
     max-width: 100%;
   }
+
+  /* Inputs inside the editable member table only */
+#member-table .table td input[type="text"],
+#member-table .table td input[type="email"] {
+  margin-bottom: 0;          /* no spacing below */
+  height: var(--row-height); /* aligns neatly in row */
+}
 
   /* Actions: stack nicely and align right */
   .table td.actions-cell { text-align: right; }

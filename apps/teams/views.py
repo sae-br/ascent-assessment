@@ -196,6 +196,9 @@ def member_table(request, team_id):
     members = team.members.all().order_by("name")
     member_form = TeamMemberForm()
 
+    # Add confirm_id from GET param, for two-step HTMX confirm UI
+    confirm_id = request.GET.get("confirm")
+
     # Always return the partial so HTMX can swap it in
     return render(
         request,
@@ -206,5 +209,6 @@ def member_table(request, team_id):
             "member_form": member_form,
             "use_htmx": True,           # tells the partial to emit hx-* attributes
             "selected_team": team,      # keeps hidden selected_team filled
+            "confirm_id": confirm_id,
         },
     )

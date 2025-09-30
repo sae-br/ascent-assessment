@@ -72,87 +72,119 @@
 
             <div class="table-wrapper">
                 <table class="table">
+                    <colgroup>
+                        <col style="width: 25%">
+                        <col style="width: 30%">
+                        <col style="width: 14%">
+                        <col style="width: 14%">
+                        <col>
+                    </colgroup>
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Submitted?</th>
                             <th>Last Invited</th>
-                            <th>Actions</th>
+                            <th class="rightmost-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for participant in participants %}
                         <tr>
-                        <td>{{ participant.team_member.name }}</td>
-                        <td>{{ participant.team_member.email }}</td>
-                        <td class="status-cell">
-                            {% if participant.has_submitted %}
-                            <i data-lucide="check-circle" class="status-icon submitted"></i>
-                            {% else %}
-                            <i data-lucide="x-circle" class="status-icon incomplete"></i>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <span id="last-invite-{{ participant.id }}">
-                                {% with li=participant.last_invited_at|default:selected_assessment.created_at %}
-                                {% if li %}
-                                    {{ li|date:"M j, Y" }}
+                            <td data-label="Name">{{ participant.team_member.name }}</td>
+                            <td data-label="Email">{{ participant.team_member.email }}</td>
+                            <td class="status-cell" data-label="Submitted?">
+                                {% if participant.has_submitted %}
+                                    <i data-lucide="check-circle" class="status-icon submitted"></i>
                                 {% else %}
-                                    —
+                                    <i data-lucide="x-circle" class="status-icon incomplete"></i>
                                 {% endif %}
+                            </td>
+                            <td data-label="Last Invited">
+                                <span id="last-invite-{{ participant.id }}">
+                                    {% with li=participant.last_invited_at|default:selected_assessment.created_at %}
+                                        {% if li %}
+                                            {{ li|date:"M j, Y" }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    {% endwith %}
+                                </span>
+                            </td>
+                            <td class="actions-cell" data-label="Actions">
+                                {% with fr=selected_assessment.final_report %}
+                                    {# If a final report file exists, disable resends for everyone #}
+                                    {% if fr and fr.s3_key %}
+                                        <span class="text-muted">—</span>
+                                    {# Otherwise, if this participant already submitted, also disable #}
+                                    {% elif participant.has_submitted %}
+                                        <span class="text-muted">—</span>
+                                    {# Otherwise, allow resending #}
+                                    {% else %}
+                                        <form
+                                            method="post"
+                                            action="{% url 'assessments:resend_invite' participant.id %}"
+                                            hx-post="{% url 'assessments:resend_invite' participant.id %}"
+                                            hx-target="closest form"
+                                            hx-swap="outerHTML"
+                                            class="resend-form"
+                                            data-participant-id="{{ participant.id }}"
+                                            style="display:inline"
+                                        >
+                                            {% csrf_token %}
+                                            <span class="message-slot" aria-live="polite" aria-atomic="true">
+                                                <span class="sent-message" aria-hidden="true">Sent!</span>
+                                                <button type="submit" class="text-button">Resend Invite</button>
+                                            </span>
+                                        </form>
+                                    {% endif %}
                                 {% endwith %}
-                            </span>
-                        </td>
-                        <td class="actions-cell">
-                            {% with fr=selected_assessment.final_report %}
-                                {# If a final report file exists, disable resends for everyone #}
-                                {% if fr and fr.s3_key %}
-                                    <span class="text-muted">—</span>
-                                {# Otherwise, if this participant already submitted, also disable #}
-                                {% elif participant.has_submitted %}
-                                    <span class="text-muted">—</span>
-                                {# Otherwise, allow resending #}
-                                {% else %}
-                                    <form
-                                        method="post"
-                                        action="{% url 'assessments:resend_invite' participant.id %}"
-                                        hx-post="{% url 'assessments:resend_invite' participant.id %}"
-                                        hx-target="closest form"
-                                        hx-swap="outerHTML"
-                                        class="resend-form"
-                                        data-participant-id="{{ participant.id }}"
-                                        style="display:inline"
-                                    >
-                                        {% csrf_token %}
-                                        <button type="submit" class="text-button">Resend Invite</button>
-                                        <span class="message-slot" aria-live="polite" aria-atomic="true">
-                                            <!-- starts invisible via CSS opacity:0; keeps the cell width stable -->
-                                            <span class="sent-message" aria-hidden="true">Sent!</span>
-                                        </span>
-                                    </form>
-                                {% endif %}
-                            {% endwith %}
-                        </td>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
 
-            <!-- Delete Team -->
+            <!-- Delete Assessment -->
             <hr>
-
-            <div class="section" style="margin-top:1rem;">
-                {% if not selected_assessment.final_report %}
-                    <form method="post"
-                            action="{% url 'assessments:delete_assessment' selected_assessment.id %}"
-                            onsubmit="return confirm('Delete this assessment? This will remove its participants and their responses.');"
-                            style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="text-button danger">Delete Assessment</button>
+            <div id="delete-assessment-block" class="section" style="margin-top:1rem;">
+              {% if not selected_assessment.final_report %}
+                {% if request.GET.confirm_assessment and request.GET.confirm_assessment|stringformat:"s" == selected_assessment.id|stringformat:"s" %}
+                  <div class="actions-stack">
+                    <span class="text-button" style="color: var(--alert);">
+                      Delete the assessment <strong>{{ selected_assessment.pretty_name }}</strong>?
+                      <small class="para-small" style="color: var(--text-light); display:block; margin-top:.15rem;">
+                        This will permanently delete the assessment, its invitations/participant links, and any responses submitted so far.<br>
+                        Team and Team Member records will remain available in your Teams list.
+                      </small>
+                    </span>
+                    <form method="post" action="{% url 'assessments:delete_assessment' selected_assessment.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="text-button" style="color: var(--alert);">Yes, delete</button>
                     </form>
+                    <span class="actions-sep" aria-hidden="true">|</span>
+                    <a href="#"
+                       class="text-button"
+                       hx-get="{% url 'assessments:assessments_overview' %}?assessment={{ selected_assessment.id }}"
+                       hx-target="#delete-assessment-block"
+                       hx-select="#delete-assessment-block"
+                       hx-swap="outerHTML">
+                      Cancel
+                    </a>
+                  </div>
+                {% else %}
+                  <a href="#"
+                     class="text-button"
+                     style="color: var(--alert);"
+                     hx-get="{% url 'assessments:assessments_overview' %}?confirm_assessment={{ selected_assessment.id }}&assessment={{ selected_assessment.id }}"
+                     hx-target="#delete-assessment-block"
+                     hx-select="#delete-assessment-block"
+                     hx-swap="outerHTML">
+                    Delete Assessment
+                  </a>
                 {% endif %}
+              {% endif %}
             </div>
         {% endif %}
     {% endif %}
