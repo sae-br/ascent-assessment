@@ -30,6 +30,13 @@
   display: block;
 }
 
+.footer-left svg {
+  height: 20pt;
+  width: auto;
+  display: block;
+}
+
+
 @page {
   margin: 1in 1in 1.15in;
 
